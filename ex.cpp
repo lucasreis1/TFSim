@@ -292,12 +292,15 @@ class res_station: public sc_module
 				wait(sc_time(instruct_time[op],SC_NS));
 				if(op.at(0) == 'L' || !a)
 				{
-					cout << "**Instrucao " << op << " completada no ciclo " << sc_time_stamp() << " em " << name() << " com resultado " << res << endl << flush;
 					string escrita_saida = std::to_string(id) + ' ' + std::to_string(res);
-					if(a && !isFirst)
-						wait(isFirst_event);
-					res = (*memoria)[a];
-					(*first_out).notify(1,SC_NS);
+					if(a)
+					{
+						if(!isFirst)
+							wait(isFirst_event);
+						res = memoria->at(a);
+						first_out->notify(1,SC_NS);
+					}
+					cout << "Instrucao " << op << " completada no ciclo " << sc_time_stamp() << " em " << name() << " com resultado " << res << endl << flush;
 					out->write(escrita_saida);
 					Busy = false;
 				}
@@ -305,9 +308,10 @@ class res_station: public sc_module
 				{
 					if(!isFirst)
 						wait(isFirst_event);
-					(*memoria)[a] = vj;
+					memoria->at(a) = vj;
+					first_out->notify(1,SC_NS);
 				}
-				(*fila).notify(sc_time(1,SC_NS));
+				(*fila).notify(1,SC_NS);
 				wait();
 			}
 		}
@@ -326,14 +330,14 @@ class res_station: public sc_module
 					qj = 0;
 					vj = std::stoi(p.substr(i+1,p.size() - i - 1));
 					cout << "Instrucao " << op << " conseguiu o valor " << vj << " da RS_" << rs_source << endl << flush; 
-					val_enc.notify(sc_time(1,SC_NS));
+					val_enc.notify(1,SC_NS);
 				}
 				if(qk == rs_source)
 				{
 					qk = 0;
 					vk = std::stoi(p.substr(i+1,p.size() - i - 1));
 					cout << "Instrucao " << op << " conseguiu o valor " << vk << " da RS_" << rs_source << endl << flush; 
-					val_enc.notify(sc_time(1,SC_NS));
+					val_enc.notify(1,SC_NS);
 				}
 			}
 		}
@@ -363,7 +367,7 @@ class res_vector: public sc_module
 			unsigned int tam = adder_tam + multiplier_tam;
 			res_type = {{"DADD",0},{"DADDI",0},{"DSUB",0},{"DSUBI",0},{"DMUL",1},{"DMULI",1},{"DDIV",1},{"DDIVI",1},{"L.D",2},{"S.D",2}};
 			start[0] = 0;
-			start[1] = start[0] + multiplier_tam;
+			start[1] = start[0] + adder_tam;
 			start[2] = tam;
 			rs.resize(tam);
 			mem.resize(memory_tam);
@@ -437,11 +441,11 @@ class res_vector: public sc_module
 						cout << "instruçao " << ord[0] << " aguardando reg R" << reg2v << endl << flush;
 					}
 					rs[pos]->Busy = true;
-					rs[pos]->exec_event.notify(sc_time(1,SC_NS));
+					rs[pos]->exec_event.notify(1,SC_NS);
 				}
 				else
 				{
-					pos -=start[2];
+					pos -= start[2];
 					ptrs[pos]->op = ord[0];
 					mem_ord = offset_split(ord[2]);
 					if(ord[0].at(0) == 'L')
@@ -458,18 +462,19 @@ class res_vector: public sc_module
 						else
 							ptrs[pos]->vj = ask_value(reg1v);
 					}
-					reg2v = std::stoi(mem_ord[0].substr(1,mem_ord[0].size()-1));
+					reg2v = std::stoi(mem_ord[1].substr(1,mem_ord[1].size()-1));
 					regst = ask_status(true,reg2v);
 					if(regst)
 						ptrs[pos]->qk = regst;
 					else
 						ptrs[pos]->vk = ask_value(reg2v);
-					ptrs[pos]->a = std::stoi(mem_ord[1]);
+					cout << mem_ord[1] << endl << flush;
+					ptrs[pos]->a = std::stoi(mem_ord[0]);
 					ptrs[pos]->Busy = true;
 					if(mem.empty())
 						ptrs[pos]->isFirst = true;
 					mem.push_back(ptrs[pos]);
-					ptrs[pos]->exec_event.notify(sc_time(1,SC_NS));
+					ptrs[pos]->exec_event.notify(1,SC_NS);
 				}
 				wait();
 			}
@@ -477,6 +482,7 @@ class res_vector: public sc_module
 		void mem_buffer_control()
 		{
 			mem[0]->isFirst = false;
+			mem[0]->a = 0;
 			mem.pop_front();
 			if(!mem.empty())
 			{
@@ -494,13 +500,17 @@ class res_vector: public sc_module
 		{
 			short int inst_type = res_type[inst];
 			if(inst_type < 2)
+			{
 				for(unsigned int i = start[inst_type] ; i < start[inst_type + 1] ; i++)
 					if(!rs[i]->Busy)
 						return i;
+			}
 			else
+			{
 				for(unsigned int i = 0 ; i < memory_tam ; i++)
 					if(!ptrs[i]->Busy)
-						return i+memory_tam;
+						return i+start[2];
+			}
 			return -1;
 		}
 		float ask_value(unsigned int index)
@@ -525,7 +535,8 @@ class res_vector: public sc_module
 		}
 		vector<string> instruction_split(string p)
 		{
-			vector<string> ord(4);
+			vector<string> ord;
+			ord.reserve(4);
 			unsigned int i,last_pos;
 			i = last_pos = 0;
 			for(i = 0 ; i < p.size() && p[i] != ' ' ; i++)
@@ -587,7 +598,7 @@ class top: public sc_module
 
 int sc_main(int argc, char *argv[])
 {
-	map<string,int> instruct_time{{"DADD",4},{"DADDI",4},{"DSUB",6},{"DSUBI",6},{"DMUL",10},{"DMULI",10},{"DDIV",16},{"DDIVI",16}};
+	map<string,int> instruct_time{{"DADD",4},{"DADDI",4},{"DSUB",6},{"DSUBI",6},{"DMUL",10},{"DMULI",10},{"DDIV",16},{"DDIVI",16},{"S.D",1},{"L.D",2}};
 	sc_clock clock("clk");
 	ifstream inFile;
 	vector<string> instruction_queue;
