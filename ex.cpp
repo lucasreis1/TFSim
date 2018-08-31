@@ -114,7 +114,7 @@ class cons_bus: public sc_channel, public write_if_fila, public read_if_fila
 /*
 	ESTRUTURA DE INSTRUÇÃO
 	DADD rd, rs, rt
-	LOAD rt, rs(offset)
+	LOAD rt, offset(rs)
 	Rx, valor
 */
 
@@ -243,7 +243,7 @@ class res_station: public sc_module
 {
 	public:
 		int id;
-		bool Busy;
+		bool Busy,isFirst;
 		string op;
 		int vj,vk,qj,qk;
 		unsigned int a;
@@ -251,11 +251,13 @@ class res_station: public sc_module
 		sc_port<write_if> out;
 		sc_port<read_if> in;
 		sc_event exec_event;
+		sc_event isFirst_event;
 		SC_HAS_PROCESS(res_station);
-		res_station(sc_module_name name, map<string,int> inst_map,int i,sc_event *f): 
-										sc_module(name), id(i), instruct_time(inst_map),fila(f)
+		res_station(sc_module_name name, map<string,int> inst_map,int i,sc_event *f,vector<int> *m=NULL,sc_event *f_out=NULL): 
+					sc_module(name), id(i), instruct_time(inst_map),fila(f),memoria(m),first_out(f_out)
 		{
-			Busy = false;
+			Busy = isFirst = false;
+			vj = vk = qj = qk = a = 0;
 			SC_THREAD(exec);
 			sensitive << exec_event;
 			dont_initialize();
@@ -284,12 +286,27 @@ class res_station: public sc_module
 					else
 						cout << "Divisao por 0, instrucao ignorada!" << endl;
 				}
+				else if(a)
+					a += vk;	
 				cout << "Execuçao da instruçao " << op << " iniciada no ciclo " << sc_time_stamp() << " em " << name() << endl << flush;
 				wait(sc_time(instruct_time[op],SC_NS));
-				cout << "**Instrucao " << op << " completada no ciclo " << sc_time_stamp() << " em " << name() << " com resultado " << res << endl << flush;
-				Busy = false;
-				string escrita_saida = std::to_string(id) + ' ' + std::to_string(res);
-				out->write(escrita_saida);
+				if(op.at(0) == 'L' || !a)
+				{
+					cout << "**Instrucao " << op << " completada no ciclo " << sc_time_stamp() << " em " << name() << " com resultado " << res << endl << flush;
+					string escrita_saida = std::to_string(id) + ' ' + std::to_string(res);
+					if(a && !isFirst)
+						wait(isFirst_event);
+					res = (*memoria)[a];
+					(*first_out).notify(1,SC_NS);
+					out->write(escrita_saida);
+					Busy = false;
+				}
+				else
+				{
+					if(!isFirst)
+						wait(isFirst_event);
+					(*memoria)[a] = vj;
+				}
 				(*fila).notify(sc_time(1,SC_NS));
 				wait();
 			}
@@ -324,6 +341,8 @@ class res_station: public sc_module
 		string p;
 		sc_event *fila;
 		sc_event val_enc;
+		vector<int> *memoria;
+		sc_event *first_out;
 };
 
 class res_vector: public sc_module
@@ -336,10 +355,10 @@ class res_vector: public sc_module
 		sc_port<write_if> out_cdb;
 		sc_port<read_if_fila> rb_in;
 		sc_port<write_if_fila> rb_out;
-		sc_event rs_livre;
+		sc_event rs_livre,first_out;
 		SC_HAS_PROCESS(res_vector);
 		res_vector(sc_module_name name, unsigned int t1, unsigned int t2, unsigned int t3,map<string,int> instruct_time,
-			vector<int> mem): sc_module(name),adder_tam(t1),multiplier_tam(t2),memory_tam(t3),memoria(mem)
+			vector<int> mem): sc_module(name),adder_tam(t1),multiplier_tam(t2),memory_tam(t3)
 		{
 			unsigned int tam = adder_tam + multiplier_tam;
 			res_type = {{"DADD",0},{"DADDI",0},{"DSUB",0},{"DSUBI",0},{"DMUL",1},{"DMULI",1},{"DDIV",1},{"DDIVI",1},{"L.D",2},{"S.D",2}};
@@ -353,28 +372,38 @@ class res_vector: public sc_module
 			{
 				if(i < start[1])
 					texto = "Add" + std::to_string(i-start[0]+1);
-				else if(i < start[2])
-					texto = "Mul" + std::to_string(i-start[1]+1);
 				else
-					texto = "Load" + std::to_string(i-start[2]+1);
+					texto = "Mul" + std::to_string(i-start[1]+1);
 				rs[i] = new res_station(texto.c_str(),instruct_time,i+1,&rs_livre);
 				rs[i]->in(in_cdb);
 				rs[i]->out(out_cdb);
 			}
+			ptrs = new res_station*[memory_tam];
+			for(unsigned int i = 0 ; i < memory_tam ; i++)
+			{
+				texto = "Load" + std::to_string(i+1);
+				ptrs[i] = new res_station(texto.c_str(),instruct_time,i+tam+1,&rs_livre,&mem,&first_out);
+				ptrs[i]->in(in_cdb);
+				ptrs[i]->out(out_cdb);
+			}
 			SC_THREAD(leitura_fila);
 			sensitive << in_fila;
+			dont_initialize();
+			SC_METHOD(mem_buffer_control);
+			sensitive << first_out;
 			dont_initialize();
 		}
 		void leitura_fila()
 		{
 			while(true)
 			{
-				vector<string> ord;
+				vector<string> ord,mem_ord;
+				string texto;
 				int pos,reg1v,reg2v,regstv,regst;
-				in_fila->nb_read(p); //le sem notificar ao canal que leu
-				ord = instruction_split(p); //separa a string em vetor de strings
+				in_fila->nb_read(bus_out); //le sem notificar ao canal que leu
+				ord = instruction_split(bus_out); //separa a string em vetor de strings
 				pos = busy_check(ord[0]); //Verifica se ha estaçao vazia
-				if(pos == -1)
+				while(pos == -1)
 				{
 					cout << "//Todas as estacoes ocupadas no ciclo " << sc_time_stamp() << endl << flush;
 					wait(rs_livre);
@@ -382,7 +411,7 @@ class res_vector: public sc_module
 				}
 				in_fila->notify(); //notifica ao canal que leu
 				cout << "Issue da instrução " << ord[0] << " no ciclo " << sc_time_stamp() << " para a rs_" << pos << endl << flush;
-				if(pos < tam)
+				if(pos < (int)start[2])
 				{
 					rs[pos]->op = ord[0];
 					regstv = std::stoi(ord[1].substr(1,ord[1].size()-1));
@@ -412,25 +441,66 @@ class res_vector: public sc_module
 				}
 				else
 				{
-					pos -= tam;
-					mem[pos]->op = ord[0];
-
+					pos -=start[2];
+					ptrs[pos]->op = ord[0];
+					mem_ord = offset_split(ord[2]);
+					if(ord[0].at(0) == 'L')
+					{
+						regstv = std::stoi(ord[1].substr(1,ord[1].size()-1));
+						ask_status(false,regstv,pos+start[2]+1);
+					}
+					else
+					{
+						reg1v = std::stoi(ord[1].substr(1,ord[1].size()-1));
+						regst = ask_status(true,reg1v);
+						if(regst)
+							ptrs[pos]->qj = regst;
+						else
+							ptrs[pos]->vj = ask_value(reg1v);
+					}
+					reg2v = std::stoi(mem_ord[0].substr(1,mem_ord[0].size()-1));
+					regst = ask_status(true,reg2v);
+					if(regst)
+						ptrs[pos]->qk = regst;
+					else
+						ptrs[pos]->vk = ask_value(reg2v);
+					ptrs[pos]->a = std::stoi(mem_ord[1]);
+					ptrs[pos]->Busy = true;
+					if(mem.empty())
+						ptrs[pos]->isFirst = true;
+					mem.push_back(ptrs[pos]);
+					ptrs[pos]->exec_event.notify(sc_time(1,SC_NS));
 				}
 				wait();
 			}
 		}
+		void mem_buffer_control()
+		{
+			mem[0]->isFirst = false;
+			mem.pop_front();
+			if(!mem.empty())
+			{
+				mem[0]->isFirst = true;
+				mem[0]->isFirst_event.notify(1,SC_NS);
+			}
+		}
 	private:
-		string p;
+		string bus_out;
 		unsigned int start[3]; //Guarda o indice onde inicia a instrucao de cada tipo, sendo que o 3o elemento guarda apenas o numero de rs (soma de todos os indices)
 		unsigned int adder_tam, multiplier_tam, memory_tam;
 		map<string,short int> res_type;
-		vector<int> memoria;
+		res_station **ptrs;
 		int busy_check(string inst)
 		{
 			short int inst_type = res_type[inst];
-			for(unsigned int i = start[inst_type] ; i < start[inst_type + 1] ; i++)
-				if(!rs[i]->Busy)
-					return i;
+			if(inst_type < 2)
+				for(unsigned int i = start[inst_type] ; i < start[inst_type + 1] ; i++)
+					if(!rs[i]->Busy)
+						return i;
+			else
+				for(unsigned int i = 0 ; i < memory_tam ; i++)
+					if(!ptrs[i]->Busy)
+						return i+memory_tam;
 			return -1;
 		}
 		float ask_value(unsigned int index)
@@ -455,10 +525,11 @@ class res_vector: public sc_module
 		}
 		vector<string> instruction_split(string p)
 		{
-			vector<string> ord;
+			vector<string> ord(4);
 			unsigned int i,last_pos;
 			i = last_pos = 0;
-			for(i = 0 ; i < p.size() && p[i] != ' ' ; i++);
+			for(i = 0 ; i < p.size() && p[i] != ' ' ; i++)
+				;
 			ord.push_back(p.substr(0,i));
 			last_pos = i;
 			for(; i < p.size() ; i++)
@@ -468,6 +539,16 @@ class res_vector: public sc_module
 					last_pos = i;
 				}
 			ord.push_back(p.substr(last_pos+1,p.size()-last_pos-1));
+			return ord;
+		}
+		vector<string> offset_split(string p)
+		{
+			unsigned int i;
+			vector<string> ord(2);
+			for(i = 0 ; i < p.size() && p[i] != '(';i++)
+				;
+			ord[0] = p.substr(0,i);
+			ord[1] = p.substr(i+1,p.size()-i-2);
 			return ord;
 		}
 };
