@@ -269,6 +269,8 @@ class memoria: public sc_module
 			else
 				mem->at(pos) = std::stoi(ord[2]);
 		}
+	private:
+		string p;
 		vector<string> instruction_split(string p)
 		{
 			vector<string> ord;
@@ -283,8 +285,6 @@ class memoria: public sc_module
 			ord.push_back(p.substr(last_pos,p.size()-last_pos));
 			return ord;
 		}
-	private:
-		string p;
 }
 
 class res_station: public sc_module
@@ -302,8 +302,7 @@ class res_station: public sc_module
 		sc_event exec_event;
 		sc_event isFirst_event;
 		SC_HAS_PROCESS(res_station);
-		res_station(sc_module_name name, map<string,int> inst_map,int i,vector<int> *m=NULL,sc_event *f_out=NULL): 
-					sc_module(name), id(i), instruct_time(inst_map),first_out(f_out)
+		res_station(sc_module_name name, map<string,int> inst_map,int i):sc_module(name), id(i), instruct_time(inst_map)
 		{
 			Busy = isFirst = false;
 			vj = vk = qj = qk = a = 0;
@@ -354,7 +353,6 @@ class res_station: public sc_module
 						mem_req(true,a,id);
 					else
 						mem_req(false,a,vj);
-					first_out->notify(1,SC_NS);
 					cout << "Instrucao " << op << " completada no ciclo " << sc_time_stamp() << " em " << name() << " gravando na posicao de memoria " << a << " o resultado " << vj << endl << flush;
 					Busy = false;
 					isFirst = false;
@@ -392,7 +390,6 @@ class res_station: public sc_module
 	private:
 		string p;
 		sc_event val_enc;
-		vector<int> *memoria;
 		sc_event *first_out;
 		void mem_req(bool load,unsigned int addr,int value)
 		{
@@ -451,7 +448,7 @@ class res_vector: public sc_module
 			sensitive << in_fila << in_cdb;
 			dont_initialize();
 			SC_METHOD(sl_buffer_control);
-			sensitive << in_cdb;
+			sensitive << mem_out;
 			dont_initialize();
 		}
 		void leitura_fila()
@@ -543,14 +540,11 @@ class res_vector: public sc_module
 		}
 		void sl_buffer_control()
 		{
-			if(!sl_buff.empty() && !sl_buff[0]->isFirst)
+			sl_buff.pop_front();
+			if(!sl_buff.empty())
 			{
-				sl_buff.pop_front();
-				if(!sl_buff.empty())
-				{
-					sl_buff[0]->isFirst = true;
-					sl_buff[0]->isFirst_event.notify(1,SC_NS);
-				}
+				sl_buff[0]->isFirst = true;
+				sl_buff[0]->isFirst_event.notify(1,SC_NS);
 			}
 		}
 	private:
@@ -638,6 +632,7 @@ class top: public sc_module
 		register_bank *rb;
 		memoria *mem;
 		instruction_queue *fila;
+		
 	top(sc_module_name name,unsigned int t1, unsigned int t2,unsigned int t3,map<string,int> instruct_time,
 		vector<string> instruct_queue, vector<int> reg_status,vector<int> *memoria): sc_module(name)
 	{
