@@ -166,7 +166,7 @@ class register_bank: public sc_module
 			SC_THREAD(le_bus);
 			sensitive << in;
 			dont_initialize();
-			SC_THREAD(le_cdb);
+			SC_METHOD(le_cdb);
 			sensitive << in_cdb;
 			dont_initialize();
 		}
@@ -204,21 +204,17 @@ class register_bank: public sc_module
 			string p;
 			float value;
 			vector<string> ord;
-			while(true)
-			{
-				in_cdb->read(p);
-				ord = instruction_split(p);
-				rs_index = std::stoi(ord[0]);
-				value = std::stof(ord[1]);
-				for(unsigned int i = 0 ; i < reg_status.size() ; i++)
-					if(reg_status[i] == rs_index)
-					{
-						reg_status[i] = 0;
-						reg_values[i] = value;
-						cout << "Valor de R" << i << " atualizado para " << value << endl << flush;
-					}
-				wait();
-			}
+			in_cdb->read(p);
+			ord = instruction_split(p);
+			rs_index = std::stoi(ord[0]);
+			value = std::stof(ord[1]);
+			for(unsigned int i = 0 ; i < reg_status.size() ; i++)
+				if(reg_status[i] == rs_index)
+				{
+					reg_status[i] = 0;
+					reg_values[i] = value;
+					cout << "Valor de R" << i << " atualizado para " << value << endl << flush;
+				}
 		}
 
 		vector<string> instruction_split(string p)
@@ -240,6 +236,57 @@ class register_bank: public sc_module
 		vector<int> reg_values;
 };
 
+/*
+	ESTRUTURA DA REQUISIÇAO DA MEMORIA
+	L/S MEM_POS DADO/RS_NUMBER
+*/
+
+class memoria: public sc_module
+{
+	public:
+		sc_port<read_if> in;
+		sc_port<write_if> out;
+		vector<int> *mem;
+		memoria(sc_module_name name, vector<int> &m): sc_module(name), mem(m)
+		{
+			SC_METHOD(leitura_bus);
+			sensitive << in;
+			dont_initialize();
+		}
+		void leitura_bus()
+		{
+			vector<string> ord;
+			unsigned int pos;
+			string escrita_saida;
+			in->read(p);
+			ord = instruction_split(p);
+			pos = std::stoi(ord[1]);
+			if(ord[0] == 'S')
+			{
+				escrita_saida = ord[2] + ' ' + std::to_string(mem->at(pos));
+				out->write(escrita_saida);
+			}
+			else
+				mem->at(pos) = std::stoi(ord[2]);
+		}
+		vector<string> instruction_split(string p)
+		{
+			vector<string> ord;
+			unsigned int i,last_pos;
+			last_pos = 0;
+			for(i = 0 ; i < p.size() ; i++)
+				if(p[i] == ' ')
+				{
+					ord.push_back(p.substr(last_pos,i-last_pos));
+					last_pos = i+1;
+				}
+			ord.push_back(p.substr(last_pos,p.size()-last_pos));
+			return ord;
+		}
+	private:
+		string p;
+}
+
 class res_station: public sc_module
 {
 	public:
@@ -251,11 +298,12 @@ class res_station: public sc_module
 		map<string,int> instruct_time;
 		sc_port<write_if> out;
 		sc_port<read_if> in;
+		sc_port<write_if> mem_out;
 		sc_event exec_event;
 		sc_event isFirst_event;
 		SC_HAS_PROCESS(res_station);
 		res_station(sc_module_name name, map<string,int> inst_map,int i,vector<int> *m=NULL,sc_event *f_out=NULL): 
-					sc_module(name), id(i), instruct_time(inst_map),fila(f),memoria(m),first_out(f_out)
+					sc_module(name), id(i), instruct_time(inst_map),first_out(f_out)
 		{
 			Busy = isFirst = false;
 			vj = vk = qj = qk = a = 0;
@@ -291,27 +339,21 @@ class res_station: public sc_module
 					a += vk;	
 				cout << "Execuçao da instruçao " << op << " iniciada no ciclo " << sc_time_stamp() << " em " << name() << endl << flush;
 				wait(sc_time(instruct_time[op],SC_NS));
-				if(op.at(0) == 'L' || !a)
+				if(!a)
 				{
-					if(a)
-					{
-						if(!isFirst)
-							wait(isFirst_event);
-						res = memoria->at(a);
-						first_out->notify(1,SC_NS);
-					}
 					string escrita_saida = std::to_string(id) + ' ' + std::to_string(res);
 					cout << "Instrucao " << op << " completada no ciclo " << sc_time_stamp() << " em " << name() << " com resultado " << res << endl << flush;
 					out->write(escrita_saida);
 					Busy = false;
-					isFirst = false;
-					a = 0;
 				}
 				else
 				{
 					if(!isFirst)
 						wait(isFirst_event);
-					memoria->at(a) = vj;
+					if(op[0].at(0) == 'L')
+						mem_req(true,a,id);
+					else
+						mem_req(false,a,vj);
 					first_out->notify(1,SC_NS);
 					cout << "Instrucao " << op << " completada no ciclo " << sc_time_stamp() << " em " << name() << " gravando na posicao de memoria " << a << " o resultado " << vj << endl << flush;
 					Busy = false;
@@ -352,6 +394,16 @@ class res_station: public sc_module
 		sc_event val_enc;
 		vector<int> *memoria;
 		sc_event *first_out;
+		void mem_req(bool load,unsigned int addr,int value)
+		{
+			string escrita_saida;
+			string temp = std::to_string(addr) + ' ' + std::to_string(value);
+			if(load)
+				escrita_saida = "L " + temp;
+			else
+				escrita_saida = "S " + temp;
+			mem_out->write(escrita_saida);
+		}
 };
 
 class res_vector: public sc_module
@@ -364,7 +416,7 @@ class res_vector: public sc_module
 		sc_port<write_if> out_cdb;
 		sc_port<read_if_fila> rb_in;
 		sc_port<write_if_fila> rb_out;
-		sc_event rs_livre,first_out;
+		sc_port<write_if> mem_out;
 		SC_HAS_PROCESS(res_vector);
 		res_vector(sc_module_name name, unsigned int t1, unsigned int t2, unsigned int t3,map<string,int> instruct_time,
 			vector<int> *mem): sc_module(name),adder_tam(t1),multiplier_tam(t2),memory_tam(t3)
@@ -382,7 +434,7 @@ class res_vector: public sc_module
 					texto = "Add" + std::to_string(i-start[0]+1);
 				else
 					texto = "Mul" + std::to_string(i-start[1]+1);
-				rs[i] = new res_station(texto.c_str(),instruct_time,i+1,&rs_livre);
+				rs[i] = new res_station(texto.c_str(),instruct_time,i+1);
 				rs[i]->in(in_cdb);
 				rs[i]->out(out_cdb);
 			}
@@ -390,15 +442,16 @@ class res_vector: public sc_module
 			for(unsigned int i = 0 ; i < memory_tam ; i++)
 			{
 				texto = "Load" + std::to_string(i+1);
-				ptrs[i] = new res_station(texto.c_str(),instruct_time,i+tam+1,mem,&first_out);
+				ptrs[i] = new res_station(texto.c_str(),instruct_time,i+tam+1);
 				ptrs[i]->in(in_cdb);
 				ptrs[i]->out(out_cdb);
+				ptrs[i]->mem_out(mem_out);
 			}
 			SC_THREAD(leitura_fila);
 			sensitive << in_fila << in_cdb;
 			dont_initialize();
-			SC_METHOD(mem_buffer_control);
-			sensitive << first_out;
+			SC_METHOD(sl_buffer_control);
+			sensitive << in_cdb;
 			dont_initialize();
 		}
 		void leitura_fila()
@@ -488,13 +541,16 @@ class res_vector: public sc_module
 				wait(in_fila);
 			}
 		}
-		void mem_buffer_control()
+		void sl_buffer_control()
 		{
-			sl_buff.pop_front();
-			if(!sl_buff.empty())
+			if(!sl_buff.empty() && !sl_buff[0]->isFirst)
 			{
-				sl_buff[0]->isFirst = true;
-				sl_buff[0]->isFirst_event.notify(1,SC_NS);
+				sl_buff.pop_front();
+				if(!sl_buff.empty())
+				{
+					sl_buff[0]->isFirst = true;
+					sl_buff[0]->isFirst_event.notify(1,SC_NS);
+				}
 			}
 		}
 	private:
@@ -575,31 +631,37 @@ class top: public sc_module
 {
 	public:
 		sc_in_clk clock;
-		res_vector *rst;
-		register_bank *rb;
-		bus *CDB;
+		bus *CDB,*mem_bus;
 		cons_bus *inst_bus;
 		cons_bus *rb_bus;
+		res_vector *rst;
+		register_bank *rb;
+		memoria *mem;
 		instruction_queue *fila;
 	top(sc_module_name name,unsigned int t1, unsigned int t2,unsigned int t3,map<string,int> instruct_time,
 		vector<string> instruct_queue, vector<int> reg_status,vector<int> *memoria): sc_module(name)
 	{
 		CDB = new bus("CDB");
+		mem_bus = new bus("mem_bus");
 		inst_bus = new cons_bus("inst_bus");
 		rb_bus = new cons_bus("rb_bus");
 		fila = new instruction_queue("fila_inst",instruct_queue);
+		rst = new res_vector("rs_vc",t1,t2,t3,instruct_time);
+		rb = new register_bank("register_bank",reg_status);
+		mem = new memoria("memoria",mem);
 		fila->clock(clock);
 		fila->out(*inst_bus);
-		rst = new res_vector("rs_vc",t1,t2,t3,instruct_time,memoria);
-		rb = new register_bank("register_bank",reg_status);
 		rst->in_fila(*inst_bus);
 		rst->in_cdb(*CDB);
 		rst->out_cdb(*CDB);
 		rst->rb_in(*rb_bus);
 		rst->rb_out(*rb_bus);
+		rst->mem_out(*mem_bus);
 		rb->in(*rb_bus);
 		rb->out(*rb_bus);
 		rb->in_cdb(*CDB);
+		mem->in(*mem_bus);
+		mem->out(*CDB);
 	}
 };
 
