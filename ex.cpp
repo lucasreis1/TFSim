@@ -254,7 +254,7 @@ class res_station: public sc_module
 		sc_event exec_event;
 		sc_event isFirst_event;
 		SC_HAS_PROCESS(res_station);
-		res_station(sc_module_name name, map<string,int> inst_map,int i,sc_event *f,vector<int> *m=NULL,sc_event *f_out=NULL): 
+		res_station(sc_module_name name, map<string,int> inst_map,int i,vector<int> *m=NULL,sc_event *f_out=NULL): 
 					sc_module(name), id(i), instruct_time(inst_map),fila(f),memoria(m),first_out(f_out)
 		{
 			Busy = isFirst = false;
@@ -318,7 +318,6 @@ class res_station: public sc_module
 					isFirst = false;
 					a = 0;
 				}
-				(*fila).notify(1,SC_NS);
 				wait();
 			}
 		}
@@ -350,7 +349,6 @@ class res_station: public sc_module
 		}
 	private:
 		string p;
-		sc_event *fila;
 		sc_event val_enc;
 		vector<int> *memoria;
 		sc_event *first_out;
@@ -392,12 +390,12 @@ class res_vector: public sc_module
 			for(unsigned int i = 0 ; i < memory_tam ; i++)
 			{
 				texto = "Load" + std::to_string(i+1);
-				ptrs[i] = new res_station(texto.c_str(),instruct_time,i+tam+1,&rs_livre,mem,&first_out);
+				ptrs[i] = new res_station(texto.c_str(),instruct_time,i+tam+1,mem,&first_out);
 				ptrs[i]->in(in_cdb);
 				ptrs[i]->out(out_cdb);
 			}
 			SC_THREAD(leitura_fila);
-			sensitive << in_fila;
+			sensitive << in_fila << in_cdb;
 			dont_initialize();
 			SC_METHOD(mem_buffer_control);
 			sensitive << first_out;
@@ -416,7 +414,7 @@ class res_vector: public sc_module
 				while(pos == -1)
 				{
 					cout << "//Todas as estacoes ocupadas no ciclo " << sc_time_stamp() << " para a instrucao " << bus_out << endl << flush;
-					wait(rs_livre);
+					wait(in_cdb);
 					pos = busy_check(ord[0]);
 				}
 				in_fila->notify(); //notifica ao canal que leu
@@ -487,7 +485,7 @@ class res_vector: public sc_module
 					sl_buff.push_back(ptrs[pos]);
 					ptrs[pos]->exec_event.notify(1,SC_NS);
 				}
-				wait();
+				wait(in_fila);
 			}
 		}
 		void mem_buffer_control()
