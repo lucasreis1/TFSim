@@ -247,7 +247,8 @@ class memoria: public sc_module
 		sc_port<read_if> in;
 		sc_port<write_if> out;
 		vector<int> *mem;
-		memoria(sc_module_name name, vector<int> &m): sc_module(name), mem(m)
+		SC_HAS_PROCESS(memoria);
+		memoria(sc_module_name name, vector<int> *m): sc_module(name), mem(m)
 		{
 			SC_METHOD(leitura_bus);
 			sensitive << in;
@@ -261,9 +262,10 @@ class memoria: public sc_module
 			in->read(p);
 			ord = instruction_split(p);
 			pos = std::stoi(ord[1]);
-			if(ord[0] == 'S')
+			if(ord[0] == "L")
 			{
 				escrita_saida = ord[2] + ' ' + std::to_string(mem->at(pos));
+				cout << "Instrucao completa no ciclo " << sc_time_stamp() << " buscando do endereco de memoria " << pos << " o resultado " << mem->at(pos) << endl << flush;
 				out->write(escrita_saida);
 			}
 			else
@@ -285,7 +287,7 @@ class memoria: public sc_module
 			ord.push_back(p.substr(last_pos,p.size()-last_pos));
 			return ord;
 		}
-}
+};
 
 class res_station: public sc_module
 {
@@ -349,11 +351,13 @@ class res_station: public sc_module
 				{
 					if(!isFirst)
 						wait(isFirst_event);
-					if(op[0].at(0) == 'L')
+					if(op.at(0) == 'L')
 						mem_req(true,a,id);
 					else
+					{
 						mem_req(false,a,vj);
-					cout << "Instrucao " << op << " completada no ciclo " << sc_time_stamp() << " em " << name() << " gravando na posicao de memoria " << a << " o resultado " << vj << endl << flush;
+						cout << "Instrucao " << op << " completada no ciclo " << sc_time_stamp() << " em " << name() << " gravando na posicao de memoria " << a << " o resultado " << vj << endl << flush;
+					}
 					Busy = false;
 					isFirst = false;
 					a = 0;
@@ -415,8 +419,7 @@ class res_vector: public sc_module
 		sc_port<write_if_fila> rb_out;
 		sc_port<write_if> mem_out;
 		SC_HAS_PROCESS(res_vector);
-		res_vector(sc_module_name name, unsigned int t1, unsigned int t2, unsigned int t3,map<string,int> instruct_time,
-			vector<int> *mem): sc_module(name),adder_tam(t1),multiplier_tam(t2),memory_tam(t3)
+		res_vector(sc_module_name name, unsigned int t1, unsigned int t2, unsigned int t3,map<string,int> instruct_time): sc_module(name),adder_tam(t1),multiplier_tam(t2),memory_tam(t3)
 		{
 			unsigned int tam = adder_tam + multiplier_tam;
 			res_type = {{"DADD",0},{"DADDI",0},{"DSUB",0},{"DSUBI",0},{"DMUL",1},{"DMULI",1},{"DDIV",1},{"DDIVI",1},{"L.D",2},{"S.D",2}};
@@ -434,6 +437,7 @@ class res_vector: public sc_module
 				rs[i] = new res_station(texto.c_str(),instruct_time,i+1);
 				rs[i]->in(in_cdb);
 				rs[i]->out(out_cdb);
+				rs[i]->mem_out(mem_out);
 			}
 			ptrs = new res_station*[memory_tam];
 			for(unsigned int i = 0 ; i < memory_tam ; i++)
@@ -464,7 +468,7 @@ class res_vector: public sc_module
 				while(pos == -1)
 				{
 					cout << "//Todas as estacoes ocupadas no ciclo " << sc_time_stamp() << " para a instrucao " << bus_out << endl << flush;
-					wait(in_cdb);
+					wait(in_cdb->default_event());
 					pos = busy_check(ord[0]);
 				}
 				in_fila->notify(); //notifica ao canal que leu
@@ -535,7 +539,7 @@ class res_vector: public sc_module
 					sl_buff.push_back(ptrs[pos]);
 					ptrs[pos]->exec_event.notify(1,SC_NS);
 				}
-				wait(in_fila);
+				wait(in_fila->default_event());
 			}
 		}
 		void sl_buffer_control()
@@ -634,7 +638,7 @@ class top: public sc_module
 		instruction_queue *fila;
 		
 	top(sc_module_name name,unsigned int t1, unsigned int t2,unsigned int t3,map<string,int> instruct_time,
-		vector<string> instruct_queue, vector<int> reg_status,vector<int> *memoria): sc_module(name)
+		vector<string> instruct_queue, vector<int> reg_status,vector<int> *mem_vector): sc_module(name)
 	{
 		CDB = new bus("CDB");
 		mem_bus = new bus("mem_bus");
@@ -643,7 +647,7 @@ class top: public sc_module
 		fila = new instruction_queue("fila_inst",instruct_queue);
 		rst = new res_vector("rs_vc",t1,t2,t3,instruct_time);
 		rb = new register_bank("register_bank",reg_status);
-		mem = new memoria("memoria",mem);
+		mem = new memoria("memoria",mem_vector);
 		fila->clock(clock);
 		fila->out(*inst_bus);
 		rst->in_fila(*inst_bus);
