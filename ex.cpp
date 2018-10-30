@@ -26,6 +26,24 @@ enum{
 	WRITE = 3
 };
 
+struct payload
+{
+	string word;
+	vector<bool> bl;
+	vector<int> integ;
+	vector<float> flt;
+	nana::listbox::item_proxy &item;
+	payload(string w = "", vector<bool> b = {}, vector<int> i = {}, vector<float> f = {}, nana::lisbtox::item_proxy &i = NULL)
+	{
+		word = w;
+		bl = b;
+		integ = i;
+		flt = f;
+		item = i;
+	}
+}
+
+
 using std::string;
 using std::vector;
 using std::map;
@@ -33,69 +51,69 @@ using std::fstream;
 using std::deque;
 
 vector<string> instruction_split(string p)
+{
+	vector<string> ord;
+	unsigned int i,last_pos;
+	last_pos = 0;
+	for(i = 0 ; i < p.size() ; i++)
+		if(p[i] == ' ' || p[i] == ',')
 		{
-			vector<string> ord;
-			unsigned int i,last_pos;
-			last_pos = 0;
-			for(i = 0 ; i < p.size() ; i++)
-				if(p[i] == ' ' || p[i] == ',')
-				{
-					ord.push_back(p.substr(last_pos,i-last_pos));
-					last_pos = i+1;
-				}
-			ord.push_back(p.substr(last_pos,p.size()-last_pos));
-			return ord;
+			ord.push_back(p.substr(last_pos,i-last_pos));
+			last_pos = i+1;
 		}
+	ord.push_back(p.substr(last_pos,p.size()-last_pos));
+	return ord;
+}
 
 class write_if_f: virtual public sc_interface
 {
 	public:
-		virtual void write(string) = 0;
-		virtual void nb_write(string) = 0;
+		virtual void write(payload) = 0;
+		virtual void nb_write(payload) = 0;
 };
 
 class read_if_f: virtual public sc_interface
 {
 	public:
-		virtual void read(string &) = 0;
-		virtual void nb_read(string &) = 0;
+		virtual void read(payload &) = 0;
+		virtual void nb_read(payload &) = 0;
 		virtual void notify() = 0;
 };
 
 class write_if: virtual public sc_interface
 {
 	public:
-		virtual void write(string) = 0;
+		virtual void write(payload) = 0;
 };
 
 class read_if: virtual public sc_interface
 {
 	public:
-		virtual void read(string &) = 0;
+		virtual void read(payload &) = 0;
 };
 
 class bus: public sc_channel, public write_if, public read_if
 {
 	public:
 		bus(sc_module_name name): sc_channel(name){stamp = sc_time(-1,SC_NS);}
-		void write(string p)
+		void write(payload p)
 		{
 			if(sc_time_stamp() == stamp)
 				wait(sc_time(1,SC_NS));
 			stamp = sc_time_stamp();
-			palavra = p;
+			pl = p;
 			write_event.notify();
 		}
 		const sc_event& default_event() const
 		{
 			return write_event;
 		}
-		void read(string &p)
+		void read(payload &p)
 		{
-			p = palavra;
+			p = pl;
 		}
 	private:
-		string palavra;
+		payload pl;
 		sc_event write_event;
 		sc_time stamp;
 };
@@ -103,38 +121,35 @@ class bus: public sc_channel, public write_if, public read_if
 class cons_bus: public sc_channel, public write_if_f, public read_if_f
 {
 	public:
-		cons_bus(sc_module_name name): sc_channel(name){palavra = " ";}		
-		void write(string p)
+		cons_bus(sc_module_name name): sc_channel(name){empty = true;}		
+		void write(payload p)
 		{
-			if(palavra != " ")
+			if(!empty)
 				wait(read_event);
-			palavra = p;
+			pl = p;
 			write_event.notify(SC_ZERO_TIME);
 			wait(read_event);
 		}
-		void nb_write(string p)
+		void nb_write(payload p)
 		{
-			palavra = p;
+			pl = p;
 		}
-		void read(string &p)
+		void read(payload &p)
 		{
-			if(palavra != " ")
-			{
-				p = palavra;
-				read_event.notify(SC_ZERO_TIME);
-				palavra = " ";
-			}
-			else
-				wait(write_event);
+			if(empty)
+				wait(write_event;)
+			p = pl;
+			read_event.notify(SC_ZERO_TIME);
+			empty = true;
 		}
-		void nb_read(string &p)
+		void nb_read(payload &p)
 		{
-			if(palavra != " ")
-				p  = palavra;
+			if(!empty)
+				p  = pl;
 		}
 		void notify()
 		{
-			palavra = " ";
+			empty = true;
 			read_event.notify(SC_ZERO_TIME);
 		}
 		const sc_event& default_event() const
@@ -142,48 +157,44 @@ class cons_bus: public sc_channel, public write_if_f, public read_if_f
 			return write_event;
 		}
 	private:
-		string palavra;
+		payload pl;
 		sc_event write_event;
 		sc_event read_event;
+		bool empty;
 };
 
-class cons_bus_fast: public sc_channel, public write_if_f, public read_if_f
+class cons_bus: public sc_channel, public write_if_f, public read_if_f
 {
 	public:
-		cons_bus_fast(sc_module_name name): sc_channel(name){palavra = " ";}
-		void write(string p)
+		cons_bus(sc_module_name name): sc_channel(name){empty = true;}		
+		void write(payload p)
 		{
-			if(palavra != " ")
+			if(!empty)
 				wait(read_event);
-			palavra = p;
+			pl = p;
 			write_event.notify();
 			wait(read_event);
 		}
-		void nb_write(string p)
+		void nb_write(payload p)
 		{
-			palavra = p;
+			pl = p;
 		}
-		void read(string &p)
+		void read(payload &p)
 		{
-			if(palavra != " ")
-			{
-				p = palavra;
-				read_event.notify();
-				palavra = " ";
-			}
-			else
-				wait(write_event);
+			if(empty)
+					wait(write_event);
+			p = pl;
+			read_event.notify();
+			empty = true;
 		}
-		void nb_read(string &p)
+		void nb_read(payload &p)
 		{
-			if(palavra != " ")
-			{
-				p = palavra;
-				palavra = " ";
-			}
+			if(!empty)
+				p  = pl;
 		}
 		void notify()
 		{
+			empty = true;
 			read_event.notify();
 		}
 		const sc_event& default_event() const
@@ -191,9 +202,10 @@ class cons_bus_fast: public sc_channel, public write_if_f, public read_if_f
 			return write_event;
 		}
 	private:
-		string palavra;
+		payload pl;
 		sc_event write_event;
 		sc_event read_event;
+		bool empty;
 };
 
 
@@ -218,7 +230,7 @@ class clock1: public sc_module
 			while(true)
 			{
 				sc_pause();
-				out->write("");
+				out->write({""});
 				clock_count.caption(sc_time_stamp().to_string());
 				wait(delay,SC_NS);
 			}
@@ -254,7 +266,7 @@ class instruction_queue: public sc_module
 					cat.at(pc-1).select(true,true);
 					cat.at(pc-1).text(ISS,"X");
 				}
-				out->write(instruct_queue[pc]);
+				out->write({instruct_queue[pc]});
 				wait();
 			}
 		}
@@ -295,53 +307,55 @@ class register_bank: public sc_module
 		{
 			vector<string> ord;
 			unsigned int index;
-			string p;
+			payload p;
 			bool fp;
 			auto cat = registers.at(0);
 			while(true)
 			{
 				in->read(p);
-				ord = instruction_split(p);
-				index = std::stoi(ord[2].substr(1,ord[2].size()-1));
-				if(ord[2].at(0) == 'F')
+				//ord = instruction_split(p);
+				//index = std::stoi(ord[2].substr(1,ord[2].size()-1));
+				/*if(ord[2].at(0) == 'F')
 					fp = true;
 				else
-					fp = false;
-				if(ord[0] == "R")
+					fp = false;*/
+				//if(ord[0] == "R")
+				//true se é read, false se é write
+				if(p.bl[1] == true)
 				{
-					if(ord[1] == "S")
+					if(p.bl[2] == true) //true se é status, false se é value
 					{
-						if(fp)
-							out->nb_write(cat.at(index).text(FQ));
+						if(p.bl[0]) //true se é reg fp, false se é int
+							out->nb_write({"",{},std::stoi(cat.at(p.integ[0]).text(FQ))});
 						else
-							out->nb_write(cat.at(index).text(IQ));
+							out->nb_write({"",{},std::stoi(cat.at(p.integ[0]).text(IQ))});
 					}
 					else
 					{
-						if(fp)
-							out->nb_write(cat.at(index).text(FVALUE));
+						if(p.bl[0]) //true se é reg fp, false se é int
+							out->nb_write({"",{},{},std::stof(cat.at(index).text(FVALUE))});
 						else
-							out->nb_write(cat.at(index).text(IVALUE));
+							out->nb_write({"",{},std::stoi(cat.at(index).text(IVALUE))});
 					}
 				}
 				else
 				{
-					if(ord[1] == "S")
+					if(p.bl[2] == true) //true se é status, false se é value
 					{
-						if(fp)
-							cat.at(index).text(FQ,ord[3]);
+						if(p.bl[0] == true) //true se é reg fp, false se é int
+							cat.at(p.integ[0]).text(FQ,std::to_string(p.flt[0]));
 							//reg_status_fp[index] = std::stof(ord[3]);
 						else
-							cat.at(index).text(IQ,ord[3]);
+							cat.at(p.integ[0]).text(IQ,std::to_string(p.integ[1]));
 							//reg_status_int[index] = (int)std::stof(ord[3]);
 					}
 					else
 					{
-						if(fp)
+						if(p.bl[0] == true)
 							//reg_values_fp[index] = std::stof(ord[3]);
-							cat.at(index).text(FVALUE,ord[3]);
+							cat.at(p.integ[0]).text(FVALUE,std::to_string(p.flt[0]));
 						else
-							cat.at(index).text(IVALUE,ord[3]);
+							cat.at(p.integ[0]).text(IVALUE,std::to_string(p.integ[1]));
 							//reg_values_int[index] = (int)std::stof(ord[3]);
 					}
 				}
@@ -352,11 +366,11 @@ class register_bank: public sc_module
 		void le_cdb()
 		{
 			//int rs_index;
-			string p;
+			payload p;
 			//float value;
-			vector<string> ord;
+			//vector<string> ord;
 			in_cdb->read(p);
-			ord = instruction_split(p);
+			//ord = instruction_split(p);
 			auto cat = registers.at(0);
 			//rs_index = std::stoi(ord[0]);
 			//value = std::stof(ord[1]);
