@@ -26,44 +26,33 @@ enum{
 	WRITE = 3
 };
 
-struct payload
-{
-	string word;
-	vector<bool> bl;
-	vector<int> integ;
-	vector<float> flt;
-	nana::listbox::item_proxy &item;
-	payload(string w = "", vector<bool> b = {}, vector<int> i = {}, vector<float> f = {}, nana::lisbtox::item_proxy &i = NULL)
-	{
-		word = w;
-		bl = b;
-		integ = i;
-		flt = f;
-		item = i;
-	}
-}
-
-
 using std::string;
 using std::vector;
 using std::map;
 using std::fstream;
 using std::deque;
 
-vector<string> instruction_split(string p)
+struct payload
 {
-	vector<string> ord;
-	unsigned int i,last_pos;
-	last_pos = 0;
-	for(i = 0 ; i < p.size() ; i++)
-		if(p[i] == ' ' || p[i] == ',')
+	string word;
+	nana::listbox::item_proxy *item;
+	payload(string w = "", nana::listbox::item_proxy *i = NULL): word(w), item(i){}
+};
+
+vector<string> instruction_split(string p)
 		{
-			ord.push_back(p.substr(last_pos,i-last_pos));
-			last_pos = i+1;
+			vector<string> ord;
+			unsigned int i,last_pos;
+			last_pos = 0;
+			for(i = 0 ; i < p.size() ; i++)
+				if(p[i] == ' ' || p[i] == ',')
+				{
+					ord.push_back(p.substr(last_pos,i-last_pos));
+					last_pos = i+1;
+				}
+			ord.push_back(p.substr(last_pos,p.size()-last_pos));
+			return ord;
 		}
-	ord.push_back(p.substr(last_pos,p.size()-last_pos));
-	return ord;
-}
 
 class write_if_f: virtual public sc_interface
 {
@@ -137,7 +126,7 @@ class cons_bus: public sc_channel, public write_if_f, public read_if_f
 		void read(payload &p)
 		{
 			if(empty)
-				wait(write_event;)
+				wait(write_event);
 			p = pl;
 			read_event.notify(SC_ZERO_TIME);
 			empty = true;
@@ -163,10 +152,10 @@ class cons_bus: public sc_channel, public write_if_f, public read_if_f
 		bool empty;
 };
 
-class cons_bus: public sc_channel, public write_if_f, public read_if_f
+class cons_bus_fast: public sc_channel, public write_if_f, public read_if_f
 {
 	public:
-		cons_bus(sc_module_name name): sc_channel(name){empty = true;}		
+		cons_bus_fast(sc_module_name name): sc_channel(name){empty = true;}		
 		void write(payload p)
 		{
 			if(!empty)
@@ -230,7 +219,7 @@ class clock1: public sc_module
 			while(true)
 			{
 				sc_pause();
-				out->write({""});
+				out->write((payload){""});
 				clock_count.caption(sc_time_stamp().to_string());
 				wait(delay,SC_NS);
 			}
@@ -266,7 +255,7 @@ class instruction_queue: public sc_module
 					cat.at(pc-1).select(true,true);
 					cat.at(pc-1).text(ISS,"X");
 				}
-				out->write({instruct_queue[pc]});
+				out->write(instruct_queue[pc]);
 				wait();
 			}
 		}
@@ -307,55 +296,53 @@ class register_bank: public sc_module
 		{
 			vector<string> ord;
 			unsigned int index;
-			payload p;
+			string p;
 			bool fp;
 			auto cat = registers.at(0);
 			while(true)
 			{
 				in->read(p);
-				//ord = instruction_split(p);
-				//index = std::stoi(ord[2].substr(1,ord[2].size()-1));
-				/*if(ord[2].at(0) == 'F')
+				ord = instruction_split(p);
+				index = std::stoi(ord[2].substr(1,ord[2].size()-1));
+				if(ord[2].at(0) == 'F')
 					fp = true;
 				else
-					fp = false;*/
-				//if(ord[0] == "R")
-				//true se é read, false se é write
-				if(p.bl[1] == true)
+					fp = false;
+				if(ord[0] == "R")
 				{
-					if(p.bl[2] == true) //true se é status, false se é value
+					if(ord[1] == "S")
 					{
-						if(p.bl[0]) //true se é reg fp, false se é int
-							out->nb_write({"",{},std::stoi(cat.at(p.integ[0]).text(FQ))});
+						if(fp)
+							out->nb_write(cat.at(index).text(FQ));
 						else
-							out->nb_write({"",{},std::stoi(cat.at(p.integ[0]).text(IQ))});
+							out->nb_write(cat.at(index).text(IQ));
 					}
 					else
 					{
-						if(p.bl[0]) //true se é reg fp, false se é int
-							out->nb_write({"",{},{},std::stof(cat.at(index).text(FVALUE))});
+						if(fp)
+							out->nb_write(cat.at(index).text(FVALUE));
 						else
-							out->nb_write({"",{},std::stoi(cat.at(index).text(IVALUE))});
+							out->nb_write(cat.at(index).text(IVALUE));
 					}
 				}
 				else
 				{
-					if(p.bl[2] == true) //true se é status, false se é value
+					if(ord[1] == "S")
 					{
-						if(p.bl[0] == true) //true se é reg fp, false se é int
-							cat.at(p.integ[0]).text(FQ,std::to_string(p.flt[0]));
+						if(fp)
+							cat.at(index).text(FQ,ord[3]);
 							//reg_status_fp[index] = std::stof(ord[3]);
 						else
-							cat.at(p.integ[0]).text(IQ,std::to_string(p.integ[1]));
+							cat.at(index).text(IQ,ord[3]);
 							//reg_status_int[index] = (int)std::stof(ord[3]);
 					}
 					else
 					{
-						if(p.bl[0] == true)
+						if(fp)
 							//reg_values_fp[index] = std::stof(ord[3]);
-							cat.at(p.integ[0]).text(FVALUE,std::to_string(p.flt[0]));
+							cat.at(index).text(FVALUE,ord[3]);
 						else
-							cat.at(p.integ[0]).text(IVALUE,std::to_string(p.integ[1]));
+							cat.at(index).text(IVALUE,ord[3]);
 							//reg_values_int[index] = (int)std::stof(ord[3]);
 					}
 				}
@@ -366,11 +353,11 @@ class register_bank: public sc_module
 		void le_cdb()
 		{
 			//int rs_index;
-			payload p;
+			string p;
 			//float value;
-			//vector<string> ord;
+			vector<string> ord;
 			in_cdb->read(p);
-			//ord = instruction_split(p);
+			ord = instruction_split(p);
 			auto cat = registers.at(0);
 			//rs_index = std::stoi(ord[0]);
 			//value = std::stof(ord[1]);
