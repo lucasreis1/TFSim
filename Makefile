@@ -1,6 +1,6 @@
 EXE = t
 
-C++ = g++-6
+C++ = g++
 INCLUDEDIR = include/
 SRC_DIR = src
 OBJ_DIR = obj
