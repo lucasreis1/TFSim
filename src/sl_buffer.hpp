@@ -21,6 +21,7 @@ public:
 	SC_HAS_PROCESS(sl_buffer);
 
 	sl_buffer(sc_module_name name,unsigned int t,unsigned int t_outros,map<string,int> instruct_time, nana::listbox &lsbox, nana::listbox::cat_proxy ct);
+	~sl_buffer();
 	void leitura_issue();
 	void sl_buff_control();
 

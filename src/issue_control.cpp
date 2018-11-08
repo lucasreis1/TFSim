@@ -25,6 +25,7 @@ void issue_control::issue_select()
 				break;
 			default:
 				cerr << "Instruçao nao suportada!" << endl << flush;
+				sc_stop();
 				exit(1);
 		}
 		in->notify();

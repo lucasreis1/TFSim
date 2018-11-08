@@ -1,5 +1,5 @@
-#include "general.hpp"
 #include "sl_buffer.hpp"
+#include "general.hpp"
 
 sl_buffer::sl_buffer(sc_module_name name,unsigned int t,unsigned int t_outros,map<string,int> instruct_time, nana::listbox &lsbox, nana::listbox::cat_proxy ct): 
 sc_module(name),
@@ -14,6 +14,7 @@ table(lsbox)
 	{
 		texto = "Load" + std::to_string(i+1);
 		cat.append(texto);
+		cat.at(cat.columns()-1).text(BUSY,"False");
 		ptrs[i] = new res_station(texto.c_str(),i+t_outros,texto,instruct_time,cat.at(i+t_outros),ct);
 		ptrs[i]->in(in_cdb);
 		ptrs[i]->out(out_cdb);
@@ -26,6 +27,12 @@ table(lsbox)
 	sensitive << out_mem;
 	dont_initialize();
 }
+sl_buffer::~sl_buffer()
+{
+	for(unsigned int i = 0 ; i < tam ; i++)
+		delete ptrs[i];
+	delete ptrs;
+}
 
 void sl_buffer::leitura_issue()
 {
@@ -33,6 +40,7 @@ void sl_buffer::leitura_issue()
 	vector<string> ord,mem_ord;
 	int pos;
 	int regst;
+	float value;
 	auto cat = table.at(0);
 	while(true)
 	{
@@ -60,7 +68,7 @@ void sl_buffer::leitura_issue()
 			regst = ask_status(true,ord[1]);
 			if(regst == 0)
 			{
-				float value = ask_value(ord[1]);
+				value = ask_value(ord[1]);
 				ptrs[pos]->vj = value;
 				cat.at(pos+tam_outros).text(VJ,std::to_string(value));
 			}
@@ -74,7 +82,7 @@ void sl_buffer::leitura_issue()
 		regst = ask_status(true,mem_ord[1]);
 		if(regst == 0)
 		{
-			float value = ask_value(mem_ord[1]);
+			value = ask_value(mem_ord[1]);
 			ptrs[pos]->vk = value;
 			cat.at(pos+tam_outros).text(VK,std::to_string(value));
 		}

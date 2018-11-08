@@ -1,8 +1,8 @@
-#include "res_station.hpp"
+#include "res_station_rob.hpp"
 #include "general.hpp"
 
 
-res_station::res_station(sc_module_name name,int i, string n, map<string,int> inst_map, const nana::listbox::item_proxy item, const nana::listbox::cat_proxy c):
+res_station_rob::res_station_rob(sc_module_name name,int i, string n, map<string,int> inst_map, const nana::listbox::item_proxy item, const nana::listbox::cat_proxy c):
 sc_module(name),
 id(i),
 type_name(n),
@@ -10,7 +10,7 @@ instruct_time(inst_map),
 table_item(item),
 cat(c)
 {
-	Busy = isFirst = false;
+	Busy = isFlushed = false;
 	vj = vk = qj = qk = a = 0;
 	SC_THREAD(exec);
 	sensitive << exec_event;
@@ -20,7 +20,7 @@ cat(c)
 	dont_initialize();
 }
 
-void res_station::exec()
+void res_station_rob::exec()
 {
 	while(true)
 	{
@@ -50,19 +50,19 @@ void res_station::exec()
 			table_item->text(A,std::to_string(a));
 			table_item->text(VK,"");
 		}
-		wait(sc_time(instruct_time[op],SC_NS));
-		wait(SC_ZERO_TIME);
-		cat.at(instr_pos).text(WRITE,"X");
 		if(!a)
 		{
-			string escrita_saida = std::to_string(id) + ' ' + std::to_string(res);
-			cout << "Instrucao " << op << " completada no ciclo " << sc_time_stamp() << " em " << name() << " com resultado " << res << endl << flush;
-			out->write(escrita_saida);
+			wait(sc_time(instruct_time[op],SC_NS));
+			if(!isFlushed)
+			{
+				string escrita_saida = std::to_string(dest) + ' ' + std::to_string(res);
+				cout << "Instrucao " << op << " completada no ciclo " << sc_time_stamp() << " em " << name() << " com resultado " << res << endl << flush;
+				out->write(escrita_saida);
+			}
+			isFlushed = false;
 		}
 		else
 		{
-			if(!isFirst)
-				wait(isFirst_event);
 			if(op.at(0) == 'L')
 				mem_req(true,a,id);
 			else
@@ -70,9 +70,10 @@ void res_station::exec()
 				mem_req(false,a,vj);
 				cout << "Instrucao " << op << " completada no ciclo " << sc_time_stamp() << " em " << name() << " gravando na posicao de memoria " << a << " o resultado " << vj << endl << flush;
 			}
-			isFirst = false;
 			a = 0;
 		}
+		wait(SC_ZERO_TIME);
+		cat.at(instr_pos).text(WRITE,"X");
 		Busy = false;
 		cout << "estacao " << id << " liberada no ciclo " << sc_time_stamp() << endl << flush;
 		clean_item(); //Limpa a tabela na interface grafica
@@ -80,7 +81,7 @@ void res_station::exec()
 	}
 }
 
-void res_station::leitura()
+void res_station_rob::leitura()
 {
 	if(qj || qk)
 	{
@@ -110,14 +111,14 @@ void res_station::leitura()
 	}
 }
 
-void res_station::clean_item()
+void res_station_rob::clean_item()
 {
 	for(unsigned i = 2 ; i < table_item->columns(); i++)
 		table_item->text(i,"");
 	table_item->text(BUSY,"False");
 }
 
-void res_station::mem_req(bool load,unsigned int addr,int value)
+void res_station_rob::mem_req(bool load,unsigned int addr,int value)
 {
 	string escrita_saida;
 	string temp = std::to_string(addr) + ' ' + std::to_string(value);

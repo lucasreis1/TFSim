@@ -1,6 +1,7 @@
-#include "res_vector.hpp"
+#include "res_vector_rob.hpp"
+#include "general.hpp"
 
-res_vector::res_vector(sc_module_name name,unsigned int t1, unsigned int t2,map<string,int> instruct_time, nana::listbox &lsbox, nana::listbox::cat_proxy ct):
+res_vector_rob::res_vector_rob(sc_module_name name,unsigned int t1, unsigned int t2,map<string,int> instruct_time, nana::listbox &lsbox, nana::listbox::cat_proxy ct):
 sc_module(name),
 table(lsbox)
 {
@@ -27,19 +28,23 @@ table(lsbox)
 	SC_THREAD(leitura_issue);
 	sensitive << in_issue;
 	dont_initialize();
+	SC_METHOD(leitura_rob);
+	sensitive << in_rob;
+	dont_initialize();
 }
 
-res_vector::~res_vector()
+res_vector_rob::~res_vector_rob()
 {
 	for(unsigned int i = 0 ; i < rs.size() ; i++)
 		delete rs[i];
 }
 
-void res_vector::leitura_issue()
+void res_vector_rob::leitura_issue()
 {
 	string p;
 	vector<string> ord;
-	int pos,regst;
+	int pos,rob_pos;
+	int regst;
 	float value;
 	auto cat = table.at(0);
 	while(true)
@@ -56,38 +61,46 @@ void res_vector::leitura_issue()
 		}
 		in_issue->notify();
 		cout << "Issue da instrução " << ord[0] << " no ciclo " << sc_time_stamp() << " para " << rs[pos]->type_name << endl << flush;
+		rob_pos = std::stoi(ord[4]);
 		rs[pos]->op = ord[0];
-		rs[pos]->instr_pos = std::stoi(ord[4]);
+		rs[pos]->dest = rob_pos;
+		rs[pos]->instr_pos = std::stoi(ord[5]);
 		cat.at(pos).text(OP,ord[0]);
-		ask_status(false,ord[1],pos+1);
-		regst = ask_status(true,ord[2]);
+		regst = ask_status(ord[2]);
 		if(regst == 0)
 		{
 			value = ask_value(ord[2]);
 			rs[pos]->vj = value;
-			cat.at(pos).text(VJ,std::to_string((int)value));
+			if(ord[2].at(0) == 'R')
+				cat.at(pos).text(VJ,std::to_string((int)value));
+			else
+				cat.at(pos).text(VJ,std::to_string(value));
 		}
 		else
 		{
-			cout << "instruçao " << ord[0] << " aguardando reg R" << ord[2] << endl << flush;
+			cout << "instruçao " << ord[0] << " aguardando reg " << ord[2] << endl << flush;
 			rs[pos]->qj = regst;
 			cat.at(pos).text(QJ,std::to_string(regst));
 		}
-		regst = ask_status(true,ord[3]);
+		regst = ask_status(ord[3]);
 		if(ord[0].at(ord[0].size()-1) == 'I')
 		{
-			rs[pos]->vk = std::stoi(ord[3]);
-			cat.at(pos).text(VK,ord[3]);
+			value = std::stof(ord[3]);
+			rs[pos]->vk = value;
+			cat.at(pos).text(VK,std::to_string((int)value));
 		}
 		else if(regst == 0)
 		{
 			value = ask_value(ord[3]);
 			rs[pos]->vk = value;
-			cat.at(pos).text(VK,std::to_string(value));
+			if(ord[3].at(0) == 'R')
+				cat.at(pos).text(VK,std::to_string((int)value));
+			else
+				cat.at(pos).text(VK,std::to_string(value));
 		}
 		else
 		{
-			cout << "instruçao " << ord[0] << " aguardando reg R" << ord[3] << endl << flush;
+			cout << "instruçao " << ord[0] << " aguardando reg " << ord[2] << endl << flush;
 			rs[pos]->qk = regst;
 			cat.at(pos).text(QK,std::to_string(regst));
 		}
@@ -98,7 +111,22 @@ void res_vector::leitura_issue()
 	}
 }
 
-int res_vector::busy_check(string inst)
+void res_vector_rob::leitura_rob()
+{
+	for(unsigned int i = 0 ; i < rs.size() ; i++)
+	{
+		if(rs[i]->Busy)
+		{
+			rs[i]->isFlushed = true;
+			rs[i]->qj = rs[i]->qk = 0;
+			cat.at(i).text(QJ,"");
+			cat.at(i).text(QK,"");
+			rs[i]->isFlushed_event.notify();
+		}
+	}
+}
+
+int res_vector_rob::busy_check(string inst)
 {
 	unsigned int inst_type = res_type[inst];
 	for(unsigned int i = tam_pos[inst_type] ; i < tam_pos[inst_type + 1] ; i++)
@@ -106,23 +134,17 @@ int res_vector::busy_check(string inst)
 			return i;
 	return -1;
 }
-float res_vector::ask_value(string reg)
+float res_vector_rob::ask_value(string reg)
 {
 	string res;
 	out_rb->write("R V " + reg);
 	in_rb->read(res);
 	return std::stof(res);
 }
-unsigned int res_vector::ask_status(bool read,string reg,unsigned int pos)
+unsigned int res_vector_rob::ask_status(string reg)
 {
 	string res;
-	if(read)
-	{
-		out_rb->write("R S " + reg);
-		in_rb->read(res);
-		return std::stoi(res);
-	}
-	else
-		out_rb->write("W S " + reg + " " + std::to_string(pos));
-	return 0;
+	out_rb->write("R S " + reg);
+	in_rb->read(res);
+	return std::stoi(res);
 }

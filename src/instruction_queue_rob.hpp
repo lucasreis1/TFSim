@@ -5,18 +5,20 @@
 
 using std::vector;
 
-class instruction_queue: public sc_module
+class instruction_queue_rob: public sc_module
 {
 public:
 	sc_port<read_if> in;
 	sc_port<write_if_f> out;
-	
-	SC_HAS_PROCESS(instruction_queue);
-	instruction_queue(sc_module_name name, vector<string> inst_q, nana::listbox &instr);
+	sc_port<read_if> in_rob;
+
+	SC_HAS_PROCESS(instruction_queue_rob);
+	instruction_queue_rob(sc_module_name name, vector<string> inst_q, nana::listbox &instr);
 	void main();
+	void leitura_rob();
 
 private:
-	unsigned int pc;
+	unsigned int pc,last_pc,next_pc;
 	vector<string> instruct_queue;
 	nana::listbox &instructions;
 };

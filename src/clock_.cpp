@@ -7,13 +7,12 @@ clock_::clock_(sc_module_name name, int dl, nana::label &clk):  sc_module(name),
 
 void clock_::main()
 {
-	sc_pause();
-	wait(SC_ZERO_TIME);
 	while(true)
 	{
+		sc_pause();
+		wait(SC_ZERO_TIME);
 		out->write("");
 		clock_count.caption(sc_time_stamp().to_string());
-		sc_pause();
 		wait(delay,SC_NS);
 	}
 }
