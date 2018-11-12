@@ -1,6 +1,6 @@
 #include "reorder_buffer.hpp"
 
-reorder_buffer::reorder_buffer(sc_module_name name,unsigned int t,unsigned int t2): sc_module(name),tam(t), preditor(t2)
+reorder_buffer::reorder_buffer(sc_module_name name,unsigned int sz,unsigned int pred_size): sc_module(name),tam(sz), preditor(pred_size)
 {
 	branch_instr = {{"BEQ",0},{"BNE",1},{"BGTZ",2},{"BLTZ",3},{"BGEZ",4},{"BLEZ",5}};
 	ptrs = new rob_slot*[tam];
@@ -23,7 +23,7 @@ reorder_buffer::reorder_buffer(sc_module_name name,unsigned int t,unsigned int t
 	dont_initialize();
 }
 
-~reorder_buffer::reorder_buffer()
+reorder_buffer::~reorder_buffer()
 {
 	for(unsigned int i = 0 ; i < tam ; i++)
 		delete ptrs[i];

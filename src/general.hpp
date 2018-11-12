@@ -12,13 +12,13 @@ enum{
 };
 
 enum{
-	BUSY = 1,
-	OP = 2,
-	VJ = 3,
-	VK = 4,
-	QJ = 5,
-	QK = 6,
-	A = 7
+	BUSY = 2,
+	OP = 3,
+	VJ = 4,
+	VK = 5,
+	QJ = 6,
+	QK = 7,
+	A = 8
 };
 
 

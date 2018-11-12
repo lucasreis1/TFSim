@@ -1,12 +1,16 @@
 #include "interfaces.hpp"
+#include "res_station_rob.hpp"
 #include<map>
+#include<vector>
+#include<nana/gui/widgets/listbox.hpp>
 
 using std::map;
+using std::vector;
 
 class res_vector_rob: public sc_module
 {
 public:
-	vector<res_station *> rs;
+	vector<res_station_rob *> rs;
 	sc_port<read_if_f> in_issue;
 	sc_port<read_if> in_cdb;
 	sc_port<write_if> out_cdb;

@@ -13,8 +13,7 @@ table(lsbox)
 	for(unsigned int i = 0 ; i < tam ; i++)
 	{
 		texto = "Load" + std::to_string(i+1);
-		cat.append(texto);
-		cat.at(cat.columns()-1).text(BUSY,"False");
+		cat.append({std::to_string(cat.size()+1),texto,"False"});
 		ptrs[i] = new res_station(texto.c_str(),i+t_outros,texto,instruct_time,cat.at(i+t_outros),ct);
 		ptrs[i]->in(in_cdb);
 		ptrs[i]->out(out_cdb);
@@ -70,7 +69,7 @@ void sl_buffer::leitura_issue()
 			{
 				value = ask_value(ord[1]);
 				ptrs[pos]->vj = value;
-				cat.at(pos+tam_outros).text(VJ,std::to_string(value));
+				cat.at(pos+tam_outros).text(VJ,std::to_string((int)value));
 			}
 			else
 			{
@@ -84,7 +83,7 @@ void sl_buffer::leitura_issue()
 		{
 			value = ask_value(mem_ord[1]);
 			ptrs[pos]->vk = value;
-			cat.at(pos+tam_outros).text(VK,std::to_string(value));
+			cat.at(pos+tam_outros).text(VK,std::to_string((int)value));
 		}
 		else
 		{

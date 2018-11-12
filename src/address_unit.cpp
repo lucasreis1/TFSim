@@ -1,6 +1,9 @@
 #include "address_unit.hpp"
+#include "general.hpp"
 
-adress_unit::address_unit(sc_module_name name,unsigned int t): sc_module(name), delay_time(t)
+address_unit::address_unit(sc_module_name name,unsigned int t):
+sc_module(name),
+delay_time(t)
 {
 	SC_THREAD(leitura_issue);
 	sensitive << in_issue;
@@ -13,7 +16,7 @@ adress_unit::address_unit(sc_module_name name,unsigned int t): sc_module(name), 
 	dont_initialize();
 }
 
-void adress_unit::leitura_issue()
+void address_unit::leitura_issue()
 {
 	bool store;
 	while(true)
@@ -52,7 +55,7 @@ void adress_unit::leitura_issue()
 	}
 }
 
-void adress_unit::leitura_cdb()
+void address_unit::leitura_cdb()
 {
 	string p_c;
 	vector<string> ord_c;
@@ -77,7 +80,7 @@ void adress_unit::leitura_cdb()
 	}
 }
 
-void adress_unit::addr_issue()
+void address_unit::addr_issue()
 {
 	addr_node fr;
 	while(true)
@@ -94,14 +97,14 @@ void adress_unit::addr_issue()
 	}
 }
 
-void adress_unit::leitura_rob()
+void address_unit::leitura_rob()
 {
 	queue<addr_node> empty;
 	std::swap(addr_queue,empty);
 	offset_buff.clear();
 }
 
-vector<string> adress_unit::offset_split(string p)
+vector<string> address_unit::offset_split(string p)
 {
 	unsigned int i;
 	vector<string> ord(2);
@@ -111,14 +114,14 @@ vector<string> adress_unit::offset_split(string p)
 	ord[1] = p.substr(i+1,p.size()-i-2);
 	return ord;
 }
-float adress_unit::ask_value(string reg)
+float address_unit::ask_value(string reg)
 {
 	string res;
 	out_rb->write("R V " + reg);
 	in_rb->read(res);
 	return std::stof(res);
 }
-unsigned int adress_unit::ask_status(bool read,string reg,unsigned int pos)
+unsigned int address_unit::ask_status(bool read,string reg,unsigned int pos)
 {
 	string res;
 	if(read)
@@ -131,7 +134,7 @@ unsigned int adress_unit::ask_status(bool read,string reg,unsigned int pos)
 		out_rb->write("W S " + reg + " " + std::to_string(pos));
 	return 0;
 }
-void adress_unit::check_loads()
+void address_unit::check_loads()
 {
 	for(unsigned i = 0 ; i < offset_buff.size() && !offset_buff[i].store ; i++)
 		if(offset_buff[i].addr_calc)

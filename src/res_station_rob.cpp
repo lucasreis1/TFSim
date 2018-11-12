@@ -55,7 +55,12 @@ void res_station_rob::exec()
 			wait(sc_time(instruct_time[op],SC_NS));
 			if(!isFlushed)
 			{
-				string escrita_saida = std::to_string(dest) + ' ' + std::to_string(res);
+				string escrita_saida,rs;
+				if(fp)
+					rs = std::to_string(res);
+				else
+					rs = std::to_string((int)res);
+				escrita_saida = std::to_string(dest) + ' ' + rs;
 				cout << "Instrucao " << op << " completada no ciclo " << sc_time_stamp() << " em " << name() << " com resultado " << res << endl << flush;
 				out->write(escrita_saida);
 			}
@@ -85,7 +90,6 @@ void res_station_rob::leitura()
 {
 	if(qj || qk)
 	{
-		unsigned int i;
 		int rs_source;
 		in->read(p);
 		ord = instruction_split(p);

@@ -23,7 +23,7 @@ int start(nana::listbox &table, vector<string> &instruction_queue, nana::grid &m
 int sc_main(int argc, char *argv[])
 {
 	using namespace nana;
-	std::vector<std::string> columns = {"Name","Busy","Op","Vj","Vk","Qj","Qk","A"}; 
+	std::vector<std::string> columns = {"#","Name","Busy","Op","Vj","Vk","Qj","Qk","A"}; 
 	std::vector<int> sizes;
 	form fm(API::make_center(1000,600));
 	place plc(fm);
@@ -56,7 +56,10 @@ int sc_main(int argc, char *argv[])
 	for(unsigned int i = 0 ; i < columns.size() ; i++)
 	{
 		table.append_header(columns[i].c_str());
-		table.column_at(i).width(60);
+		if(i)
+			table.column_at(i).width(45);
+		else
+			table.column_at(i).width(30);
 	}
 	columns = {"","Value","Qi"};
 	for(unsigned int k = 0 ; k < 2 ; k++)
@@ -149,7 +152,7 @@ int sc_main(int argc, char *argv[])
 	{
 		botao.enabled(false);
 		clock_control.enabled(true);
-		top1.simple(3,2,2,instruct_time,instruction_queue,table,memory,reg,instruct,clock_count);
+		top1.simple_mode(3,2,2,instruct_time,instruction_queue,table,memory,reg,instruct,clock_count);
 		sc_start();
 	});
 	clock_control.events().click([]

@@ -17,8 +17,7 @@ table(lsbox)
 			texto = "Add" + std::to_string(i+1);
 		else
 			texto = "Mult" + std::to_string(i-t1+1);
-		cat.append(texto);
-		cat.at(cat.columns()-1).text(BUSY,"False");
+		cat.append({std::to_string(cat.size()+1),texto,"False"});
 		rs[i] = new res_station(texto.c_str(),i+1,texto,instruct_time,cat.at(i),ct);
 		rs[i]->in(in_cdb);
 		rs[i]->out(out_cdb);
@@ -57,6 +56,7 @@ void res_vector::leitura_issue()
 		in_issue->notify();
 		cout << "Issue da instrução " << ord[0] << " no ciclo " << sc_time_stamp() << " para " << rs[pos]->type_name << endl << flush;
 		rs[pos]->op = ord[0];
+		rs[pos]->fp = ord[0].at(0) == 'F';
 		rs[pos]->instr_pos = std::stoi(ord[4]);
 		cat.at(pos).text(OP,ord[0]);
 		ask_status(false,ord[1],pos+1);
@@ -65,13 +65,17 @@ void res_vector::leitura_issue()
 		{
 			value = ask_value(ord[2]);
 			rs[pos]->vj = value;
-			cat.at(pos).text(VJ,std::to_string((int)value));
+			if(ord[2].at(0) != 'F')
+				cat.at(pos).text(VJ,std::to_string((int)value));
+			else
+				cat.at(pos).text(VJ,std::to_string(value));
 		}
 		else
 		{
 			cout << "instruçao " << ord[0] << " aguardando reg R" << ord[2] << endl << flush;
 			rs[pos]->qj = regst;
 			cat.at(pos).text(QJ,std::to_string(regst));
+
 		}
 		regst = ask_status(true,ord[3]);
 		if(ord[0].at(ord[0].size()-1) == 'I')
@@ -83,7 +87,10 @@ void res_vector::leitura_issue()
 		{
 			value = ask_value(ord[3]);
 			rs[pos]->vk = value;
-			cat.at(pos).text(VK,std::to_string(value));
+			if(ord[3].at(0) != 'F')
+				cat.at(pos).text(VK,std::to_string((int)value));
+			else
+				cat.at(pos).text(VK,std::to_string(value));
 		}
 		else
 		{

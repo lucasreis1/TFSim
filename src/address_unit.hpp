@@ -1,9 +1,11 @@
 #include "interfaces.hpp"
 #include<vector>
+#include<queue>
 
 using std::vector;
+using std::queue;
 
-class adress_unit: public sc_module
+class address_unit: public sc_module
 {
 public:
 	sc_port<read_if_f> in_issue;
@@ -12,9 +14,9 @@ public:
 	sc_port<write_if> out_rob;
 	sc_port<read_if_f> in_rb;
 	sc_port<write_if_f> out_rb;
-	SC_HAS_PROCESS(adress_unit);
+	SC_HAS_PROCESS(address_unit);
 	
-	adress_unit(sc_module_name name,unsigned int t);
+	address_unit(sc_module_name name,unsigned int t);
 	void leitura_issue();
 	void leitura_cdb();
 	void addr_issue();

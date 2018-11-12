@@ -1,9 +1,13 @@
 #include "general.hpp"
+#include "interfaces.hpp"
+#include "branch_predictor.hpp"
 #include<vector>
 #include<deque>
+#include<map>
 
 using std::vector;
 using std::deque;
+using std::map;
 
 class reorder_buffer: public sc_module
 {
@@ -30,12 +34,6 @@ public:
 	void check_conflict();
 
 private:
-	unsigned int tam;
-	rob_slot **ptrs;
-	deque<rob_slot *> rob_buff;
-	sc_event free_rob_event,new_rob_head_event,rob_head_value_event;
-	branch_predictor preditor;
-	map<string,unsigned int> branch_instr;
 	struct rob_slot{
 		unsigned int entry;
 		bool busy;
@@ -53,6 +51,19 @@ private:
 			qj = qk = 0;
 		}
 	};
+	enum
+	{
+		ISSUE = 1,
+		EXECUTE = 2,
+		WRITE = 3,
+		COMMIT = 4
+	};
+	unsigned int tam;
+	rob_slot **ptrs;
+	deque<rob_slot *> rob_buff;
+	sc_event free_rob_event,new_rob_head_event,rob_head_value_event;
+	branch_predictor preditor;
+	map<string,unsigned int> branch_instr;
 
 	int busy_check();
 	unsigned int ask_status(bool read,string reg,unsigned int pos = 0);

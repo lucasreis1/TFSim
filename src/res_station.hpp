@@ -12,9 +12,11 @@ class res_station: public sc_module
 public:
 	int id;
 	string type_name;
-	bool Busy,isFirst;
+	bool Busy;
+	bool isFirst;
+	bool fp;
 	string op;
-	float vj,vk
+	float vj,vk;
 	int qj,qk;
 	unsigned int a;
 	unsigned int instr_pos;

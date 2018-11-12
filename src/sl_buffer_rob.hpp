@@ -1,6 +1,6 @@
 #pragma once
 #include "interfaces.hpp"
-#include "res_station.hpp"
+#include "res_station_rob.hpp"
 #include<vector>
 #include<deque>
 #include<map>
@@ -33,7 +33,8 @@ public:
 private:
 	unsigned int tam;
 	unsigned int tam_outros;
-	vector<res_station *>ptrs;
+	vector<res_station_rob *>ptrs;
+	nana::listbox &table;
 	map<unsigned int,vector<unsigned int> >addr_dep;
 
 	int busy_check();

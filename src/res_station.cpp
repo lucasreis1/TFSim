@@ -55,7 +55,12 @@ void res_station::exec()
 		cat.at(instr_pos).text(WRITE,"X");
 		if(!a)
 		{
-			string escrita_saida = std::to_string(id) + ' ' + std::to_string(res);
+			string escrita_saida,rs;
+			if(fp)
+				rs = std::to_string(res);
+			else
+				rs = std::to_string((int)res);
+			escrita_saida = std::to_string(id) + ' ' + rs;
 			cout << "Instrucao " << op << " completada no ciclo " << sc_time_stamp() << " em " << name() << " com resultado " << res << endl << flush;
 			out->write(escrita_saida);
 		}
@@ -84,7 +89,6 @@ void res_station::leitura()
 {
 	if(qj || qk)
 	{
-		unsigned int i;
 		int rs_source;
 		in->read(p);
 		ord = instruction_split(p);

@@ -20,7 +20,7 @@ public:
 	void issue_select();
 
 private:
-	string p;
+	string p,rob_pos;
 	vector<string> ord;
 	map<string,unsigned short int> res_type;
 };

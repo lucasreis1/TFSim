@@ -18,9 +18,8 @@ table(lsbox)
 			texto = "Add" + std::to_string(i+1);
 		else
 			texto = "Mult" + std::to_string(i-t1+1);
-		cat.append(texto);
-		cat.at(cat.columns()-1).text(BUSY,"False");
-		rs[i] = new res_station(texto.c_str(),i+1,texto,instruct_time,cat.at(i),ct);
+		cat.append({std::to_string(cat.size()+1),texto,"False"});
+		rs[i] = new res_station_rob(texto.c_str(),i+1,texto,instruct_time,cat.at(i),ct);
 		rs[i]->in(in_cdb);
 		rs[i]->out(out_cdb);
 		rs[i]->out_mem(out_mem);
@@ -63,6 +62,7 @@ void res_vector_rob::leitura_issue()
 		cout << "Issue da instrução " << ord[0] << " no ciclo " << sc_time_stamp() << " para " << rs[pos]->type_name << endl << flush;
 		rob_pos = std::stoi(ord[4]);
 		rs[pos]->op = ord[0];
+		rs[pos]->fp = ord[0].at(0) == 'F';
 		rs[pos]->dest = rob_pos;
 		rs[pos]->instr_pos = std::stoi(ord[5]);
 		cat.at(pos).text(OP,ord[0]);
@@ -113,6 +113,7 @@ void res_vector_rob::leitura_issue()
 
 void res_vector_rob::leitura_rob()
 {
+	auto cat = table.at(0);
 	for(unsigned int i = 0 ; i < rs.size() ; i++)
 	{
 		if(rs[i]->Busy)

@@ -1,20 +1,20 @@
 #include "sl_buffer_rob.hpp"
 #include "general.hpp"
 
-sl_buffer_rob::sl_buffer_rob(sc_module_name name,unsigned int t,unsigned int t_outros,map<string,int> instruct_time): sc_module(name),
+sl_buffer_rob::sl_buffer_rob(sc_module_name name,unsigned int t,unsigned int t_outros,map<string,int> instruct_time, nana::listbox &lsbox, nana::listbox::cat_proxy ct): 
+sc_module(name),
 tam(t),
 tam_outros(t_outros),
 table(lsbox)
 {
 	string texto;
 	ptrs.resize(tam);
-	auto cat = tables.at(0);
+	auto cat = table.at(0);
 	for(unsigned int i = 0 ; i < tam ; i++)
 	{
 		texto = "Load" + std::to_string(i+1);
-		cat.append(texto);
-		cat.at(cat.columns()-1).text(BUSY,"False");
-		ptrs[i] = new res_station(texto.c_str(),i+t_outros,texto,instruct_time);
+		cat.append({std::to_string(cat.size()+1),texto,"False"});
+		ptrs[i] = new res_station_rob(texto.c_str(),i+t_outros,texto,instruct_time,cat.at(i+t_outros),ct);
 		ptrs[i]->in(in_cdb);
 		ptrs[i]->out(out_cdb);
 		ptrs[i]->out_mem(out_mem);
@@ -44,6 +44,7 @@ void sl_buffer_rob::leitura_issue()
 	string p;
 	vector<string> ord;
 	int pos,rob_pos;
+	auto cat = table.at(0);
 	while(true)
 	{
 		in_issue->nb_read(p);
@@ -61,7 +62,6 @@ void sl_buffer_rob::leitura_issue()
 		in_issue->notify();
 		cout << "Instrução " << p << " conseguiu espaço para usar uma estação de reserva" << endl << flush;
 		rob_pos = std::stoi(ord[3]);
-		cout << "Valor do ROB dessa inst=" << rob_pos << endl << flush;
 		ptrs[pos]->op = ord[0];
 		cat.at(pos+tam_outros).text(OP,ord[0]);
 		ptrs[pos]->dest = rob_pos;
@@ -76,6 +76,7 @@ void sl_buffer_rob::add_rec()
 	string p;
 	vector<string> ord;
 	unsigned int addr,rob_pos,chk;
+	auto cat = table.at(0);
 	while(true)
 	{
 		in_adu->read(p);
@@ -117,6 +118,7 @@ void sl_buffer_rob::leitura_mem()
 void sl_buffer_rob::leitura_rob()
 {
 	string p;
+	auto cat = table.at(0);
 	while(true)
 	{
 		in_rob->nb_read(p);

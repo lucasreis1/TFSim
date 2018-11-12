@@ -15,10 +15,12 @@ public:
 	string type_name;
 	bool Busy;
 	bool isFlushed;
+	bool fp;
 	string op;
-	float vj,vk
+	float vj,vk;
 	int qj,qk;
 	unsigned int a;
+	unsigned int instr_pos;
 	map<string,int> instruct_time;
 	sc_port<write_if> out;
 	sc_port<read_if> in;
