@@ -2,7 +2,7 @@
 
 top::top(sc_module_name name): sc_module(name){}
 
-void top::simple_mode(unsigned int tadd, unsigned int tmul,unsigned int tload,map<string,int> instruct_time,vector<string> instruct_queue, nana::listbox &table, nana::grid &mem_gui, nana::listbox &regs, nana::listbox &instr, nana::label &ccount)
+void top::simple_mode(unsigned int tadd, unsigned int tmul,unsigned int tload,map<string,int> instruct_time,vector<string> instruct_queue, nana::listbox &table, nana::grid &mem_gui, nana::listbox &regs, nana::listbox &instr_gui, nana::label &ccount)
 {
 	CDB = unique_ptr<bus>(new bus("CDB"));
 	mem_bus = unique_ptr<bus>(new bus("mem_bus"));
@@ -13,10 +13,10 @@ void top::simple_mode(unsigned int tadd, unsigned int tmul,unsigned int tload,ma
 	rb_bus = unique_ptr<cons_bus_fast>(new cons_bus_fast("rb_bus"));
 	iss_ctrl = unique_ptr<issue_control>(new issue_control("issue_control"));
 	clk = unique_ptr<clock_>(new clock_("clock",1,ccount));
-	fila = unique_ptr<instruction_queue>(new instruction_queue("fila_inst",instruct_queue,instr));
-	rst = unique_ptr<res_vector>(new res_vector("rs_vc",tadd,tmul,instruct_time,table,instr.at(0)));
+	fila = unique_ptr<instruction_queue>(new instruction_queue("fila_inst",instruct_queue,instr_gui));
+	rst = unique_ptr<res_vector>(new res_vector("rs_vc",tadd,tmul,instruct_time,table,instr_gui.at(0)));
 	rb = unique_ptr<register_bank>(new register_bank("register_bank", regs));
-	slb = unique_ptr<sl_buffer>(new sl_buffer("sl_buffer",tload,tadd+tmul,instruct_time,table,instr.at(0)));
+	slb = unique_ptr<sl_buffer>(new sl_buffer("sl_buffer",tload,tadd+tmul,instruct_time,table,instr_gui.at(0)));
 	mem = unique_ptr<memory>(new memory("memoria", mem_gui));
 	clk->out(*clock_bus);
 	fila->in(*clock_bus);
@@ -43,7 +43,7 @@ void top::simple_mode(unsigned int tadd, unsigned int tmul,unsigned int tload,ma
 	mem->out(*CDB);
 }
 
-void top::rob_mode(unsigned int tadd, unsigned int tmul,unsigned int tload,map<string,int> instruct_time, vector<string> instruct_queue, nana::listbox &table, nana::grid &mem_gui, nana::listbox &regs, nana::listbox &instr, nana::label &ccount)
+void top::rob_mode(unsigned int tadd, unsigned int tmul,unsigned int tload,map<string,int> instruct_time, vector<string> instruct_queue, nana::listbox &table, nana::grid &mem_gui, nana::listbox &regs, nana::listbox &instr_gui, nana::label &ccount)
 {
 	CDB = unique_ptr<bus>(new bus("CDB"));
 	mem_bus = unique_ptr<bus>(new bus("mem_bus"));
@@ -63,6 +63,57 @@ void top::rob_mode(unsigned int tadd, unsigned int tmul,unsigned int tload,map<s
 	rb_bus = unique_ptr<cons_bus_fast>(new cons_bus_fast("rb_bus"));
 	clk = unique_ptr<clock_>(new clock_("clock",1,ccount));
 	iss_ctrl_r = unique_ptr<issue_control_rob>(new issue_control_rob("issue_control_rob"));
-	adu = unique_ptr<address_unit>(new address_unit(instruct_time["MEM"]));
-
+	fila_r = unique_ptr<instruction_queue_rob>(new instruction_queue_rob("fila_inst_rob",instruct_queue,instr_gui));
+	rob = unique_ptr<reorder_buffer>(new reorder_buffer("rob",10,2));
+	adu = unique_ptr<address_unit>(new address_unit("address_unit",instruct_time["MEM"]));
+	rst_r = unique_ptr<res_vector_rob>(new res_vector_rob("rs_vc",tadd,tmul,instruct_time,table,instr_gui.at(0)));
+	rb_r = unique_ptr<register_bank_rob>(new register_bank_rob("register_bank_rob",regs));
+	slb_r = unique_ptr<sl_buffer_rob>(new sl_buffer_rob("sl_buffer_rob",tload,tadd+tmul,instruct_time,table,instr_gui.at(0)));
+	mem_r = unique_ptr<memory_rob>(new memory_rob("memory_rob", mem_gui));
+	clk->out(*clock_bus);
+	fila_r->in(*clock_bus);
+	fila_r->out(*inst_bus);
+	iss_ctrl_r->in(*inst_bus);
+	iss_ctrl_r->out_rsv(*rst_bus);
+	iss_ctrl_r->out_slbuff(*sl_bus);
+	iss_ctrl_r->in_rob(*rob_bus);
+	iss_ctrl_r->out_rob(*rob_bus);
+	iss_ctrl_r->out_adu(*ad_bus);
+	rob->in_issue(*rob_bus);
+	rob->out_issue(*rob_bus);
+	rob->in_cdb(*CDB);
+	rob->in_rb(*rb_bus);
+	rob->out_rb(*rb_bus);
+	rob->out_mem(*mem_bus);
+	rob->in_adu(*adu_bus);
+	rob->out_iq(*iq_rob_bus);
+	rob->out_resv(*rob_rv_bus);
+	adu->in_issue(*ad_bus);
+	adu->in_cdb(*CDB);
+	adu->out_slbuff(*adu_sl_bus);
+	adu->out_rob(*adu_bus);
+	adu->in_rb(*rb_bus);
+	adu->out_rb(*rb_bus);
+	rst_r->in_issue(*rst_bus);
+	rst_r->in_cdb(*CDB);
+	rst_r->out_cdb(*CDB);
+	rst_r->in_rb(*rb_bus);
+	rst_r->out_rb(*rb_bus);
+	rst_r->out_mem(*mem_bus);
+	rst_r->in_rob(*rob_rv_bus);
+	slb_r->in_issue(*sl_bus);
+	slb_r->in_cdb(*CDB);
+	slb_r->out_cdb(*CDB);
+	slb_r->out_mem(*mem_bus);
+	slb_r->in_adu(*adu_sl_bus);
+	slb_r->in_mem(*mem_slb_bus);
+	slb_r->in_rob(*rob_slb_bus);
+	slb_r->out_rob(*rob_slb_bus);
+	rob->in_slb(*rob_slb_bus);
+	rob->out_slb(*rob_slb_bus);
+	rb_r->in(*rb_bus);
+	rb_r->out(*rb_bus);		
+	mem_r->in(*mem_bus);
+	mem_r->out(*CDB);
+	mem_r->out_slb(*mem_slb_bus);
 }

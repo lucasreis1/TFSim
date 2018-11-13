@@ -25,7 +25,7 @@ public:
 	sc_port<write_if> out_resv;
 
 	SC_HAS_PROCESS(reorder_buffer);
-	reorder_buffer(sc_module_name name,unsigned int t,unsigned int t2);
+	reorder_buffer(sc_module_name name,unsigned int sz,unsigned int pred_size);
 	~reorder_buffer();
 	void leitura_issue();
 	void new_rob_head();

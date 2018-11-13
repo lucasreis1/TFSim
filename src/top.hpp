@@ -45,7 +45,7 @@ private:
 	unique_ptr<issue_control_rob> iss_ctrl_r;
 	unique_ptr<reorder_buffer> rob;
 	unique_ptr<res_vector_rob> rst_r;
-	unique_ptr<sl_buffer_rob> slt_r;
+	unique_ptr<sl_buffer_rob> slb_r;
 	unique_ptr<register_bank_rob> rb_r;
 	unique_ptr<memory_rob> mem_r;
 	unique_ptr<instruction_queue_rob> fila_r;
