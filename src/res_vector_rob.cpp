@@ -1,7 +1,7 @@
 #include "res_vector_rob.hpp"
 #include "general.hpp"
 
-res_vector_rob::res_vector_rob(sc_module_name name,unsigned int t1, unsigned int t2,map<string,int> instruct_time, nana::listbox &lsbox, nana::listbox::cat_proxy ct):
+res_vector_rob::res_vector_rob(sc_module_name name,unsigned int t1, unsigned int t2,map<string,int> instruct_time, nana::listbox &lsbox, nana::listbox::cat_proxy ct, nana::listbox::cat_proxy r_ct):
 sc_module(name),
 table(lsbox)
 {
@@ -19,7 +19,7 @@ table(lsbox)
 		else
 			texto = "Mult" + std::to_string(i-t1+1);
 		cat.append({std::to_string(cat.size()+1),texto,"False"});
-		rs[i] = new res_station_rob(texto.c_str(),i+1,texto,instruct_time,cat.at(i),ct);
+		rs[i] = new res_station_rob(texto.c_str(),i+1,texto,instruct_time,cat.at(i),ct,r_ct);
 		rs[i]->in(in_cdb);
 		rs[i]->out(out_cdb);
 		rs[i]->out_mem(out_mem);
@@ -60,11 +60,11 @@ void res_vector_rob::leitura_issue()
 		}
 		in_issue->notify();
 		cout << "Issue da instrução " << ord[0] << " no ciclo " << sc_time_stamp() << " para " << rs[pos]->type_name << endl << flush;
-		rob_pos = std::stoi(ord[4]);
+		rob_pos = std::stoi(ord[5]);
 		rs[pos]->op = ord[0];
 		rs[pos]->fp = ord[0].at(0) == 'F';
 		rs[pos]->dest = rob_pos;
-		rs[pos]->instr_pos = std::stoi(ord[5]);
+		rs[pos]->instr_pos = std::stoi(ord[4]);
 		cat.at(pos).text(OP,ord[0]);
 		regst = ask_status(ord[2]);
 		if(regst == 0)
@@ -100,7 +100,7 @@ void res_vector_rob::leitura_issue()
 		}
 		else
 		{
-			cout << "instruçao " << ord[0] << " aguardando reg " << ord[2] << endl << flush;
+			cout << "instruçao " << ord[0] << " aguardando reg " << ord[3] << endl << flush;
 			rs[pos]->qk = regst;
 			cat.at(pos).text(QK,std::to_string(regst));
 		}

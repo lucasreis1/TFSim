@@ -25,7 +25,7 @@ void address_unit::leitura_issue()
 		ord = instruction_split(p);
 		mem_ord = offset_split(ord[2]);
 		a = std::stoi(mem_ord[0]);
-		rob_pos = std::stoi(ord[3]);
+		rob_pos = std::stoi(ord[4]);
 		regst = ask_status(true,mem_ord[1]);
 		if(ord[0].at(0) == 'S')
 			store = true;

@@ -1,6 +1,7 @@
 #include "general.hpp"
 #include "interfaces.hpp"
 #include "branch_predictor.hpp"
+#include <nana/gui/widgets/listbox.hpp>
 #include<vector>
 #include<deque>
 #include<map>
@@ -25,7 +26,7 @@ public:
 	sc_port<write_if> out_resv;
 
 	SC_HAS_PROCESS(reorder_buffer);
-	reorder_buffer(sc_module_name name,unsigned int sz,unsigned int pred_size);
+	reorder_buffer(sc_module_name name,unsigned int sz,unsigned int pred_size, nana::listbox &gui, nana::listbox::cat_proxy instr_gui);
 	~reorder_buffer();
 	void leitura_issue();
 	void new_rob_head();
@@ -44,6 +45,7 @@ private:
 		bool ready;
 		unsigned int vj,vk;
 		unsigned int qj,qk;
+		unsigned int instr_pos;
 		rob_slot(unsigned int id)
 		{
 			busy = ready = false;
@@ -59,11 +61,14 @@ private:
 		COMMIT = 4
 	};
 	unsigned int tam;
+	unsigned int last_rob;
 	rob_slot **ptrs;
 	deque<rob_slot *> rob_buff;
 	sc_event free_rob_event,new_rob_head_event,rob_head_value_event;
 	branch_predictor preditor;
 	map<string,unsigned int> branch_instr;
+	nana::listbox &gui_table;
+	nana::listbox::cat_proxy instr_queue_gui;
 
 	int busy_check();
 	unsigned int ask_status(bool read,string reg,unsigned int pos = 0);
@@ -73,4 +78,5 @@ private:
 	void _flush();
 	bool branch(int optype,unsigned int rs = 0,unsigned int rt = 0);
 	bool branch(int optype,float value);
+	int instruction_pos_finder(string p);
 };

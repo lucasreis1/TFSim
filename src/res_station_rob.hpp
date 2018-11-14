@@ -28,7 +28,7 @@ public:
 	sc_event exec_event,isFlushed_event;
 	SC_HAS_PROCESS(res_station_rob);
 
-	res_station_rob(sc_module_name name,int i, string n, map<string,int> inst_map, const nana::listbox::item_proxy item, const nana::listbox::cat_proxy c);
+	res_station_rob(sc_module_name name,int i, string n, map<string,int> inst_map, const nana::listbox::item_proxy item, const nana::listbox::cat_proxy c, const nana::listbox::cat_proxy rgui);
 	void exec();
 	void leitura();
 	void clean_item();
@@ -38,7 +38,8 @@ private:
 	vector<string> ord;
 	sc_event val_enc;
 	nana::listbox::item_proxy table_item;
-	const nana::listbox::cat_proxy cat;
+	const nana::listbox::cat_proxy instr_queue_gui;
+	const nana::listbox::cat_proxy rob_gui;
 
 	void mem_req(bool load,unsigned int addr,int value);
 };

@@ -21,5 +21,12 @@ enum{
 	A = 8
 };
 
+enum{
+	R_BUSY = 1,
+	INSTRUCTION = 2,
+	STATE = 3,
+	DESTINATION = 4,
+	VALUE = 5
+};
 
 vector<string> instruction_split(string p);

@@ -27,7 +27,7 @@ void memory_rob::leitura_bus()
 	}
 	else
 	{
-		mem.Set(pos,ord[2]);
+		mem.Set(pos,std::to_string((int)std::stoi(ord[2])));
 		out_slb->write(ord[3]);
 	}
 }

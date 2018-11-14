@@ -24,7 +24,7 @@ public:
 
 	SC_HAS_PROCESS(sl_buffer_rob);
 
-	sl_buffer_rob(sc_module_name name,unsigned int t,unsigned int t_outros,map<string,int> instruct_time, nana::listbox &lsbox, nana::listbox::cat_proxy ct);
+	sl_buffer_rob(sc_module_name name,unsigned int t,unsigned int t_outros,map<string,int> instruct_time, nana::listbox &lsbox, nana::listbox::cat_proxy ct, nana::listbox::cat_proxy r_ct);
 	~sl_buffer_rob();
 	void leitura_issue();
 	void add_rec();

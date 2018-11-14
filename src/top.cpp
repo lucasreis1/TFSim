@@ -43,7 +43,7 @@ void top::simple_mode(unsigned int tadd, unsigned int tmul,unsigned int tload,ma
 	mem->out(*CDB);
 }
 
-void top::rob_mode(unsigned int tadd, unsigned int tmul,unsigned int tload,map<string,int> instruct_time, vector<string> instruct_queue, nana::listbox &table, nana::grid &mem_gui, nana::listbox &regs, nana::listbox &instr_gui, nana::label &ccount)
+void top::rob_mode(unsigned int tadd, unsigned int tmul,unsigned int tload,map<string,int> instruct_time, vector<string> instruct_queue, nana::listbox &table, nana::grid &mem_gui, nana::listbox &regs, nana::listbox &instr_gui, nana::label &ccount, nana::listbox &rob_gui)
 {
 	CDB = unique_ptr<bus>(new bus("CDB"));
 	mem_bus = unique_ptr<bus>(new bus("mem_bus"));
@@ -64,15 +64,16 @@ void top::rob_mode(unsigned int tadd, unsigned int tmul,unsigned int tload,map<s
 	clk = unique_ptr<clock_>(new clock_("clock",1,ccount));
 	iss_ctrl_r = unique_ptr<issue_control_rob>(new issue_control_rob("issue_control_rob"));
 	fila_r = unique_ptr<instruction_queue_rob>(new instruction_queue_rob("fila_inst_rob",instruct_queue,instr_gui));
-	rob = unique_ptr<reorder_buffer>(new reorder_buffer("rob",10,2));
+	rob = unique_ptr<reorder_buffer>(new reorder_buffer("rob",10,2,rob_gui,instr_gui.at(0)));
 	adu = unique_ptr<address_unit>(new address_unit("address_unit",instruct_time["MEM"]));
-	rst_r = unique_ptr<res_vector_rob>(new res_vector_rob("rs_vc",tadd,tmul,instruct_time,table,instr_gui.at(0)));
+	rst_r = unique_ptr<res_vector_rob>(new res_vector_rob("rs_vc",tadd,tmul,instruct_time,table,instr_gui.at(0),rob_gui.at(0)));
 	rb_r = unique_ptr<register_bank_rob>(new register_bank_rob("register_bank_rob",regs));
-	slb_r = unique_ptr<sl_buffer_rob>(new sl_buffer_rob("sl_buffer_rob",tload,tadd+tmul,instruct_time,table,instr_gui.at(0)));
+	slb_r = unique_ptr<sl_buffer_rob>(new sl_buffer_rob("sl_buffer_rob",tload,tadd+tmul,instruct_time,table,instr_gui.at(0),rob_gui.at(0)));
 	mem_r = unique_ptr<memory_rob>(new memory_rob("memory_rob", mem_gui));
 	clk->out(*clock_bus);
 	fila_r->in(*clock_bus);
 	fila_r->out(*inst_bus);
+	fila_r->in_rob(*iq_rob_bus);
 	iss_ctrl_r->in(*inst_bus);
 	iss_ctrl_r->out_rsv(*rst_bus);
 	iss_ctrl_r->out_slbuff(*sl_bus);

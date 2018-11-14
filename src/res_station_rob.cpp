@@ -2,13 +2,14 @@
 #include "general.hpp"
 
 
-res_station_rob::res_station_rob(sc_module_name name,int i, string n, map<string,int> inst_map, const nana::listbox::item_proxy item, const nana::listbox::cat_proxy c):
+res_station_rob::res_station_rob(sc_module_name name,int i, string n, map<string,int> inst_map, const nana::listbox::item_proxy item, const nana::listbox::cat_proxy c, const nana::listbox::cat_proxy rgui):
 sc_module(name),
 id(i),
 type_name(n),
 instruct_time(inst_map),
 table_item(item),
-cat(c)
+instr_queue_gui(c),
+rob_gui(rgui)
 {
 	Busy = isFlushed = false;
 	vj = vk = qj = qk = a = 0;
@@ -30,7 +31,8 @@ void res_station_rob::exec()
 		float res = 0;
 		wait(SC_ZERO_TIME);
 		cout << "Execuçao da instruçao " << op << " iniciada no ciclo " << sc_time_stamp() << " em " << name() << endl << flush;
-		cat.at(instr_pos).text(EXEC,"X");
+		instr_queue_gui.at(instr_pos).text(EXEC,"X");
+		rob_gui.at(dest-1).text(STATE,"Execute");
 		if(op.substr(0,4) == "DADD")
 			res = vj + vk;
 		else if(op.substr(0,4) == "DSUB")
@@ -69,7 +71,7 @@ void res_station_rob::exec()
 		else
 		{
 			if(op.at(0) == 'L')
-				mem_req(true,a,id);
+				mem_req(true,a,dest);
 			else
 			{
 				mem_req(false,a,vj);
@@ -78,7 +80,7 @@ void res_station_rob::exec()
 			a = 0;
 		}
 		wait(SC_ZERO_TIME);
-		cat.at(instr_pos).text(WRITE,"X");
+		instr_queue_gui.at(instr_pos).text(WRITE,"X");
 		Busy = false;
 		cout << "estacao " << id << " liberada no ciclo " << sc_time_stamp() << endl << flush;
 		clean_item(); //Limpa a tabela na interface grafica

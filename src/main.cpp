@@ -7,6 +7,7 @@
 #include<nana/gui/widgets/listbox.hpp>
 #include<nana/gui/widgets/button.hpp>
 #include<nana/gui/widgets/label.hpp>
+#include<nana/gui/widgets/menubar.hpp>
 #include "top.hpp"
 
 using std::string;
@@ -29,18 +30,20 @@ int sc_main(int argc, char *argv[])
 	place plc(fm);
 	place upper(fm);
 	place lower(fm);
-	plc.div("<vert<weight = 50% <vert weight = 50% <weight = 60% rst> <instr> ><vert <weight = 50% memor> < <regs> <weight=20%>> > > <weight = 5%> < <gap = 10 btns><weight = 80%> > <clk_c> <weight=30%> >");
+	plc.div("<vert<weight=5%><weight = 50% <vert weight = 50% <weight = 60% rst> <instr> ><vert <weight = 50% memor> < <regs> <weight=20%>> > > <weight = 5%> < <gap = 10 btns><weight = 80%> > <clk_c> <weight=30% <rob><weight=45%> >");
 	listbox table(fm);
 	listbox reg(fm);
 	listbox instruct(fm);
+	listbox rob(fm);
+	//menubar mnbar(fm);
 	button botao(fm);
 	button clock_control(fm);
 	button exit(fm);
 	label clock_count(fm);
 	grid memory(fm,rectangle(),10,50);
-	map<string,int> instruct_time{{"DADD",4},{"DADDI",4},{"DSUB",6},{"DSUBI",6},{"DMUL",10},{"DMULI",10},{"DDIV",16},{"DDIVI",16},{"SD",1},{"LD",2}};
+	map<string,int> instruct_time{{"DADD",4},{"DADDI",4},{"DSUB",6},{"DSUBI",6},{"DMUL",10},{"DMULI",10},{"DDIV",16},{"DDIVI",16},{"MEM",2}};
 	top top1("top");
-	
+	//mnbar.push_back("&Options");
 	botao.caption("START");
 	clock_control.caption("NEXT CYCLE");
 	exit.caption("EXIT");
@@ -50,9 +53,10 @@ int sc_main(int argc, char *argv[])
 	plc["regs"] << reg;
 	plc["instr"] << instruct;
 	plc["clk_c"] << clock_count;
+	plc["rob"] << rob;
 	plc.collocate();
 	instruct.scheme().item_selected = colors::red;
-
+	//mnbar.at(0).append("a");
 	for(unsigned int i = 0 ; i < columns.size() ; i++)
 	{
 		table.append_header(columns[i].c_str());
@@ -84,7 +88,13 @@ int sc_main(int argc, char *argv[])
 		instruct.append_header(columns[i]);
 		instruct.column_at(i).width(sizes[i]);
 	}
-
+	columns = {"Entry","Busy","Instruction","State","Destination","Value"};
+	sizes = {45,45,120,120,90,60};
+	for(unsigned int i = 0 ; i < columns.size() ; i++)
+	{
+		rob.append_header(columns[i]);
+		rob.column_at(i).width(sizes[i]);
+	}
 	ifstream inFile;
 	vector<string> instruction_queue;
 	string line;
@@ -145,14 +155,13 @@ int sc_main(int argc, char *argv[])
 	}
 	while(inFile >> value)
 		memory.Push(std::to_string(value));
-	for(unsigned int i = 0 ; i < instruct.column_size() ; i++)
 		
 	clock_control.enabled(false);
 	botao.events().click([&]
 	{
 		botao.enabled(false);
 		clock_control.enabled(true);
-		top1.simple_mode(3,2,2,instruct_time,instruction_queue,table,memory,reg,instruct,clock_count);
+		top1.rob_mode(3,2,2,instruct_time,instruction_queue,table,memory,reg,instruct,clock_count,rob);
 		sc_start();
 	});
 	clock_control.events().click([]
