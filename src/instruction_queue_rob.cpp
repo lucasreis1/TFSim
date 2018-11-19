@@ -20,6 +20,8 @@ void instruction_queue_rob::main()
 	for(pc = 0; pc < instruct_queue.size() ; pc++)
 	{
 		cat.at(pc).text(ISS,"X");
+		cat.at(pc).text(EXEC,"");
+		cat.at(pc).text(WRITE,"");
 		out->write(instruct_queue[pc] + " " + std::to_string(pc));
 		wait();
 	}

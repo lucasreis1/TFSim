@@ -220,7 +220,6 @@ void reorder_buffer::leitura_adu()
 		{
 			ptrs[index-1]->ready = true;
 			cat.at(index-1).text(STATE,"Write Result");
-			instr_queue_gui.at(ptrs[index-1]->instr_pos).text(EXEC,"X");
 			instr_queue_gui.at(ptrs[index-1]->instr_pos).text(WRITE,"X");
 		}
 		if(rob_buff[0]->entry == index && ptrs[index-1]->ready)
@@ -304,7 +303,6 @@ void reorder_buffer::check_dependencies(unsigned int index, float value)
 				if(ptrs[i]->destination != "")
 				{
 					cat.at(i).text(STATE,"Write Result");
-					instr_queue_gui.at(ptrs[i]->instr_pos).text(EXEC,"X");
 					instr_queue_gui.at(ptrs[i]->instr_pos).text(WRITE,"X");
 					ptrs[i]->ready = true;
 				}

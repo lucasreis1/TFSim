@@ -1,9 +1,10 @@
 #include "address_unit.hpp"
 #include "general.hpp"
 
-address_unit::address_unit(sc_module_name name,unsigned int t):
+address_unit::address_unit(sc_module_name name,unsigned int t, nana::listbox::cat_proxy rob_t):
 sc_module(name),
-delay_time(t)
+delay_time(t),
+rob_table(rob_t)
 {
 	SC_THREAD(leitura_issue);
 	sensitive << in_issue;
@@ -33,6 +34,7 @@ void address_unit::leitura_issue()
 			store = false;
 		if(regst == 0)
 		{
+			rob_table.at(rob_pos).text(EXEC,"X");
 			a += ask_value(mem_ord[1]);
 			if(store)
 			{
@@ -68,6 +70,7 @@ void address_unit::leitura_cdb()
 			offset_buff[i].a+= std::stoi(ord_c[1]);
 			if(offset_buff[i].store)
 			{
+				rob_table.at(offset_buff[i].rob_pos).text(EXEC,"X");
 				if(addr_queue.empty())
 					addr_queue_event.notify(delay_time,SC_NS);
 				addr_queue.push(offset_buff[i]);

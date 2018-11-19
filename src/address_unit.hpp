@@ -1,6 +1,7 @@
 #include "interfaces.hpp"
 #include<vector>
 #include<queue>
+#include<nana/gui/widgets/listbox.hpp>
 
 using std::vector;
 using std::queue;
@@ -16,7 +17,7 @@ public:
 	sc_port<write_if_f> out_rb;
 	SC_HAS_PROCESS(address_unit);
 	
-	address_unit(sc_module_name name,unsigned int t);
+	address_unit(sc_module_name name,unsigned int t, nana::listbox::cat_proxy rob_t);
 	void leitura_issue();
 	void leitura_cdb();
 	void addr_issue();
@@ -38,6 +39,7 @@ private:
 	int regst,rg_i,rob_pos;
 	unsigned int a,delay_time;
 	sc_event addr_queue_event;
+	nana::listbox::cat_proxy rob_table;
 
 	vector<string> offset_split(string p);
 	float ask_value(string reg);
