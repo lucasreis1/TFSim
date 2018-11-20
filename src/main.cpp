@@ -8,6 +8,7 @@
 #include<nana/gui/widgets/button.hpp>
 #include<nana/gui/widgets/label.hpp>
 #include<nana/gui/widgets/menubar.hpp>
+#include<nana/gui/widgets/group.hpp>
 #include "top.hpp"
 
 using std::string;
@@ -30,7 +31,7 @@ int sc_main(int argc, char *argv[])
 	place plc(fm);
 	place upper(fm);
 	place lower(fm);
-	plc.div("<vert<weight=5%><weight = 50% <vert weight = 50% <weight = 60% rst> <instr> ><vert <weight = 50% memor> < <regs> <weight=20%>> > > <weight = 5%> < <gap = 10 btns><weight = 80%> > <clk_c> <weight=30% <rob><weight=45%> >");
+	plc.div("<vert <vert weight=90% < <instr> <rst> <weight = 20% regs> > < <memor> <rob> > > < <clk_c weight=15%> <weight=60%> <gap = 10btns> > <weight=2%> >");
 	listbox table(fm);
 	listbox reg(fm);
 	listbox instruct(fm);
@@ -39,7 +40,10 @@ int sc_main(int argc, char *argv[])
 	button botao(fm);
 	button clock_control(fm);
 	button exit(fm);
-	label clock_count(fm);
+	group clock_group(fm);
+	label clock_count(clock_group);
+	clock_group.caption("Ciclo de Clock");
+	clock_group.div("count");
 	grid memory(fm,rectangle(),10,50);
 	map<string,int> instruct_time{{"DADD",4},{"DADDI",4},{"DSUB",6},{"DSUBI",6},{"DMUL",10},{"DMULI",10},{"DDIV",16},{"DDIVI",16},{"MEM",2}};
 	top top1("top");
@@ -52,8 +56,10 @@ int sc_main(int argc, char *argv[])
 	plc["memor"] << memory;
 	plc["regs"] << reg;
 	plc["instr"] << instruct;
-	plc["clk_c"] << clock_count;
+	plc["clk_c"] << clock_group;
 	plc["rob"] << rob;
+	clock_group["count"] << clock_count;
+	clock_group.collocate();
 	plc.collocate();
 	instruct.scheme().item_selected = colors::red;
 	//auto handler = ...;
@@ -67,12 +73,16 @@ int sc_main(int argc, char *argv[])
 			table.column_at(i).width(30);
 	}
 	columns = {"","Value","Qi"};
+	sizes = {30,60,40};
 	for(unsigned int k = 0 ; k < 2 ; k++)
 		for(unsigned int i = 0 ; i < columns.size() ; i++)
-			reg.append_header(columns[i].c_str());
+		{
+			reg.append_header(columns[i]);
+			reg.column_at(k*columns.size() + i).width(sizes[i]);
+		}
 
-	for(unsigned int i = 0 ; i < reg.column_size() ; i++)
-		reg.column_at(i).width(60);
+	/*for(unsigned int i = 0 ; i < reg.column_size() ; i++)
+		reg.column_at(i).width(60);*/
 	
 	auto cat = reg.at(0);
 	for(int i = 0 ; i < 32 ;i++)
@@ -83,7 +93,7 @@ int sc_main(int argc, char *argv[])
 	}
 
 	columns = {"Instruction","Issue","Execute","Write Result"};
-	sizes = {150,60,70,100};
+	sizes = {140,60,70,95};
 	for(unsigned int i = 0 ; i < columns.size() ; i++)
 	{
 		instruct.append_header(columns[i]);
