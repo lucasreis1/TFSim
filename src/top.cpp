@@ -65,7 +65,7 @@ void top::rob_mode(unsigned int tadd, unsigned int tmul,unsigned int tload,map<s
 	iss_ctrl_r = unique_ptr<issue_control_rob>(new issue_control_rob("issue_control_rob"));
 	fila_r = unique_ptr<instruction_queue_rob>(new instruction_queue_rob("fila_inst_rob",instruct_queue,instr_gui));
 	rob = unique_ptr<reorder_buffer>(new reorder_buffer("rob",10,2,rob_gui,instr_gui.at(0)));
-	adu = unique_ptr<address_unit>(new address_unit("address_unit",instruct_time["MEM"],rob_gui.at(0)));
+	adu = unique_ptr<address_unit>(new address_unit("address_unit",instruct_time["MEM"],instr_gui.at(0)));
 	rst_r = unique_ptr<res_vector_rob>(new res_vector_rob("rs_vc",tadd,tmul,instruct_time,table,instr_gui.at(0),rob_gui.at(0)));
 	rb_r = unique_ptr<register_bank_rob>(new register_bank_rob("register_bank_rob",regs));
 	slb_r = unique_ptr<sl_buffer_rob>(new sl_buffer_rob("sl_buffer_rob",tload,tadd+tmul,instruct_time,table,instr_gui.at(0),rob_gui.at(0)));

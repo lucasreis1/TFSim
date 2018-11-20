@@ -17,7 +17,7 @@ public:
 	sc_port<write_if_f> out_rb;
 	SC_HAS_PROCESS(address_unit);
 	
-	address_unit(sc_module_name name,unsigned int t, nana::listbox::cat_proxy rob_t);
+	address_unit(sc_module_name name,unsigned int t, nana::listbox::cat_proxy instr_t);
 	void leitura_issue();
 	void leitura_cdb();
 	void addr_issue();
@@ -30,16 +30,17 @@ private:
 		bool addr_calc;
 		int regst;
 		int rob_pos;
+		int instr_pos;
 		unsigned int a;
 	};
 	string p;
 	vector<string> ord,mem_ord;
 	queue<addr_node> addr_queue;
 	vector<addr_node> offset_buff;
-	int regst,rg_i,rob_pos;
+	int regst,rg_i,rob_pos,instr_pos;
 	unsigned int a,delay_time;
 	sc_event addr_queue_event;
-	nana::listbox::cat_proxy rob_table;
+	nana::listbox::cat_proxy instruct_table;
 
 	vector<string> offset_split(string p);
 	float ask_value(string reg);

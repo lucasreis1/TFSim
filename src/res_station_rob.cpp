@@ -31,7 +31,7 @@ void res_station_rob::exec()
 		float res = 0;
 		wait(SC_ZERO_TIME);
 		cout << "Execuçao da instruçao " << op << " iniciada no ciclo " << sc_time_stamp() << " em " << name() << endl << flush;
-		if(!a) //Se for store ou load, ja foi setado pelo address_unit
+		//if(!a) //Se for store ou load, ja foi setado pelo address_unit
 			instr_queue_gui.at(instr_pos).text(EXEC,"X");
 		rob_gui.at(dest-1).text(STATE,"Execute");
 		if(op.substr(0,4) == "DADD")

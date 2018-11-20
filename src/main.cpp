@@ -57,7 +57,7 @@ int sc_main(int argc, char *argv[])
 	plc.collocate();
 	instruct.scheme().item_selected = colors::red;
 	//auto handler = ...;
-	mnbar.at(0).append("Especulação");
+	//mnbar.at(0).append("Especulação");
 	for(unsigned int i = 0 ; i < columns.size() ; i++)
 	{
 		table.append_header(columns[i].c_str());
