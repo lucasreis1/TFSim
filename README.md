@@ -32,7 +32,7 @@ out-of-order execution on modern microprocessors.
 	git clone --single-branch -b hotfix-1.6.2 https://github.com/cnjinhao/nana.git
 	cd nana
 	```
-2-2. Crie uma pasta qualquer (não pode se chamar build) e acesse-a
+	2-2. Crie uma pasta qualquer (não pode se chamar build) e acesse-a
 	```
 	mkdir build2
 	cd build2
