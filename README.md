@@ -1,4 +1,6 @@
 
+
+
 # Tomasulo-Algorithm-Simulator
 
 Event-driven simulation of the Tomasulo Algorithm using the C++ interface SystemC, with a complete GUI.
@@ -24,8 +26,12 @@ out-of-order execution on modern microprocessors.
 	make
 	sudo make install
 	```
-2. Baixe o [Nana](http://nanapro.org/en-us/#)
-2-1. Extrair nana e acessar sua pasta raiz
+2. Crie uma pasta qualquer para fazer download do Nana.
+	2-1. Clone o Nana e acesse sua raiz:
+	```
+	git clone --single-branch -b hotfix-1.6.2 https://github.com/cnjinhao/nana.git
+	cd nana
+	```
 2-2. Crie uma pasta qualquer (não pode se chamar build) e acesse-a
 	```
 	mkdir build2
@@ -46,7 +52,7 @@ out-of-order execution on modern microprocessors.
 	make
 	sudo make install
 	```
-3. Crie uma pasta qualquer para armazenar esse repositorio
+ - Crie uma pasta qualquer para armazenar esse repositorio
 3-1. Clone usando git
 	```
 	git clone https://github.com/lucasreis1/Tomasulo-Algorithm-Simulator.git
@@ -56,7 +62,7 @@ out-of-order execution on modern microprocessors.
 	make
 	```
 	3-3. Para executar o código, são necessários 3 arquivos de texto contendo:
-	* A lista de instruções a serem executadas
+	 -  A lista de instruções a serem executadas
 	*  Valores iniciais para os 32 registradores inteiros
 	*  Valores iniciais para os 32 registradores de ponto flutuante
 	*   Valores iniciais para uma memoria (500 valores)
