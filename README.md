@@ -61,7 +61,7 @@ out-of-order execution on modern microprocessors.
 	```
 	make
 	```
-	3-3. Para executar o código, são necessários 3 arquivos de texto contendo:
+	3-3. Para executar o código, são necessários 4 arquivos de texto contendo:
 	 -  A lista de instruções a serem executadas
 	*  Valores iniciais para os 32 registradores inteiros
 	*  Valores iniciais para os 32 registradores de ponto flutuante
