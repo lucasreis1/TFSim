@@ -52,8 +52,8 @@ out-of-order execution on modern microprocessors.
 	make
 	sudo make install
 	```
- - Crie uma pasta qualquer para armazenar esse repositorio
-3-1. Clone usando git
+3. Crie uma pasta qualquer para armazenar esse repositorio
+	3-1. Clone usando git
 	```
 	git clone https://github.com/lucasreis1/Tomasulo-Algorithm-Simulator.git
 	```
