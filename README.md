@@ -67,5 +67,5 @@ out-of-order execution on modern microprocessors.
 	*  Valores iniciais para os 32 registradores de ponto flutuante
 	*   Valores iniciais para uma memoria (500 valores)
 
-	3-4. Execute com ./t <lista_de_instruçoes> <valores_reg_inteiros> <valores_reg_pf> <valores_mem>
+	3-4. Execute com ./simulador <lista_de_instruçoes> <valores_reg_inteiros> <valores_reg_pf> <valores_mem>
 	* O repositório fornece 4 arquivos de teste já preenchidos (fila_instr, reg_status, reg_status_fp, mem_status)
