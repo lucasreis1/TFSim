@@ -1,4 +1,4 @@
-EXE = t
+EXE = simulador
 
 C++ = g++
 INCLUDEDIR = include/
@@ -11,7 +11,7 @@ OBJ = $(SRC:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 CPPFLAGS += -I /opt/systemc/include 
 LDLFLAGS += -L /opt/systemc/lib -Wl,-rpath=/opt/systemc/lib 
 CFLAGS += -std=c++14 -g -ggdb -Wall 
-LIBS += -lnana -lX11 -lpthread -lrt -lXft -lpng -lasound -lfontconfig -lstdc++fs -lm -lsystemc
+LIBS += -lnana -lX11 -lpthread -lrt -lXft -lpng -lasound -lfontconfig -lm -lsystemc
 
 .PHONY: all clean
 

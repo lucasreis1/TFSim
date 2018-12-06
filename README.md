@@ -52,8 +52,8 @@ out-of-order execution on modern microprocessors.
 	make
 	sudo make install
 	```
- - Crie uma pasta qualquer para armazenar esse repositorio
-3-1. Clone usando git
+3. Crie uma pasta qualquer para armazenar esse repositorio
+	3-1. Clone usando git
 	```
 	git clone https://github.com/lucasreis1/Tomasulo-Algorithm-Simulator.git
 	```
@@ -61,11 +61,11 @@ out-of-order execution on modern microprocessors.
 	```
 	make
 	```
-	3-3. Para executar o código, são necessários 3 arquivos de texto contendo:
+	3-3. Para executar o código, são necessários 4 arquivos de texto contendo:
 	 -  A lista de instruções a serem executadas
 	*  Valores iniciais para os 32 registradores inteiros
 	*  Valores iniciais para os 32 registradores de ponto flutuante
 	*   Valores iniciais para uma memoria (500 valores)
 
-	3-4. Execute com ./t <lista_de_instruçoes> <valores_reg_inteiros> <valores_reg_pf> <valores_mem>
+	3-4. Execute com ./simulador <lista_de_instruçoes> <valores_reg_inteiros> <valores_reg_pf> <valores_mem>
 	* O repositório fornece 4 arquivos de teste já preenchidos (fila_instr, reg_status, reg_status_fp, mem_status)
