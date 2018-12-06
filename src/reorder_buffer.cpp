@@ -1,3 +1,4 @@
+#include <nana/gui.hpp>
 #include "reorder_buffer.hpp"
 
 reorder_buffer::reorder_buffer(sc_module_name name,unsigned int sz,unsigned int pred_size, nana::listbox &gui, nana::listbox::cat_proxy instr_gui): 
@@ -355,6 +356,7 @@ bool reorder_buffer::branch(int optype,unsigned int rs,unsigned int rt)
 		default:
 			cerr << "Erro inesperado, abortando..." << endl << flush;
 			sc_stop();
+			nana::API::exit();
 			exit(1);
 	}
 }

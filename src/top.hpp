@@ -33,7 +33,7 @@ private:
 	unique_ptr<cons_bus_fast> rb_bus;
 	unique_ptr<issue_control> iss_ctrl;
 	unique_ptr<clock_> clk;
-	unique_ptr<res_vector> rst;
+	unique_ptr<res_vector> rs_ctrl;
 	unique_ptr<sl_buffer> slb;
 	unique_ptr<register_bank> rb;
 	unique_ptr<memory> mem;
@@ -44,7 +44,7 @@ private:
 	unique_ptr<address_unit> adu;
 	unique_ptr<issue_control_rob> iss_ctrl_r;
 	unique_ptr<reorder_buffer> rob;
-	unique_ptr<res_vector_rob> rst_r;
+	unique_ptr<res_vector_rob> rs_ctrl_r;
 	unique_ptr<sl_buffer_rob> slb_r;
 	unique_ptr<register_bank_rob> rb_r;
 	unique_ptr<memory_rob> mem_r;

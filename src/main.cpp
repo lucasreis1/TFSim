@@ -36,7 +36,7 @@ int sc_main(int argc, char *argv[])
 	listbox reg(fm);
 	listbox instruct(fm);
 	listbox rob(fm);
-	//menubar mnbar(fm);
+	menubar mnbar(fm);
 	button botao(fm);
 	button clock_control(fm);
 	button exit(fm);
@@ -47,7 +47,7 @@ int sc_main(int argc, char *argv[])
 	grid memory(fm,rectangle(),10,50);
 	map<string,int> instruct_time{{"DADD",4},{"DADDI",4},{"DSUB",6},{"DSUBI",6},{"DMUL",10},{"DMULI",10},{"DDIV",16},{"DDIVI",16},{"MEM",2}};
 	top top1("top");
-	//mnbar.push_back("&Opções");
+	mnbar.push_back("&Opções");
 	botao.caption("START");
 	clock_control.caption("NEXT CYCLE");
 	exit.caption("EXIT");
@@ -63,7 +63,7 @@ int sc_main(int argc, char *argv[])
 	plc.collocate();
 	instruct.scheme().item_selected = colors::red;
 	//auto handler = ...;
-	//mnbar.at(0).append("Especulação");
+	mnbar.at(0).append("Especulação");
 	for(unsigned int i = 0 ; i < columns.size() ; i++)
 	{
 		table.append_header(columns[i].c_str());
