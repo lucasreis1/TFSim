@@ -12,7 +12,7 @@ out-of-order execution on modern microprocessors.
 # Guia de Execução
 
 1) Baixe o [SystemC](http://www.accellera.org/downloads/standards/systemc)
-1-1. Extrair systemC e entrar na pasta padrao
+1-1. Extrair systemC e entrar na pasta padrão
 1-2. Crie uma pasta build dentro da pasta do SystemC e entre nela
 	```
 	mkdir build
@@ -27,7 +27,7 @@ out-of-order execution on modern microprocessors.
 	make
 	sudo make install
 	```
- - Crie uma pasta qualquer para fazer download do Nana.
+2. Crie uma pasta qualquer para fazer download do Nana.
 	2-1. Clone o Nana e acesse sua raiz:
 	```
 	git clone --single-branch -b hotfix-1.6.2 https://github.com/cnjinhao/nana.git
@@ -53,12 +53,12 @@ out-of-order execution on modern microprocessors.
 	make
 	sudo make install
 	```
- - Crie uma pasta qualquer para armazenar esse repositorio
+ 3. Crie uma pasta qualquer para armazenar esse repositório
 	3-1. Clone usando git
 	```	
 	git clone https://github.com/lucasreis1/Tomasulo-Algorithm-Simulator.git
 	```
-	3-2. Compile o codigo usando o makefile incluido
+	3-2. Compile o código usando o makefile incluido
 	```
 	make
 	```
