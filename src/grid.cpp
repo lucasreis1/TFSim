@@ -53,10 +53,8 @@ void grid::Set(int pos, const std::string& value)
     int r,c;
     r = pos/myColCount;
     c = pos%myColCount;
-    std::cout << r << ' ' << c << std::endl;
     if(!CheckIndex(r,c))
     {
-        std::cout << "??";
         return;
     }
     Set(r,c,value);

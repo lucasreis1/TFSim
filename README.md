@@ -1,6 +1,7 @@
 
 
 
+
 # Tomasulo-Algorithm-Simulator
 
 Event-driven simulation of the Tomasulo Algorithm using the C++ interface SystemC, with a complete GUI.
@@ -26,7 +27,7 @@ out-of-order execution on modern microprocessors.
 	make
 	sudo make install
 	```
-2. Crie uma pasta qualquer para fazer download do Nana.
+ - Crie uma pasta qualquer para fazer download do Nana.
 	2-1. Clone o Nana e acesse sua raiz:
 	```
 	git clone --single-branch -b hotfix-1.6.2 https://github.com/cnjinhao/nana.git
@@ -52,20 +53,28 @@ out-of-order execution on modern microprocessors.
 	make
 	sudo make install
 	```
-3. Crie uma pasta qualquer para armazenar esse repositorio
+ - Crie uma pasta qualquer para armazenar esse repositorio
 	3-1. Clone usando git
-	```
+	```	
 	git clone https://github.com/lucasreis1/Tomasulo-Algorithm-Simulator.git
 	```
 	3-2. Compile o codigo usando o makefile incluido
 	```
 	make
 	```
-	3-3. Para executar o código, são necessários 4 arquivos de texto contendo:
-	 -  A lista de instruções a serem executadas
-	*  Valores iniciais para os 32 registradores inteiros
-	*  Valores iniciais para os 32 registradores de ponto flutuante
-	*   Valores iniciais para uma memoria (500 valores)
 
-	3-4. Execute com ./simulador <lista_de_instruçoes> <valores_reg_inteiros> <valores_reg_pf> <valores_mem>
-	* O repositório fornece 4 arquivos de teste já preenchidos (fila_instr, reg_status, reg_status_fp, mem_status)
+	3-3. Execute com ./simulador
+		
+
+	 - Os valores iniciais de registradores e de memória são gerados aleatoriamente para cada execução. É possível alterá-los (assim como inserir a lista de instruções) por linha de comando ou pela barra de opções da interface. Por linha de comando, utilize:
+			
+
+		 -  '-q' para fila de instruções
+		- '-i' para valores de registradores inteiros (32 valores)
+		- '-f' para valores de registradores PF (32 valores)
+		- '-m' para valores de memória (500 valores inteiros)
+		* O repositório fornece 4 arquivos de teste já preenchidos (fila_instr, reg_status, reg_status_fp, mem_status)
+* Observações:
+	- Caso esteja obtendo erro na compilação do simulador devido a biblioteca stdc++fs, utilize a regra nofs:
+		```make nofs```
+

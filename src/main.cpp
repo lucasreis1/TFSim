@@ -4,11 +4,11 @@
 #include<map>
 #include<fstream>
 #include<nana/gui.hpp>
-#include<nana/gui/widgets/listbox.hpp>
 #include<nana/gui/widgets/button.hpp>
-#include<nana/gui/widgets/label.hpp>
 #include<nana/gui/widgets/menubar.hpp>
 #include<nana/gui/widgets/group.hpp>
+#include<nana/gui/widgets/textbox.hpp>
+#include <nana/gui/filebox.hpp>
 #include "top.hpp"
 
 using std::string;
@@ -16,22 +16,19 @@ using std::vector;
 using std::map;
 using std::fstream;
 
-int start(nana::listbox &table, vector<string> &instruction_queue, nana::grid &mem_gui, nana::listbox &regs, nana::listbox &instr, nana::label &clk)
-{
-	sc_start();
-	return 0;
-}
-
 int sc_main(int argc, char *argv[])
 {
 	using namespace nana;
-	std::vector<std::string> columns = {"#","Name","Busy","Op","Vj","Vk","Qj","Qk","A"}; 
+	vector<string> columns = {"#","Name","Busy","Op","Vj","Vk","Qj","Qk","A"}; 
+	vector<string> instruction_queue;
 	std::vector<int> sizes;
+	bool spec = false;
+	bool fila = false;
+	ifstream inFile;
 	form fm(API::make_center(1000,600));
 	place plc(fm);
 	place upper(fm);
 	place lower(fm);
-	plc.div("<vert <vert weight=90% < <instr> <rst> <weight = 20% regs> > < <memor> <rob> > > < <clk_c weight=15%> <weight=60%> <gap = 10btns> > <weight=2%> >");
 	listbox table(fm);
 	listbox reg(fm);
 	listbox instruct(fm);
@@ -51,19 +48,184 @@ int sc_main(int argc, char *argv[])
 	botao.caption("START");
 	clock_control.caption("NEXT CYCLE");
 	exit.caption("EXIT");
+	plc.div("<vert <weight = 5%><vert weight=85% < <weight = 1% ><instr> <weight = 1%> <rst> <weight = 1%> > < <weight = 1%> <memor> <weight = 1%> <weight = 29% regs> <weight = 1%> > > < <weight = 1%> <clk_c weight=15%> <weight=60%> <gap = 10btns> <weight = 1%> > <weight = 2%> >");
 	plc["rst"] << table;
 	plc["btns"] << botao << clock_control << exit;
 	plc["memor"] << memory;
 	plc["regs"] << reg;
+	plc["rob"] << rob;
 	plc["instr"] << instruct;
 	plc["clk_c"] << clock_group;
-	plc["rob"] << rob;
 	clock_group["count"] << clock_count;
 	clock_group.collocate();
 	plc.collocate();
-	instruct.scheme().item_selected = colors::red;
-	//auto handler = ...;
-	mnbar.at(0).append("Especulação");
+	menu &op = mnbar.at(0);
+	op.append("Especulação",[&](menu::item_proxy &ip)
+	{
+		if(ip.checked())
+		{
+			plc.div("<vert <weight = 5%><vert weight=85% < <weight = 1% ><instr> <rst> <weight = 1%> <weight = 20% regs> <weight = 1%> > < <weight = 1%> <memor> <weight = 1%> <rob> <weight = 1%> > > < <weight = 1%> <clk_c weight=15%> <weight=60%> <gap = 10btns> <weight = 1%> > <weight = 2%> >");
+			plc.collocate();
+			spec = true;
+		}
+		else
+		{
+			plc.div("<vert <weight = 5%><vert weight=85% < <weight = 1% ><instr> <weight = 1%> <rst> <weight = 1%> > < <weight = 1%> <memor> <weight = 1%> <weight = 29% regs> <weight = 1%> > > < <weight = 1%> <clk_c weight=15%> <weight=60%> <gap = 10btns> <weight = 1%> > <weight = 2%> >");
+			plc.collocate();
+			spec = false;
+		}
+	});
+	op.check_style(0,menu::checks::highlight);
+	op.append("Modificar valores");
+	auto sub = op.create_sub_menu(1);
+	sub->append("Tempo de latência", [&](menu::item_proxy &ip)
+	{
+		inputbox ibox(fm,"","Tempos de latência para instruções");
+		inputbox::text dadd_t("DADD",std::to_string(instruct_time["DADD"]));
+		inputbox::text daddi_t("DADDI",std::to_string(instruct_time["DADDI"]));
+		inputbox::text dsub_t("DSUB",std::to_string(instruct_time["DSUB"]));
+		inputbox::text dsubi_t("DSUBI",std::to_string(instruct_time["DSUBI"]));
+		inputbox::text dmul_t("DMUL",std::to_string(instruct_time["DMUL"]));
+		inputbox::text dmuli_t("DMULI",std::to_string(instruct_time["DMULI"]));
+		inputbox::text ddiv_t("DDIV",std::to_string(instruct_time["DDIV"]));
+		inputbox::text ddivi_t("DDIVI",std::to_string(instruct_time["DDIVI"]));
+		inputbox::text mem_t("Load/Store",std::to_string(instruct_time["MEM"]));
+		if(ibox.show(dadd_t,daddi_t,dsub_t,dsubi_t,dmul_t,dmuli_t,ddiv_t,ddivi_t,mem_t))
+		{
+			instruct_time["DADD"] = std::stoi(dadd_t.value());
+			instruct_time["DADDI"] = std::stoi(daddi_t.value());
+			instruct_time["DSUB"] = std::stoi(dsub_t.value());
+			instruct_time["DSUBI"] = std::stoi(dsubi_t.value());
+			instruct_time["DMUL"] = std::stoi(dmul_t.value());
+			instruct_time["DMULI"] = std::stoi(dmuli_t.value());
+			instruct_time["DDIV"] = std::stoi(ddiv_t.value());
+			instruct_time["DDIVI"] = std::stoi(ddivi_t.value());
+			instruct_time["MEM"] = std::stoi(mem_t.value());
+		}
+
+	});
+	sub->append("Fila de instruções", [&](menu::item_proxy &ip)
+	{
+		filebox fb(0,true);
+		inputbox ibox(fm,"Localização do arquivo com a lista de instruções:");
+		inputbox::path caminho("",fb);
+		if(ibox.show(caminho))
+		{
+			auto path = caminho.value();
+			inFile.open(path);
+			if(!inFile.is_open())
+			{
+				msgbox msg("Arquivo inválido");
+				msg << "Não foi possível abrir o arquivo!";
+				msg.show();
+			}
+			else
+			{
+				fila = true;
+				string line;
+				auto instr_gui = instruct.at(0);
+				while(getline(inFile,line))
+				{
+					instruction_queue.push_back(line);
+					instr_gui.append(line);
+				}
+				inFile.close();
+			}
+		}
+	});
+	sub->append("Valores de registradores inteiros",[&](menu::item_proxy &ip)
+	{
+		filebox fb(0,true);
+		inputbox ibox(fm,"Localização do arquivo de valores de registradores inteiros:");
+		inputbox::path caminho("",fb);
+		if(ibox.show(caminho))
+		{
+			auto path = caminho.value();
+			inFile.open(path);
+			if(!inFile.is_open())
+			{
+				msgbox msg("Arquivo inválido");
+				msg << "Não foi possível abrir o arquivo!";
+				msg.show();
+			}
+			else
+			{
+				auto reg_gui = reg.at(0);
+				int value,i = 0;
+				while(inFile >> value && i < 32)
+				{
+					reg_gui.at(i).text(1,std::to_string(value));
+					i++;
+				}
+				for(; i < 32 ; i++)
+					reg_gui.at(i).text(1,"0");
+				inFile.close();
+			}
+		}
+	});
+	sub->append("Valores de registradores PF",[&](menu::item_proxy &ip)
+	{
+		filebox fb(0,true);
+		inputbox ibox(fm,"Localização do arquivo de valores de registradores PF:");
+		inputbox::path caminho("",fb);
+		if(ibox.show(caminho))
+		{
+			auto path = caminho.value();
+			inFile.open(path);
+			if(!inFile.is_open())
+			{
+				msgbox msg("Arquivo inválido");
+				msg << "Não foi possível abrir o arquivo!";
+				msg.show();
+			}
+			else
+			{
+				auto reg_gui = reg.at(0);
+				int i = 0;
+				float value;
+				while(inFile >> value && i < 32)
+				{
+					reg_gui.at(i).text(4,std::to_string(value));
+					i++;
+				}
+				for(; i < 32 ; i++)
+					reg_gui.at(i).text(4,"0");
+				inFile.close();
+			}
+		}
+	});
+	sub->append("Valores de memória",[&](menu::item_proxy &ip)
+	{
+		filebox fb(0,true);
+		inputbox ibox(fm,"Localização do arquivo de valores de memória:");
+		inputbox::path caminho("",fb);
+		if(ibox.show(caminho))
+		{
+			auto path = caminho.value();
+			inFile.open(path);
+			if(!inFile.is_open())
+			{
+				msgbox msg("Arquivo inválido");
+				msg << "Não foi possível abrir o arquivo!";
+				msg.show();
+			}
+			else
+			{
+				int i = 0;
+				int value;
+				while(inFile >> value && i < 500)
+				{
+					memory.Set(i,std::to_string(value));
+					i++;
+				}
+				for(; i < 500 ; i++)
+				{
+					memory.Set(i,"0");
+				}
+				inFile.close();
+			}
+		}
+	});
 	for(unsigned int i = 0 ; i < columns.size() ; i++)
 	{
 		table.append_header(columns[i].c_str());
@@ -81,15 +243,12 @@ int sc_main(int argc, char *argv[])
 			reg.column_at(k*columns.size() + i).width(sizes[i]);
 		}
 
-	/*for(unsigned int i = 0 ; i < reg.column_size() ; i++)
-		reg.column_at(i).width(60);*/
-	
-	auto cat = reg.at(0);
+	auto reg_gui = reg.at(0);
 	for(int i = 0 ; i < 32 ;i++)
 	{
 		string index = std::to_string(i);
-		cat.append("R" + index);
-		cat.at(i).text(3,"F" + index);
+		reg_gui.append("R" + index);
+		reg_gui.at(i).text(3,"F" + index);
 	}
 
 	columns = {"Instruction","Issue","Execute","Write Result"};
@@ -106,74 +265,155 @@ int sc_main(int argc, char *argv[])
 		rob.append_header(columns[i]);
 		rob.column_at(i).width(sizes[i]);
 	}
-	ifstream inFile;
-	vector<string> instruction_queue;
-	string line;
-	int value,i = 0;
-	float value_fp;
-	if(argc < 4)
-	{
-		cout << "Uso: ./ex.x <lista_instrucoes> <reg_int_valores_iniciais> <reg_fp_valores_iniciais> <memoria_valores_iniciais>" << endl;
-		return 1;
-	}
-	inFile.open(argv[1]);
-	if(!inFile.is_open())
-	{
-		cerr << "Arquivo " << argv[1] << " nao existe!" << endl;
-		return 1;
-	}
-	auto c = instruct.at(0);
-	while(getline(inFile,line))
-	{
-		instruction_queue.push_back(line);
-		c.append(line);
-	}
-	inFile.close();
-	inFile.open(argv[2]);
-	if(!inFile.is_open())
-	{
-		cerr << "Arquivo " << argv[2] << " nao existe!" << endl;
-		return 1;
-	}
-	i = 0;
-	while(inFile >> value)
-	{
-		cat.at(i).text(1,std::to_string(value));
-		cat.at(i).text(2,"0");
-		i++;
-	}
-	inFile.close();
 
-	i = 0;
-	inFile.open(argv[3]);
-	if(!inFile.is_open())
+	srand(static_cast <unsigned> (time(0)));
+	for(int i = 0 ; i < 32 ; i++)
 	{
-		cerr << "Arquivo " << argv[3] << " nao existe!" << endl;
-		return 1;
+		reg_gui.at(i).text(1,std::to_string(rand()%100));
+		reg_gui.at(i).text(2,"0");
+		reg_gui.at(i).text(4,std::to_string(static_cast <float> (rand()) / static_cast <float> (RAND_MAX/100.0)));
+		reg_gui.at(i).text(5,"0");
 	}
-	while(inFile >> value_fp)
+	for(int i = 0 ; i < 500 ; i++)
+		memory.Push(std::to_string(rand()%100));
+	for(int k = 1; k < argc; k+=2)
 	{
-		cat.at(i).text(4,std::to_string(value_fp));
-		cat.at(i).text(5,"0");
-		i++;
+		int i;
+		if (strlen(argv[k]) > 2)
+		{
+			msgbox msg("Opção inválida");
+			msg << "Opção \"" << argv[k] << "\" inválida";
+			msg.show();
+		}
+		else
+		{
+			char c = argv[k][1];
+			switch(c)
+			{
+				case 'q':
+					inFile.open(argv[k+1]);
+					if(!inFile.is_open())
+					{
+						msgbox msg("Arquivo inválido");
+						msg << "Não foi possível abrir o arquivo " << argv[k+1];
+						msg.show();
+					}
+					else
+					{
+						fila = true;
+						auto c = instruct.at(0);
+						string line;
+						while(getline(inFile,line))
+						{
+							instruction_queue.push_back(line);
+							c.append(line);
+						}
+						inFile.close();
+					}
+					break;
+				case 'i':
+					inFile.open(argv[k+1]);
+					int value;
+					i = 0;
+					if(!inFile.is_open())
+					{
+						msgbox msg("Arquivo inválido");
+						msg << "Não foi possível abrir o arquivo " << argv[k+1];
+						msg.show();
+					}
+					else
+					{
+						while(inFile >> value && i < 32)
+						{
+							reg_gui.at(i).text(1,std::to_string(value));
+							i++;
+						}
+						for(; i < 32 ; i++)
+							reg_gui.at(i).text(1,"0");
+						inFile.close();
+					}
+					break;
+				case 'f':
+					float value_fp;
+					i = 0;
+					inFile.open(argv[k+1]);
+					if(!inFile.is_open())
+					{
+						msgbox msg("Arquivo inválido");
+						msg << "Não foi possível abrir o arquivo " << argv[k+1];
+						msg.show();
+					}
+					else
+					{
+						while(inFile >> value_fp && i < 32)
+						{
+							reg_gui.at(i).text(4,std::to_string(value_fp));
+							i++;
+						}
+						for(; i < 32 ; i++)
+							reg_gui.at(i).text(4,"0");
+						inFile.close();
+					}
+					break;
+				case 'm':
+					inFile.open(argv[k+1]);
+					if(!inFile.is_open())
+					{
+						msgbox msg("Arquivo inválido");
+						msg << "Não foi possível abrir o arquivo " << argv[k+1];
+						msg.show();
+					}
+					else
+					{
+						int value;
+						i = 0;
+						while(inFile >> value && i < 500)
+						{
+							memory.Set(i,std::to_string(value));
+							i++;
+						}
+						for(; i < 500 ; i++)
+						{
+							memory.Set(i,"0");
+						}
+						inFile.close();
+					}
+					break;
+				default:
+					msgbox msg("Opção inválida");
+					msg << "Opção \"" << argv[k] << "\" inválida";
+					msg.show();
+					break;
+			}
+		}
 	}
-	inFile.close();
-	inFile.open(argv[4]);
-	if(!inFile.is_open())
-	{
-		cerr << "Arquivo " << argv[4] << " nao existe!" << endl;
-		return 1;
-	}
-	while(inFile >> value)
-		memory.Push(std::to_string(value));
-		
 	clock_control.enabled(false);
 	botao.events().click([&]
 	{
-		botao.enabled(false);
-		clock_control.enabled(true);
-		top1.rob_mode(3,2,2,instruct_time,instruction_queue,table,memory,reg,instruct,clock_count,rob);
-		sc_start();
+		if(fila)
+		{
+			botao.enabled(false);
+			clock_control.enabled(true);
+			//Desativa os menus
+			op.enabled(0,false);
+			op.enabled(1,false);
+			sub->enabled(0,false);
+			sub->enabled(1,false);
+			sub->enabled(2,false);
+			sub->enabled(3,false);
+			sub->enabled(4,false);
+			if(spec)
+				top1.rob_mode(3,2,2,instruct_time,instruction_queue,table,memory,reg,instruct,clock_count,rob);
+			else
+				top1.simple_mode(3,2,2,instruct_time,instruction_queue,table,memory,reg,instruct,clock_count);
+			sc_start();
+		}
+		else
+		{
+			msgbox msg("Fila de instruções vazia");
+			msg << "A fila de instruções está vazia. Insira um conjunto de instruções para iniciar.";
+			msg.show();
+		}
 	});
 	clock_control.events().click([]
 	{
