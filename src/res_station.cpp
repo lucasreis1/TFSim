@@ -50,7 +50,10 @@ void res_station::exec()
 			table_item->text(A,std::to_string(a));
 			table_item->text(VK,"");
 		}
-		wait(sc_time(instruct_time[op],SC_NS));
+		if(!a)
+			wait(sc_time(instruct_time[op],SC_NS));
+		else
+			wait(sc_time(instruct_time["MEM"],SC_NS));
 		wait(SC_ZERO_TIME);
 		cat.at(instr_pos).text(WRITE,"X");
 		if(!a)

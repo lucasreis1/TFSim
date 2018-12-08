@@ -2,7 +2,7 @@
 
 top::top(sc_module_name name): sc_module(name){}
 
-void top::simple_mode(unsigned int tadd, unsigned int tmul,unsigned int tload,map<string,int> instruct_time,vector<string> instruct_queue, nana::listbox &table, nana::grid &mem_gui, nana::listbox &regs, nana::listbox &instr_gui, nana::label &ccount)
+void top::simple_mode(unsigned int nadd, unsigned int nmul,unsigned int nload,map<string,int> instruct_time,vector<string> instruct_queue, nana::listbox &table, nana::grid &mem_gui, nana::listbox &regs, nana::listbox &instr_gui, nana::label &ccount)
 {
 	CDB = unique_ptr<bus>(new bus("CDB"));
 	mem_bus = unique_ptr<bus>(new bus("mem_bus"));
@@ -14,9 +14,9 @@ void top::simple_mode(unsigned int tadd, unsigned int tmul,unsigned int tload,ma
 	iss_ctrl = unique_ptr<issue_control>(new issue_control("issue_control"));
 	clk = unique_ptr<clock_>(new clock_("clock",1,ccount));
 	fila = unique_ptr<instruction_queue>(new instruction_queue("fila_inst",instruct_queue,instr_gui));
-	rs_ctrl = unique_ptr<res_vector>(new res_vector("rs_control",tadd,tmul,instruct_time,table,instr_gui.at(0)));
+	rs_ctrl = unique_ptr<res_vector>(new res_vector("rs_control",nadd,nmul,instruct_time,table,instr_gui.at(0)));
 	rb = unique_ptr<register_bank>(new register_bank("register_bank", regs));
-	slb = unique_ptr<sl_buffer>(new sl_buffer("sl_buffer_control",tload,tadd+tmul,instruct_time,table,instr_gui.at(0)));
+	slb = unique_ptr<sl_buffer>(new sl_buffer("sl_buffer_control",nload,nadd+nmul,instruct_time,table,instr_gui.at(0)));
 	mem = unique_ptr<memory>(new memory("memoria", mem_gui));
 	clk->out(*clock_bus);
 	fila->in(*clock_bus);
@@ -43,7 +43,7 @@ void top::simple_mode(unsigned int tadd, unsigned int tmul,unsigned int tload,ma
 	mem->out(*CDB);
 }
 
-void top::rob_mode(unsigned int tadd, unsigned int tmul,unsigned int tload,map<string,int> instruct_time, vector<string> instruct_queue, nana::listbox &table, nana::grid &mem_gui, nana::listbox &regs, nana::listbox &instr_gui, nana::label &ccount, nana::listbox &rob_gui)
+void top::rob_mode(unsigned int nadd, unsigned int nmul,unsigned int nload,map<string,int> instruct_time, vector<string> instruct_queue, nana::listbox &table, nana::grid &mem_gui, nana::listbox &regs, nana::listbox &instr_gui, nana::label &ccount, nana::listbox &rob_gui)
 {
 	CDB = unique_ptr<bus>(new bus("CDB"));
 	mem_bus = unique_ptr<bus>(new bus("mem_bus"));
@@ -66,9 +66,9 @@ void top::rob_mode(unsigned int tadd, unsigned int tmul,unsigned int tload,map<s
 	fila_r = unique_ptr<instruction_queue_rob>(new instruction_queue_rob("fila_inst_rob",instruct_queue,instr_gui));
 	rob = unique_ptr<reorder_buffer>(new reorder_buffer("rob",10,2,rob_gui,instr_gui.at(0)));
 	adu = unique_ptr<address_unit>(new address_unit("address_unit",instruct_time["MEM"],instr_gui.at(0)));
-	rs_ctrl_r = unique_ptr<res_vector_rob>(new res_vector_rob("rs_vc",tadd,tmul,instruct_time,table,instr_gui.at(0),rob_gui.at(0)));
+	rs_ctrl_r = unique_ptr<res_vector_rob>(new res_vector_rob("rs_vc",nadd,nmul,instruct_time,table,instr_gui.at(0),rob_gui.at(0)));
 	rb_r = unique_ptr<register_bank_rob>(new register_bank_rob("register_bank_rob",regs));
-	slb_r = unique_ptr<sl_buffer_rob>(new sl_buffer_rob("sl_buffer_rob",tload,tadd+tmul,instruct_time,table,instr_gui.at(0),rob_gui.at(0)));
+	slb_r = unique_ptr<sl_buffer_rob>(new sl_buffer_rob("sl_buffer_rob",nload,nadd+nmul,instruct_time,table,instr_gui.at(0),rob_gui.at(0)));
 	mem_r = unique_ptr<memory_rob>(new memory_rob("memory_rob", mem_gui));
 	clk->out(*clock_bus);
 	fila_r->in(*clock_bus);

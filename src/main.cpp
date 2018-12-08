@@ -21,6 +21,9 @@ int sc_main(int argc, char *argv[])
 	using namespace nana;
 	vector<string> columns = {"#","Name","Busy","Op","Vj","Vk","Qj","Qk","A"}; 
 	vector<string> instruction_queue;
+	int nadd,nmul,nls;
+	nadd = 3;
+	nmul = nls = 2;
 	std::vector<int> sizes;
 	bool spec = false;
 	bool fila = false;
@@ -48,7 +51,7 @@ int sc_main(int argc, char *argv[])
 	botao.caption("START");
 	clock_control.caption("NEXT CYCLE");
 	exit.caption("EXIT");
-	plc.div("<vert <weight = 5%><vert weight=85% < <weight = 1% ><instr> <weight = 1%> <rst> <weight = 1%> > < <weight = 1%> <memor> <weight = 1%> <weight = 29% regs> <weight = 1%> > > < <weight = 1%> <clk_c weight=15%> <weight=60%> <gap = 10btns> <weight = 1%> > <weight = 2%> >");
+	plc.div("<vert <weight = 5%><vert weight=85% < <weight = 1% ><instr> <weight = 1%> <rst> <weight = 1%> > < <weight = 1%> <memor> <weight = 1%> <weight = 29% regs> <weight = 1%> > > < <weight = 1%> <clk_c weight=15%> <weight=55%> <gap = 10btns> <weight = 1%> > <weight = 2%> >");
 	plc["rst"] << table;
 	plc["btns"] << botao << clock_control << exit;
 	plc["memor"] << memory;
@@ -64,13 +67,13 @@ int sc_main(int argc, char *argv[])
 	{
 		if(ip.checked())
 		{
-			plc.div("<vert <weight = 5%><vert weight=85% < <weight = 1% ><instr> <rst> <weight = 1%> <weight = 20% regs> <weight = 1%> > < <weight = 1%> <memor> <weight = 1%> <rob> <weight = 1%> > > < <weight = 1%> <clk_c weight=15%> <weight=60%> <gap = 10btns> <weight = 1%> > <weight = 2%> >");
+			plc.div("<vert <weight = 5%><vert weight=85% < <weight = 1% ><instr> <rst> <weight = 1%> <weight = 20% regs> <weight = 1%> > < <weight = 1%> <memor> <weight = 1%> <rob> <weight = 1%> > > < <weight = 1%> <clk_c weight=15%> <weight=55%> <gap = 10btns> <weight = 1%> > <weight = 2%> >");
 			plc.collocate();
 			spec = true;
 		}
 		else
 		{
-			plc.div("<vert <weight = 5%><vert weight=85% < <weight = 1% ><instr> <weight = 1%> <rst> <weight = 1%> > < <weight = 1%> <memor> <weight = 1%> <weight = 29% regs> <weight = 1%> > > < <weight = 1%> <clk_c weight=15%> <weight=60%> <gap = 10btns> <weight = 1%> > <weight = 2%> >");
+			plc.div("<vert <weight = 5%><vert weight=85% < <weight = 1% ><instr> <weight = 1%> <rst> <weight = 1%> > < <weight = 1%> <memor> <weight = 1%> <weight = 29% regs> <weight = 1%> > > < <weight = 1%> <clk_c weight=15%> <weight=55%> <gap = 10btns> <weight = 1%> > <weight = 2%> >");
 			plc.collocate();
 			spec = false;
 		}
@@ -78,7 +81,20 @@ int sc_main(int argc, char *argv[])
 	op.check_style(0,menu::checks::highlight);
 	op.append("Modificar valores");
 	auto sub = op.create_sub_menu(1);
-	sub->append("Tempo de latência", [&](menu::item_proxy &ip)
+	sub->append("Número de Unidades Funcionais",[&](menu::item_proxy ip)
+	{
+		inputbox ibox(fm,"","Quantidade de Unidades Funcionais");
+		inputbox::integer add("ADD/SUB",nadd,1,10,1);
+		inputbox::integer mul("MUL/DIV",nmul,1,10,1);
+		inputbox::integer sl("LOAD/STORE",nls,1,10,1);
+		if(ibox.show(add,mul,sl))
+		{
+			nadd = add.value();
+			nmul = mul.value();
+			nls = sl.value();
+		}
+	});
+	sub->append("Tempos de latência", [&](menu::item_proxy &ip)
 	{
 		inputbox ibox(fm,"","Tempos de latência para instruções");
 		inputbox::text dadd_t("DADD",std::to_string(instruct_time["DADD"]));
@@ -397,15 +413,12 @@ int sc_main(int argc, char *argv[])
 			//Desativa os menus
 			op.enabled(0,false);
 			op.enabled(1,false);
-			sub->enabled(0,false);
-			sub->enabled(1,false);
-			sub->enabled(2,false);
-			sub->enabled(3,false);
-			sub->enabled(4,false);
+			for(int i = 0 ; i < 6 ; i++)
+				sub->enabled(i,false);
 			if(spec)
-				top1.rob_mode(3,2,2,instruct_time,instruction_queue,table,memory,reg,instruct,clock_count,rob);
+				top1.rob_mode(nadd,nmul,nls,instruct_time,instruction_queue,table,memory,reg,instruct,clock_count,rob);
 			else
-				top1.simple_mode(3,2,2,instruct_time,instruction_queue,table,memory,reg,instruct,clock_count);
+				top1.simple_mode(nadd,nmul,nls,instruct_time,instruction_queue,table,memory,reg,instruct,clock_count);
 			sc_start();
 		}
 		else

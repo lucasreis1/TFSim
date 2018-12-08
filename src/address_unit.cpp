@@ -35,9 +35,7 @@ void address_unit::leitura_issue()
 			store = false;
 		if(regst == 0)
 		{
-			cout << "a" << endl << flush;
 			wait(SC_ZERO_TIME);
-			cout << "b" << endl << flush;
 			instruct_table.at(instr_pos).text(EXEC,"X");
 			a += ask_value(mem_ord[1]);
 			if(store)
