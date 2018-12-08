@@ -51,7 +51,7 @@ int sc_main(int argc, char *argv[])
 	botao.caption("START");
 	clock_control.caption("NEXT CYCLE");
 	exit.caption("EXIT");
-	plc.div("<vert <weight = 5%><vert weight=85% < <weight = 1% ><instr> <weight = 1%> <rst> <weight = 1%> > < <weight = 1%> <memor> <weight = 1%> <weight = 29% regs> <weight = 1%> > > < <weight = 1%> <clk_c weight=15%> <weight=55%> <gap = 10btns> <weight = 1%> > <weight = 2%> >");
+	plc.div("<vert <weight = 5%><vert weight=85% < <weight = 1% ><instr> <weight = 1%> <rst> <weight = 1%> > < <weight = 1%> <memor> <weight = 1%> <weight = 29% regs> <weight = 1%> > > < <weight = 1%> <clk_c weight=15%> <weight=50%> <gap = 10btns> <weight = 1%> > <weight = 2%> >");
 	plc["rst"] << table;
 	plc["btns"] << botao << clock_control << exit;
 	plc["memor"] << memory;
@@ -67,13 +67,13 @@ int sc_main(int argc, char *argv[])
 	{
 		if(ip.checked())
 		{
-			plc.div("<vert <weight = 5%><vert weight=85% < <weight = 1% ><instr> <rst> <weight = 1%> <weight = 20% regs> <weight = 1%> > < <weight = 1%> <memor> <weight = 1%> <rob> <weight = 1%> > > < <weight = 1%> <clk_c weight=15%> <weight=55%> <gap = 10btns> <weight = 1%> > <weight = 2%> >");
+			plc.div("<vert <weight = 5%><vert weight=85% < <weight = 1% ><instr> <rst> <weight = 1%> <weight = 20% regs> <weight = 1%> > < <weight = 1%> <memor> <weight = 1%> <rob> <weight = 1%> > > < <weight = 1%> <clk_c weight=15%> <weight=50%> <gap = 10btns> <weight = 1%> > <weight = 2%> >");
 			plc.collocate();
 			spec = true;
 		}
 		else
 		{
-			plc.div("<vert <weight = 5%><vert weight=85% < <weight = 1% ><instr> <weight = 1%> <rst> <weight = 1%> > < <weight = 1%> <memor> <weight = 1%> <weight = 29% regs> <weight = 1%> > > < <weight = 1%> <clk_c weight=15%> <weight=55%> <gap = 10btns> <weight = 1%> > <weight = 2%> >");
+			plc.div("<vert <weight = 5%><vert weight=85% < <weight = 1% ><instr> <weight = 1%> <rst> <weight = 1%> > < <weight = 1%> <memor> <weight = 1%> <weight = 29% regs> <weight = 1%> > > < <weight = 1%> <clk_c weight=15%> <weight=50%> <gap = 10btns> <weight = 1%> > <weight = 2%> >");
 			plc.collocate();
 			spec = false;
 		}
