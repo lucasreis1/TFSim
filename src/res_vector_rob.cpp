@@ -59,6 +59,7 @@ void res_vector_rob::leitura_issue()
 			pos = busy_check(ord[0]);
 		}
 		in_issue->notify();
+		wait(SC_ZERO_TIME);
 		cout << "Issue da instrução " << ord[0] << " no ciclo " << sc_time_stamp() << " para " << rs[pos]->type_name << endl << flush;
 		rob_pos = std::stoi(ord[5]);
 		rs[pos]->op = ord[0];

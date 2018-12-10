@@ -59,6 +59,7 @@ void sl_buffer_rob::leitura_issue()
 			if(pos != -1)
 				wait(1,SC_NS);
 		}
+		wait(SC_ZERO_TIME);
 		in_issue->notify();
 		cout << "Instrução " << p << " conseguiu espaço para usar uma estação de reserva" << endl << flush;
 		rob_pos = std::stoi(ord[4]);

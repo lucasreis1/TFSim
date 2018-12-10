@@ -29,6 +29,7 @@ void res_station_rob::exec()
 		while(qj || qk)
 			wait(val_enc | isFlushed_event);
 		wait(SC_ZERO_TIME);
+		//wait(SC_ZERO_TIME); talvez precise
 		if(!isFlushed)
 		{
 			float res = 0;
