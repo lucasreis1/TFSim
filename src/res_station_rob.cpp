@@ -27,62 +27,65 @@ void res_station_rob::exec()
 	{
 		//Enquanto houver dependencia de valor em outra RS, espere
 		while(qj || qk)
-			wait(val_enc);
-		float res = 0;
+			wait(val_enc | isFlushed_event);
 		wait(SC_ZERO_TIME);
-		cout << "Execuçao da instruçao " << op << " iniciada no ciclo " << sc_time_stamp() << " em " << name() << endl << flush;
-		if(!a) //Se for store ou load, ja foi setado pelo address_unit
-			instr_queue_gui.at(instr_pos).text(EXEC,"X");
-		rob_gui.at(dest-1).text(STATE,"Execute");
-		if(op.substr(0,4) == "DADD")
-			res = vj + vk;
-		else if(op.substr(0,4) == "DSUB")
-			res = vj - vk;
-		else if(op.substr(0,4) == "DMUL")
-			res = vj*vk;
-		else if(op.substr(0,4) == "DDIV")
+		if(!isFlushed)
 		{
-			if(vk)
-				res = vj/vk;
-			else
-				cout << "Divisao por 0, instrucao ignorada!" << endl;
-		}
-		else if(a)
-		{
-			a += vk;
-			table_item->text(A,std::to_string(a));
-			table_item->text(VK,"");
-		}
-		if(!a)
-		{
-			wait(sc_time(instruct_time[op],SC_NS));
-			if(!isFlushed)
+			float res = 0;
+			cout << "Execuçao da instruçao " << op << " iniciada no ciclo " << sc_time_stamp() << " em " << name() << endl << flush;
+			if(!a) //Se for store ou load, ja foi setado pelo address_unit
+				instr_queue_gui.at(instr_pos).text(EXEC,"X");
+			rob_gui.at(dest-1).text(STATE,"Execute");
+			if(op.substr(0,4) == "DADD")
+				res = vj + vk;
+			else if(op.substr(0,4) == "DSUB")
+				res = vj - vk;
+			else if(op.substr(0,4) == "DMUL")
+				res = vj*vk;
+			else if(op.substr(0,4) == "DDIV")
 			{
-				string escrita_saida,rs;
-				if(fp)
-					rs = std::to_string(res);
+				if(vk)
+					res = vj/vk;
 				else
-					rs = std::to_string((int)res);
-				escrita_saida = std::to_string(dest) + ' ' + rs;
-				cout << "Instrucao " << op << " completada no ciclo " << sc_time_stamp() << " em " << name() << " com resultado " << res << endl << flush;
-				out->write(escrita_saida);
+					cout << "Divisao por 0, instrucao ignorada!" << endl;
 			}
-			isFlushed = false;
-		}
-		else
-		{
-			if(op.at(0) == 'L')
-				mem_req(true,a,dest);
+			else if(a)
+			{
+				a += vk;
+				table_item->text(A,std::to_string(a));
+				table_item->text(VK,"");
+			}
+			if(!a)
+			{
+				wait(sc_time(instruct_time[op],SC_NS),isFlushed_event);
+				if(!isFlushed)
+				{
+					string escrita_saida,rs;
+					if(fp)
+						rs = std::to_string(res);
+					else
+						rs = std::to_string((int)res);
+					escrita_saida = std::to_string(dest) + ' ' + rs;
+					cout << "Instrucao " << op << " completada no ciclo " << sc_time_stamp() << " em " << name() << " com resultado " << res << endl << flush;
+					out->write(escrita_saida);
+				}
+			}
 			else
 			{
-				mem_req(false,a,vj);
-				cout << "Instrucao " << op << " completada no ciclo " << sc_time_stamp() << " em " << name() << " gravando na posicao de memoria " << a << " o resultado " << vj << endl << flush;
+				if(op.at(0) == 'L')
+					mem_req(true,a,dest);
+				else
+				{
+					mem_req(false,a,vj);
+					cout << "Instrucao " << op << " completada no ciclo " << sc_time_stamp() << " em " << name() << " gravando na posicao de memoria " << a << " o resultado " << vj << endl << flush;
+				}
+				a = 0;
 			}
-			a = 0;
 		}
 		wait(SC_ZERO_TIME);
-		instr_queue_gui.at(instr_pos).text(WRITE,"X");
-		Busy = false;
+		if(!isFlushed)
+			instr_queue_gui.at(instr_pos).text(WRITE,"X");
+		Busy = isFlushed = false;
 		cout << "estacao " << id << " liberada no ciclo " << sc_time_stamp() << endl << flush;
 		clean_item(); //Limpa a tabela na interface grafica
 		wait();

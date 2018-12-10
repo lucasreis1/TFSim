@@ -81,9 +81,9 @@ int sc_main(int argc, char *argv[])
 	op.check_style(0,menu::checks::highlight);
 	op.append("Modificar valores");
 	auto sub = op.create_sub_menu(1);
-	sub->append("Número de Unidades Funcionais",[&](menu::item_proxy ip)
+	sub->append("Número de Estações de Reserva",[&](menu::item_proxy ip)
 	{
-		inputbox ibox(fm,"","Quantidade de Unidades Funcionais");
+		inputbox ibox(fm,"","Quantidade de Estações de Reserva");
 		inputbox::integer add("ADD/SUB",nadd,1,10,1);
 		inputbox::integer mul("MUL/DIV",nmul,1,10,1);
 		inputbox::integer sl("LOAD/STORE",nls,1,10,1);

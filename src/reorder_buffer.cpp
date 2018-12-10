@@ -136,11 +136,13 @@ void reorder_buffer::new_rob_head()
 			wait(new_rob_head_event);
 		if(!rob_buff[0]->ready)
 			wait(rob_head_value_event);
-		wait(SC_ZERO_TIME);
-		cat.at(rob_buff[0]->entry-1).text(STATE,"Commit");
 		rob_buff[0]->state = COMMIT;
 		if(rob_buff[0]->instruction.at(0) == 'S')
+		{
+			wait(SC_ZERO_TIME);
+			cat.at(rob_buff[0]->entry-1).text(STATE,"Commit");
 			mem_write(std::stoi(rob_buff[0]->destination),rob_buff[0]->value,rob_buff[0]->entry);
+		}
 		else if(rob_buff[0]->instruction.at(0) == 'B')
 		{
 			instr_type = branch_instr[rob_buff[0]->instruction];
@@ -154,16 +156,25 @@ void reorder_buffer::new_rob_head()
 					out_iq->write(rob_buff[0]->destination);
 				else
 					out_iq->write("R");
-				cout << "-----------------LIMPANDO ROB-----------------" << endl << flush;
+				cout << "-----------------LIMPANDO ROB no ciclo " << sc_time_stamp() << " -----------------" << endl << flush;
 				_flush();
 				out_resv->write("F");
 				out_slb->write("F");
 				out_rb->write("F");
 			}
+			else
+			{
+				wait(SC_ZERO_TIME);
+				cat.at(rob_buff[0]->entry-1).text(STATE,"Commit");
+			}
 
 		}
 		else
+		{
+			wait(SC_ZERO_TIME);
+			cat.at(rob_buff[0]->entry-1).text(STATE,"Commit");
 			ask_value(false,rob_buff[0]->destination,rob_buff[0]->value);
+		}
 		rob_buff[0]->busy = false;
 		cat.at(rob_buff[0]->entry-1).text(R_BUSY,"False");
 		rob_buff[0]->ready = false;
@@ -339,6 +350,10 @@ void reorder_buffer::_flush()
 		ptrs[i]->busy = false;
 		ptrs[i]->ready = false;
 		cat.at(i).text(R_BUSY,"False");
+		cat.at(i).text(INSTRUCTION,"");
+		cat.at(i).text(STATE,"");
+		cat.at(i).text(DESTINATION,"");
+		cat.at(i).text(VALUE,"");
 	}
 }
 bool reorder_buffer::branch(int optype,unsigned int rs,unsigned int rt)

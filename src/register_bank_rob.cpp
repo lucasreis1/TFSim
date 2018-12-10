@@ -23,7 +23,7 @@ void register_bank_rob::le_bus()
 		in->read(p);
 		if(p == "F")
 		{
-			for(unsigned int i = 0 ; i < cat.columns() ; i++)
+			for(unsigned int i = 0 ; i < 32 ; i++)
 			{
 				cat.at(i).text(IQ,"0");
 				cat.at(i).text(FQ,"0");

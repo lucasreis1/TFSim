@@ -3,6 +3,7 @@
 branch_predictor::branch_predictor(unsigned int t): n_bits(t)
 {
 	max = (1<<n_bits)-1;
+	state = 0;
 }
 
 bool branch_predictor::predict()

@@ -16,6 +16,7 @@ public:
 	instruction_queue_rob(sc_module_name name, vector<string> inst_q, nana::listbox &instr);
 	void main();
 	void leitura_rob();
+	void clear_gui(unsigned int pos);
 
 private:
 	unsigned int pc,last_pc,next_pc;

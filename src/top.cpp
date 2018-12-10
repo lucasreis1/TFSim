@@ -53,13 +53,12 @@ void top::rob_mode(unsigned int nadd, unsigned int nmul,unsigned int nload,map<s
 	mem_slb_bus = unique_ptr<bus>(new bus("mem_slb_bus"));
 	iq_rob_bus = unique_ptr<bus>(new bus("iq_rob_bus"));
 	rob_rv_bus = unique_ptr<bus>(new bus("rob_rv_bus"));
-	rob_rt_bus = unique_ptr<bus>(new bus("rob_rt_bus"));
 	inst_bus = unique_ptr<cons_bus>(new cons_bus("inst_bus"));
 	rst_bus = unique_ptr<cons_bus>(new cons_bus("rst_bus"));
 	sl_bus = unique_ptr<cons_bus>(new cons_bus("sl_bus"));
 	rob_bus = unique_ptr<cons_bus>(new cons_bus("rob_bus"));
 	ad_bus = unique_ptr<cons_bus>(new cons_bus("ad_bus"));
-	rob_slb_bus = unique_ptr<cons_bus>(new cons_bus("rob_slb_bus"));
+	rob_slb_bus = unique_ptr<cons_bus_fast>(new cons_bus_fast("rob_slb_bus"));
 	rb_bus = unique_ptr<cons_bus_fast>(new cons_bus_fast("rb_bus"));
 	clk = unique_ptr<clock_>(new clock_("clock",1,ccount));
 	iss_ctrl_r = unique_ptr<issue_control_rob>(new issue_control_rob("issue_control_rob"));
@@ -89,6 +88,8 @@ void top::rob_mode(unsigned int nadd, unsigned int nmul,unsigned int nload,map<s
 	rob->in_adu(*adu_bus);
 	rob->out_iq(*iq_rob_bus);
 	rob->out_resv(*rob_rv_bus);
+	rob->in_slb(*rob_slb_bus);
+	rob->out_slb(*rob_slb_bus);
 	adu->in_issue(*ad_bus);
 	adu->in_cdb(*CDB);
 	adu->out_slbuff(*adu_sl_bus);
@@ -110,8 +111,6 @@ void top::rob_mode(unsigned int nadd, unsigned int nmul,unsigned int nload,map<s
 	slb_r->in_mem(*mem_slb_bus);
 	slb_r->in_rob(*rob_slb_bus);
 	slb_r->out_rob(*rob_slb_bus);
-	rob->in_slb(*rob_slb_bus);
-	rob->out_slb(*rob_slb_bus);
 	rb_r->in(*rb_bus);
 	rb_r->out(*rb_bus);		
 	mem_r->in(*mem_bus);

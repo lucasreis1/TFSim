@@ -9,8 +9,8 @@ void clock_::main()
 {
 	while(true)
 	{
-		wait(SC_ZERO_TIME);
 		sc_pause();
+		wait(SC_ZERO_TIME);
 		out->write("");
 		clock_count.caption(sc_time_stamp().to_string());
 		wait(delay,SC_NS);

@@ -118,10 +118,12 @@ void res_vector_rob::leitura_rob()
 	{
 		if(rs[i]->Busy)
 		{
+			auto table_item = cat.at(i);
 			rs[i]->isFlushed = true;
 			rs[i]->qj = rs[i]->qk = 0;
-			cat.at(i).text(QJ,"");
-			cat.at(i).text(QK,"");
+			table_item.text(BUSY,"False");
+			for(unsigned int k = 3 ; k < table_item.columns() ; k++)
+				table_item.text(k,"");
 			rs[i]->isFlushed_event.notify();
 		}
 	}
