@@ -55,6 +55,7 @@ void sl_buffer::leitura_issue()
 				wait(1,SC_NS);
 		}
 		in_issue->notify();
+		wait(SC_ZERO_TIME);
 		cout << "Issue da instrução " << ord[0] << " no ciclo " << sc_time_stamp() << " para " << ptrs[pos]->type_name << endl << flush;
 		ptrs[pos]->op = ord[0];
 		ptrs[pos]->instr_pos = std::stoi(ord[3]);

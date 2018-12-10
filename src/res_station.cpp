@@ -98,6 +98,7 @@ void res_station::leitura()
 		rs_source = std::stoi(ord[0]);
 		if(qj == rs_source)
 		{
+			wait(SC_ZERO_TIME);
 			qj = 0;
 			vj = std::stoi(ord[1]);
 			table_item->text(VJ,ord[1]);
@@ -107,6 +108,7 @@ void res_station::leitura()
 		}
 		if(qk == rs_source)
 		{
+			wait(SC_ZERO_TIME);
 			qk = 0;
 			vk = std::stoi(ord[1]);
 			table_item->text(VK,ord[1]);

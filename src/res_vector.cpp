@@ -54,6 +54,7 @@ void res_vector::leitura_issue()
 			pos = busy_check(ord[0]);
 		}
 		in_issue->notify();
+		wait(SC_ZERO_TIME);
 		cout << "Issue da instrução " << ord[0] << " no ciclo " << sc_time_stamp() << " para " << rs[pos]->type_name << endl << flush;
 		rs[pos]->op = ord[0];
 		rs[pos]->fp = ord[0].at(0) == 'F';
