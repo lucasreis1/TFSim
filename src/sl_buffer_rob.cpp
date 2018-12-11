@@ -56,12 +56,10 @@ void sl_buffer_rob::leitura_issue()
 			cout << "Todas as estacoes ocupadas para a instrucao " << p << " no ciclo " << sc_time_stamp() << endl << flush;
 			wait(out_mem->default_event());
 			pos = busy_check();
-			if(pos != -1)
-				wait(1,SC_NS);
 		}
 		wait(SC_ZERO_TIME);
 		in_issue->notify();
-		cout << "Instrução " << p << " conseguiu espaço para usar uma estação de reserva" << endl << flush;
+		cout << "Instrução " << p << " conseguiu espaço para usar uma estação de reserva em " << sc_time_stamp() << endl << flush;
 		rob_pos = std::stoi(ord[4]);
 		ptrs[pos]->op = ord[0];
 		ptrs[pos]->instr_pos = std::stoi(ord[3]);

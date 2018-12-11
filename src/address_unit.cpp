@@ -24,7 +24,7 @@ void address_unit::leitura_issue()
 	{
 		in_issue->read(p);
 		ord = instruction_split(p);
-		//talvez eu precise adiar em 1 ciclo isso aqui
+		wait(sc_time(1,SC_NS));
 		mem_ord = offset_split(ord[2]);
 		a = std::stoi(mem_ord[0]);
 		instr_pos = std::stoi(ord[3]);

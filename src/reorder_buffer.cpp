@@ -51,7 +51,7 @@ void reorder_buffer::leitura_issue()
 	while(true)
 	{
 		pos = busy_check();
-		if(pos == -1)
+		if(ptrs[pos]->busy)
 		{
 			cout << "ROB esta totalmente ocupado" << endl << flush;
 			wait(free_rob_event);
@@ -137,14 +137,14 @@ void reorder_buffer::new_rob_head()
 		if(!rob_buff[0]->ready)
 			wait(rob_head_value_event);
 		rob_buff[0]->state = COMMIT;
+		wait(SC_ZERO_TIME);
+		cat.at(rob_buff[0]->entry-1).text(STATE,"Commit");
 		if(rob_buff[0]->instruction.at(0) == 'S')
-		{
-			wait(SC_ZERO_TIME);
-			cat.at(rob_buff[0]->entry-1).text(STATE,"Commit");
 			mem_write(std::stoi(rob_buff[0]->destination),rob_buff[0]->value,rob_buff[0]->entry);
-		}
 		else if(rob_buff[0]->instruction.at(0) == 'B')
 		{
+			instr_queue_gui.at(rob_buff[0]->instr_pos).text(EXEC,"X");
+			instr_queue_gui.at(rob_buff[0]->instr_pos).text(WRITE,"X");
 			instr_type = branch_instr[rob_buff[0]->instruction];
 			if(instr_type < 2)
 				pred = branch(instr_type,rob_buff[0]->vj,rob_buff[0]->vk);
@@ -162,27 +162,20 @@ void reorder_buffer::new_rob_head()
 				out_slb->write("F");
 				out_rb->write("F");
 			}
-			else
-			{
-				wait(SC_ZERO_TIME);
-				cat.at(rob_buff[0]->entry-1).text(STATE,"Commit");
-			}
-
 		}
 		else
-		{
-			wait(SC_ZERO_TIME);
-			cat.at(rob_buff[0]->entry-1).text(STATE,"Commit");
 			ask_value(false,rob_buff[0]->destination,rob_buff[0]->value);
+		if(!rob_buff.empty())
+		{
+			rob_buff[0]->busy = false;
+			cat.at(rob_buff[0]->entry-1).text(R_BUSY,"False");
+			rob_buff[0]->ready = false;
+			rob_buff[0]->destination = "";
+			rob_buff[0]->qj = rob_buff[0]->qk = 0;
+			cout << "Commit da instrucao " << rob_buff[0]->instruction << " com valor " << rob_buff[0]->value << " no ciclo " << sc_time_stamp() << endl << flush;
+			free_rob_event.notify(1,SC_NS);
+			rob_buff.pop_front();
 		}
-		rob_buff[0]->busy = false;
-		cat.at(rob_buff[0]->entry-1).text(R_BUSY,"False");
-		rob_buff[0]->ready = false;
-		rob_buff[0]->destination = "";
-		rob_buff[0]->qj = rob_buff[0]->qk = 0;
-		cout << "Commit da instrucao " << rob_buff[0]->instruction << " com valor " << rob_buff[0]->value << " no ciclo " << sc_time_stamp() << endl << flush;
-		free_rob_event.notify(1,SC_NS);
-		rob_buff.pop_front();
 		wait(1,SC_NS);
 	}
 }
@@ -196,6 +189,7 @@ void reorder_buffer::leitura_cdb()
 	while(true)
 	{
 		in_cdb->read(p);
+		cout << "to lendo " << p << " do cdb" << endl << flush;
 		ord = instruction_split(p);
 		index = std::stoi(ord[0]);
 		value = std::stof(ord[1]);
@@ -235,7 +229,7 @@ void reorder_buffer::leitura_adu()
 			instr_queue_gui.at(ptrs[index-1]->instr_pos).text(WRITE,"X");
 		}
 		if(rob_buff[0]->entry == index && ptrs[index-1]->ready)
-			rob_head_value_event.notify(1,SC_NS);
+			rob_head_value_event.notify(1,SC_NS); 
 		wait();
 	}
 }
@@ -265,10 +259,7 @@ int reorder_buffer::busy_check()
 {
 	unsigned int ret = last_rob;
 	last_rob = (last_rob+1)%tam;
-	if(ptrs[ret]->busy == false)
-		return ret;
-	else
-		return -1;
+	return ret;
 }
 unsigned int reorder_buffer::ask_status(bool read,string reg,unsigned int pos)
 {
@@ -344,11 +335,14 @@ void reorder_buffer::check_dependencies(unsigned int index, float value)
 void reorder_buffer::_flush()
 {
 	auto cat = gui_table.at(0);
-	rob_buff.resize(0);
+	rob_buff.clear();
+	last_rob = 0;
 	for(unsigned int i = 0 ; i < tam ; i++)
 	{
 		ptrs[i]->busy = false;
 		ptrs[i]->ready = false;
+		ptrs[i]->destination = "";
+		ptrs[i]->qj = ptrs[i]->qk = 0;
 		cat.at(i).text(R_BUSY,"False");
 		cat.at(i).text(INSTRUCTION,"");
 		cat.at(i).text(STATE,"");

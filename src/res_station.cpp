@@ -29,6 +29,7 @@ void res_station::exec()
 			wait(val_enc);
 		float res = 0;
 		wait(SC_ZERO_TIME);
+		wait(SC_ZERO_TIME);
 		cout << "Execuçao da instruçao " << op << " iniciada no ciclo " << sc_time_stamp() << " em " << name() << endl << flush;
 		cat.at(instr_pos).text(EXEC,"X");
 		if(op.substr(0,4) == "DADD")
@@ -98,7 +99,6 @@ void res_station::leitura()
 		rs_source = std::stoi(ord[0]);
 		if(qj == rs_source)
 		{
-			wait(SC_ZERO_TIME);
 			qj = 0;
 			vj = std::stoi(ord[1]);
 			table_item->text(VJ,ord[1]);
@@ -108,7 +108,6 @@ void res_station::leitura()
 		}
 		if(qk == rs_source)
 		{
-			wait(SC_ZERO_TIME);
 			qk = 0;
 			vk = std::stoi(ord[1]);
 			table_item->text(VK,ord[1]);

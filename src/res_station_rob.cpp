@@ -29,7 +29,7 @@ void res_station_rob::exec()
 		while(qj || qk)
 			wait(val_enc | isFlushed_event);
 		wait(SC_ZERO_TIME);
-		//wait(SC_ZERO_TIME); talvez precise
+		wait(SC_ZERO_TIME);
 		if(!isFlushed)
 		{
 			float res = 0;
@@ -68,6 +68,7 @@ void res_station_rob::exec()
 						rs = std::to_string((int)res);
 					escrita_saida = std::to_string(dest) + ' ' + rs;
 					cout << "Instrucao " << op << " completada no ciclo " << sc_time_stamp() << " em " << name() << " com resultado " << res << endl << flush;
+					cout << "vou escrever no cdb" << endl << flush;
 					out->write(escrita_saida);
 				}
 			}
