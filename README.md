@@ -77,4 +77,19 @@ out-of-order execution on modern microprocessors.
 * Observações:
 	- Caso esteja obtendo erro na compilação do simulador devido a biblioteca stdc++fs, utilize a regra nofs:
 		```make nofs```
+	- Um vídeo de demonstração da execução do simulador pode ser visto [aqui](https://youtu.be/hleCH6yndPY)
+
+
+Instruções suportadas:
+
+Sem especulação | Com especulação
+---| ---|
+DADD | BEQ |
+DADDI| BNE |
+DSUB | BGTZ |
+DSUBI| BLTZ |
+DMUL | BGEZ | 
+DDIV| BLEZ |
+LD|
+SD|
 
