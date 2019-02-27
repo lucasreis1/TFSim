@@ -1,4 +1,4 @@
-EXE = simulador
+EXEC_NAME = simulador
 
 C++ = g++
 INCLUDEDIR = include/
@@ -13,12 +13,16 @@ LDLFLAGS += -L /opt/systemc/lib -Wl,-rpath=/opt/systemc/lib
 CFLAGS += -std=c++14 -g -ggdb -Wall 
 LIBS += -lnana -lX11 -lpthread -lrt -lXft -lpng -lasound -lfontconfig -lm -lsystemc
 
-.PHONY: all clean
+.PHONY: all nofs clean
 
-all: $(EXE)
+all: EXE
+nofs: EXE_NOFS
 
-$(EXE): $(OBJ)
-	$(C++) $(LDLFLAGS) $^ $(LIBS) -o $@
+EXE: $(OBJ)
+	$(C++) $(LDLFLAGS) $^ $(LIBS) -lstdc++fs -o $(EXEC_NAME)
+
+EXE_NOFS: $(OBJ)
+	$(C++) $(LDLFLAGS) $^ $(LIBS) -o $(EXEC_NAME)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	$(C++) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
