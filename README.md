@@ -73,7 +73,10 @@ out-of-order execution on modern microprocessors.
 		- '-i' para valores de registradores inteiros (32 valores)
 		- '-f' para valores de registradores PF (32 valores)
 		- '-m' para valores de memória (500 valores inteiros)
-		* O repositório fornece 4 arquivos de teste já preenchidos (fila_instr, reg_status, reg_status_fp, mem_status)
+		- '-r' para número de unidades funcionais (3 inteiros, um para cada tipo (ADD,MULT,LOAD/STORE))
+		- '-l' para tempo de latência para cada instrução (uma linha para cada instrução, do formato <INSTRUÇÃO> <tempo de latência em ciclos>)
+		- '-s' indica que o programa execute em modo de especulação por hardware (com reorder buffer)
+		* O repositório fornece arquivos de teste já preenchidos na pasta 'in'
 * Observações:
 	- Caso esteja obtendo erro na compilação do simulador devido a biblioteca stdc++fs, utilize a regra nofs:
 		```make nofs```
