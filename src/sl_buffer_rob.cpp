@@ -159,5 +159,5 @@ int sl_buffer_rob::check_conflict(unsigned int rob_pos, unsigned int addr)
 }
 bool sl_buffer_rob::check_find(unsigned int i)
 {
-	return (addr_dep.find(i) != addr_dep.end());
+	return (addr_dep.count(i));
 }

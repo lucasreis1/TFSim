@@ -6,10 +6,12 @@ bus::bus(sc_module_name name): sc_channel(name)
 }
 void bus::write(string p)
 {
-	if(sc_time_stamp() == stamp)
+	string p_back = p;
+	while(sc_time_stamp() == stamp)
 		wait(sc_time(1,SC_NS));
 	stamp = sc_time_stamp();
-	palavra = p;
+	wait(SC_ZERO_TIME);
+	palavra = p_back;
 	write_event.notify();
 }
 const sc_event& bus::default_event() const

@@ -68,7 +68,6 @@ void res_station_rob::exec()
 						rs = std::to_string((int)res);
 					escrita_saida = std::to_string(dest) + ' ' + rs;
 					cout << "Instrucao " << op << " completada no ciclo " << sc_time_stamp() << " em " << name() << " com resultado " << res << endl << flush;
-					cout << "vou escrever no cdb" << endl << flush;
 					out->write(escrita_saida);
 				}
 			}

@@ -189,7 +189,6 @@ void reorder_buffer::leitura_cdb()
 	while(true)
 	{
 		in_cdb->read(p);
-		cout << "to lendo " << p << " do cdb" << endl << flush;
 		ord = instruction_split(p);
 		index = std::stoi(ord[0]);
 		value = std::stof(ord[1]);
@@ -392,6 +391,7 @@ bool reorder_buffer::branch(int optype,float value)
 		default:
 			cerr << "Erro inesperado, abortando..." << endl << flush;
 			sc_stop();
+			nana::API::exit();
 			exit(1);
 	}
 }

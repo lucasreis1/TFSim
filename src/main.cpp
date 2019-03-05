@@ -45,7 +45,7 @@ int sc_main(int argc, char *argv[])
 	clock_group.caption("Ciclo de Clock");
 	clock_group.div("count");
 	grid memory(fm,rectangle(),10,50);
-	map<string,int> instruct_time{{"DADD",4},{"DADDI",4},{"DSUB",6},{"DSUBI",6},{"DMUL",10},{"DMULI",10},{"DDIV",16},{"DDIVI",16},{"MEM",2}};
+	map<string,int> instruct_time{{"DADD",4},{"DADDI",4},{"DSUB",6},{"DSUBI",6},{"DMUL",10},{"DDIV",16},{"MEM",2}};
 	top top1("top");
 	mnbar.push_back("&Opções");
 	botao.caption("START");
@@ -102,23 +102,18 @@ int sc_main(int argc, char *argv[])
 		inputbox::text dsub_t("DSUB",std::to_string(instruct_time["DSUB"]));
 		inputbox::text dsubi_t("DSUBI",std::to_string(instruct_time["DSUBI"]));
 		inputbox::text dmul_t("DMUL",std::to_string(instruct_time["DMUL"]));
-		inputbox::text dmuli_t("DMULI",std::to_string(instruct_time["DMULI"]));
 		inputbox::text ddiv_t("DDIV",std::to_string(instruct_time["DDIV"]));
-		inputbox::text ddivi_t("DDIVI",std::to_string(instruct_time["DDIVI"]));
 		inputbox::text mem_t("Load/Store",std::to_string(instruct_time["MEM"]));
-		if(ibox.show(dadd_t,daddi_t,dsub_t,dsubi_t,dmul_t,dmuli_t,ddiv_t,ddivi_t,mem_t))
+		if(ibox.show(dadd_t,daddi_t,dsub_t,dsubi_t,dmul_t,ddiv_t,mem_t))
 		{
 			instruct_time["DADD"] = std::stoi(dadd_t.value());
 			instruct_time["DADDI"] = std::stoi(daddi_t.value());
 			instruct_time["DSUB"] = std::stoi(dsub_t.value());
 			instruct_time["DSUBI"] = std::stoi(dsubi_t.value());
 			instruct_time["DMUL"] = std::stoi(dmul_t.value());
-			instruct_time["DMULI"] = std::stoi(dmuli_t.value());
 			instruct_time["DDIV"] = std::stoi(ddiv_t.value());
-			instruct_time["DDIVI"] = std::stoi(ddivi_t.value());
 			instruct_time["MEM"] = std::stoi(mem_t.value());
 		}
-
 	});
 	sub->append("Fila de instruções", [&](menu::item_proxy &ip)
 	{
@@ -394,6 +389,52 @@ int sc_main(int argc, char *argv[])
 						}
 						inFile.close();
 					}
+					break;
+				case 'r':
+					inFile.open(argv[k+1]);
+					if(!inFile.is_open())
+					{
+						msgbox msg("Arquivo inválido");
+						msg << "Não foi possível abrir o arquivo " << argv[k+1];
+						msg.show();
+					}
+					else
+					{
+						int value;
+						if(inFile >> value && value <= 10 && value > 0)
+							nadd = value;
+						if(inFile >> value && value <= 10 && value > 0)
+							nmul = value;
+						if(inFile >> value && value <= 10 && value > 0)
+							nls = value;
+						inFile.close();
+					}
+					break;
+				case 's':
+					plc.div("<vert <weight = 5%><vert weight=85% < <weight = 1% ><instr> <rst> <weight = 1%> <weight = 20% regs> <weight = 1%> > < <weight = 1%> <memor> <weight = 1%> <rob> <weight = 1%> > > < <weight = 1%> <clk_c weight=15%> <weight=50%> <gap = 10btns> <weight = 1%> > <weight = 2%> >");
+					plc.collocate();
+					spec = true;
+					k--;
+					break;
+				case 'l':
+					inFile.open(argv[k+1]);
+					if(!inFile.is_open())
+					{
+						msgbox msg("Arquivo inválido");
+						msg << "Não foi possível abrir o arquivo " << argv[k+1];
+						msg.show();
+					}
+					else
+					{
+						string inst;
+						int value;
+						while(inFile >> inst)
+						{
+							if(inFile >> value && instruct_time.count(inst))
+								instruct_time[inst] = value;
+						}
+					}
+					inFile.close();
 					break;
 				default:
 					msgbox msg("Opção inválida");
