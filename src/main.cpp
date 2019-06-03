@@ -8,7 +8,7 @@
 #include<nana/gui/widgets/menubar.hpp>
 #include<nana/gui/widgets/group.hpp>
 #include<nana/gui/widgets/textbox.hpp>
-#include <nana/gui/filebox.hpp>
+#include<nana/gui/filebox.hpp>
 #include "top.hpp"
 
 using std::string;
@@ -87,7 +87,7 @@ int sc_main(int argc, char *argv[])
 		inputbox::integer add("ADD/SUB",nadd,1,10,1);
 		inputbox::integer mul("MUL/DIV",nmul,1,10,1);
 		inputbox::integer sl("LOAD/STORE",nls,1,10,1);
-		if(ibox.show(add,mul,sl))
+		if(ibox.show_modal(add,mul,sl))
 		{
 			nadd = add.value();
 			nmul = mul.value();
@@ -104,7 +104,7 @@ int sc_main(int argc, char *argv[])
 		inputbox::text dmul_t("DMUL",std::to_string(instruct_time["DMUL"]));
 		inputbox::text ddiv_t("DDIV",std::to_string(instruct_time["DDIV"]));
 		inputbox::text mem_t("Load/Store",std::to_string(instruct_time["MEM"]));
-		if(ibox.show(dadd_t,daddi_t,dsub_t,dsubi_t,dmul_t,ddiv_t,mem_t))
+		if(ibox.show_modal(dadd_t,daddi_t,dsub_t,dsubi_t,dmul_t,ddiv_t,mem_t))
 		{
 			instruct_time["DADD"] = std::stoi(dadd_t.value());
 			instruct_time["DADDI"] = std::stoi(daddi_t.value());
@@ -120,7 +120,7 @@ int sc_main(int argc, char *argv[])
 		filebox fb(0,true);
 		inputbox ibox(fm,"Localização do arquivo com a lista de instruções:");
 		inputbox::path caminho("",fb);
-		if(ibox.show(caminho))
+		if(ibox.show_modal(caminho))
 		{
 			auto path = caminho.value();
 			inFile.open(path);
@@ -149,7 +149,7 @@ int sc_main(int argc, char *argv[])
 		filebox fb(0,true);
 		inputbox ibox(fm,"Localização do arquivo de valores de registradores inteiros:");
 		inputbox::path caminho("",fb);
-		if(ibox.show(caminho))
+		if(ibox.show_modal(caminho))
 		{
 			auto path = caminho.value();
 			inFile.open(path);
@@ -179,7 +179,7 @@ int sc_main(int argc, char *argv[])
 		filebox fb(0,true);
 		inputbox ibox(fm,"Localização do arquivo de valores de registradores PF:");
 		inputbox::path caminho("",fb);
-		if(ibox.show(caminho))
+		if(ibox.show_modal(caminho))
 		{
 			auto path = caminho.value();
 			inFile.open(path);
@@ -210,7 +210,7 @@ int sc_main(int argc, char *argv[])
 		filebox fb(0,true);
 		inputbox ibox(fm,"Localização do arquivo de valores de memória:");
 		inputbox::path caminho("",fb);
-		if(ibox.show(caminho))
+		if(ibox.show_modal(caminho))
 		{
 			auto path = caminho.value();
 			inFile.open(path);

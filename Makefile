@@ -10,7 +10,7 @@ OBJ = $(SRC:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
 CPPFLAGS += -I /opt/systemc/include 
 LDLFLAGS += -L /opt/systemc/lib -Wl,-rpath=/opt/systemc/lib 
-CFLAGS += -std=c++14 -g -ggdb -Wall 
+CFLAGS += -std=c++17 -Wall 
 LIBS += -lnana -lX11 -lpthread -lrt -lXft -lpng -lasound -lfontconfig -lm -lsystemc
 
 .PHONY: all nofs clean
@@ -29,3 +29,4 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 
 clean:
 	rm $(OBJ)
+	rm $(EXEC_NAME)

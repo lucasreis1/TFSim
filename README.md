@@ -20,35 +20,31 @@ out-of-order execution on modern microprocessors.
 	```
 	1-3. Gere os arquivos de compilação usando cmake
 	```
-	cmake .. -DCMAKE_CXX_STANDARD=14 -DCMAKE_INSTALL_PREFIX=/opt/systemc
+	cmake .. -DCMAKE_CXX_STANDARD=17 -DCMAKE_INSTALL_PREFIX=/opt/systemc
 	```
 	1-4. Compile e instale a biblioteca
 	```
 	make
 	sudo make install
 	```
-2. Crie uma pasta qualquer para fazer download do Nana.
-	2-1. Clone o Nana e acesse sua raiz:
-	```
-	git clone --single-branch -b hotfix-1.6.2 https://github.com/cnjinhao/nana.git
-	cd nana
-	```
-	2-2. Crie uma pasta qualquer (não pode se chamar build) e acesse-a
+2. Baixe o [Nana](http://nanapro.org/en-us)
+	2-1. Crie uma pasta qualquer (não pode se chamar build) dentro da pasta raiz do Nana e acesse-a
 	```
 	mkdir build2
 	cd build2
 	```
-	2-3. Crie os arquivos de compilação usando cmake
+	2-2. Crie os arquivos de compilação usando cmake
 	```
-	cmake ..
+	cmake .. -DNANA_CMAKE_INSTALL=true
 	```
-	2-4. Instale as seguintes bibliotecas necessárias antes de compilar o nana:
+	2-3. Instale as seguintes bibliotecas necessárias antes de compilar o nana:
 	```
 	sudo apt install libx11-dev
 	sudo apt install libxft-dev
 	sudo apt install libasound2-dev
+	sudo apt install libxcursor-dev
 	```
-	2-5. Compile e instale o nana usando make
+	2-4. Compile e instale o nana usando make
 	```
 	make
 	sudo make install
