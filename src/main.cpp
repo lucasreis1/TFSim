@@ -1,4 +1,5 @@
 #include<systemc.h>
+#include<sstream>
 #include<string>
 #include<vector>
 #include<map>
@@ -79,7 +80,7 @@ int sc_main(int argc, char *argv[])
 		}
 	});
 	op.check_style(0,menu::checks::highlight);
-	op.append("Modificar valores");
+	op.append("Modificar valores...");
 	auto sub = op.create_sub_menu(1);
 	sub->append("Número de Estações de Reserva",[&](menu::item_proxy ip)
 	{
@@ -234,6 +235,125 @@ int sc_main(int argc, char *argv[])
 					memory.Set(i,"0");
 				}
 				inFile.close();
+			}
+		}
+	});
+	op.append("Verificar conteúdo...");
+	auto new_sub = op.create_sub_menu(2);
+	new_sub->append("Valores de registradores",[&](menu::item_proxy &ip) {
+		filebox fb(0,true);
+		inputbox ibox(fm,"Localização do arquivo de valores de registradores:");
+		inputbox::path caminho("",fb);
+		if(ibox.show_modal(caminho))
+		{
+			auto path = caminho.value();
+			inFile.open(path);
+			if(!inFile.is_open())
+			{
+				msgbox msg("Arquivo inválido");
+				msg << "Não foi possível abrir o arquivo!";
+				msg.show();
+			}
+			else
+			{
+				string str;
+				int reg_pos,i;
+				bool is_float, ok; 
+				ok = true;
+				while(inFile >> str)
+				{
+					if(str[0] == '$')
+					{
+						if(str[1] == 'f')
+					       	{ 
+							i = 2;
+						       	is_float = true; 
+						}
+					       	else 
+						{ 
+							i = 1; 
+							is_float = false;
+						}
+						reg_pos = std::stoi(str.substr(i,str.size()-i));
+						
+						auto reg_gui = reg.at(0);
+						string value;
+						inFile >> value;
+						if(!is_float)
+						{
+							if(reg_gui.at(reg_pos).text(1) != value)
+							{
+								ok = false;
+								break;
+							}
+						}
+						else
+						{
+							if(std::stof(reg_gui.at(reg_pos).text(4)) != std::stof(value))
+							{
+								ok = false;
+								break;
+							}	
+						}
+					}
+				}	
+				inFile.close();
+				msgbox msg("Verificação de registradores");
+				if(ok)
+				{
+					msg << "Registradores especificados apresentam valores idênticos!";
+					msg.icon(msgbox::icon_information);
+				}
+				else
+				{
+					msg << "Registradores especificados apresentam valores distintos!";
+					msg.icon(msgbox::icon_error);
+				}
+				msg.show();
+			}
+		}
+	});
+	new_sub->append("Valores de memória",[&](menu::item_proxy &ip) {
+		filebox fb(0,true);
+		inputbox ibox(fm,"Localização do arquivo de valores de memória:");
+		inputbox::path caminho("",fb);
+		if(ibox.show_modal(caminho))
+		{
+			auto path = caminho.value();
+			inFile.open(path);
+			if(!inFile.is_open())
+			{
+				msgbox msg("Arquivo inválido");
+				msg << "Não foi possível abrir o arquivo!";
+				msg.show();
+			}
+			else
+			{
+				string value;
+				bool ok; 
+				ok = true;
+				for(int i = 0 ; i < 500 ; i++)
+				{
+					inFile >> value;
+					if(std::stoi(memory.Get(i)) != (int)std::stol(value,nullptr,16))
+					{
+						ok = false;
+						break;
+					}
+				}
+				inFile.close();
+				msgbox msg("Verificação de memória");
+				if(ok)
+				{
+					msg << "Endereços de memória especificados apresentam valores idênticos!";
+					msg.icon(msgbox::icon_information);
+				}
+				else
+				{
+					msg << "Endereços de memória especificados apresentam valores distintos!";
+					msg.icon(msgbox::icon_error);
+				}
+				msg.show();
 			}
 		}
 	});
