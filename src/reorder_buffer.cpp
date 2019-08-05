@@ -157,7 +157,7 @@ void reorder_buffer::new_rob_head()
 				else
 					out_iq->write("R");
 				cout << "-----------------LIMPANDO ROB no ciclo " << sc_time_stamp() << " -----------------" << endl << flush;
-				_flush();
+				_flush(); //Esvazia o ROB
 				out_resv->write("F");
 				out_slb->write("F");
 				out_rb->write("F");

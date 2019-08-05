@@ -17,15 +17,20 @@ instructions(instr)
 void instruction_queue_rob::main()
 {
 	auto cat = instructions.at(0);
-	for(pc = 0; pc < instruct_queue.size() ; pc++)
+	pc = 0;
+	while(1)
 	{
-		if(pc)
-			cat.at(pc-1).select(false);
-		cat.at(pc).select(true,true);
-		cat.at(pc).text(ISS,"X");
-		cat.at(pc).text(EXEC,"");
-		cat.at(pc).text(WRITE,"");
-		out->write(instruct_queue[pc] + " " + std::to_string(pc));
+		if(pc < instruct_queue.size())
+		{
+			if(pc)
+				cat.at(pc-1).select(false);
+			cat.at(pc).select(true,true);
+			cat.at(pc).text(ISS,"X");
+			cat.at(pc).text(EXEC,"");
+			cat.at(pc).text(WRITE,"");
+			out->write(instruct_queue[pc] + " " + std::to_string(pc));
+			pc++;
+		}
 		wait();
 	}
 }
@@ -47,7 +52,7 @@ void instruction_queue_rob::leitura_rob()
 	}
 	else if(ord[0] == "S" && ord.size() == 1)
 	{
-		last_pc = pc;
+		last_pc = pc - 1;
 		pc_moved = false;
 	}
 	else if(ord[0] == "S")
@@ -59,7 +64,7 @@ void instruction_queue_rob::leitura_rob()
 	}
 	else
 	{
-		cat.at(pc).select(false);
+		cat.at(pc-1).select(false);
 		old_pc = pc;
 		pc = last_pc + std::stoi(p);
 	}

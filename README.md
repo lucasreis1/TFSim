@@ -33,16 +33,13 @@ out-of-order execution on modern microprocessors.
 	mkdir build2
 	cd build2
 	```
-	2-2. Crie os arquivos de compilação usando cmake
+	2-2. Instale as seguintes bibliotecas necessárias antes de compilar o nana:
 	```
-	cmake .. -DNANA_CMAKE_INSTALL=true
+	sudo apt install -y libx11-dev libxft-dev libasound2-dev libxcursor-dev
 	```
-	2-3. Instale as seguintes bibliotecas necessárias antes de compilar o nana:
+	2-3. Crie os arquivos de compilação usando cmake
 	```
-	sudo apt install libx11-dev
-	sudo apt install libxft-dev
-	sudo apt install libasound2-dev
-	sudo apt install libxcursor-dev
+	cmake .. -DNANA_CMAKE_INSTALL=TRUE
 	```
 	2-4. Compile e instale o nana usando make
 	```
