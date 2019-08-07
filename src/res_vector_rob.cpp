@@ -45,6 +45,7 @@ void res_vector_rob::leitura_issue()
 	int pos,rob_pos;
 	int regst;
 	float value;
+	bool check_value;
 	auto cat = table.at(0);
 	while(true)
 	{
@@ -66,11 +67,22 @@ void res_vector_rob::leitura_issue()
 		rs[pos]->fp = ord[0].at(0) == 'F';
 		rs[pos]->dest = rob_pos;
 		rs[pos]->instr_pos = std::stoi(ord[4]);
-		cat.at(pos).text(OP,ord[0]);
 		regst = ask_status(ord[2]);
-		if(regst == 0)
+		cat.at(pos).text(OP,ord[0]);
+		check_value = false;
+		if(regst != 0)
 		{
-			value = ask_value(ord[2]);
+			string check = ask_rob_value(std::to_string(regst));
+			if(check != "EMPTY")
+			{
+				value = std::stof(check);
+				check_value = true;
+			}
+		}
+		if(regst == 0 || check_value == true)
+		{
+			if(check_value == false)
+				value = ask_value(ord[2]);
 			rs[pos]->vj = value;
 			if(ord[2].at(0) == 'R')
 				cat.at(pos).text(VJ,std::to_string((int)value));
@@ -83,28 +95,44 @@ void res_vector_rob::leitura_issue()
 			rs[pos]->qj = regst;
 			cat.at(pos).text(QJ,std::to_string(regst));
 		}
-		regst = ask_status(ord[3]);
 		if(ord[0].at(ord[0].size()-1) == 'I')
 		{
 			value = std::stof(ord[3]);
 			rs[pos]->vk = value;
 			cat.at(pos).text(VK,std::to_string((int)value));
 		}
-		else if(regst == 0)
+		else 
 		{
-			value = ask_value(ord[3]);
-			rs[pos]->vk = value;
-			if(ord[3].at(0) == 'R')
-				cat.at(pos).text(VK,std::to_string((int)value));
+			check_value = false;
+			regst = ask_status(ord[3]);
+			if(regst != 0)
+			{
+				string check = ask_rob_value(std::to_string(regst));
+				if(check != "EMPTY")
+				{
+					value = std::stof(check);
+					check_value = true;
+				}
+			}
+					
+			if(regst == 0 || check_value == true)
+			{
+				if(check_value == false)
+					value = ask_value(ord[3]);
+				rs[pos]->vk = value;
+				if(ord[3].at(0) == 'R')
+					cat.at(pos).text(VK,std::to_string((int)value));
+				else
+					cat.at(pos).text(VK,std::to_string(value));
+			}
 			else
-				cat.at(pos).text(VK,std::to_string(value));
+			{
+				cout << "instruçao " << ord[0] << " aguardando reg " << ord[3] << endl << flush;
+				rs[pos]->qk = regst;
+				cat.at(pos).text(QK,std::to_string(regst));
+			}
 		}
-		else
-		{
-			cout << "instruçao " << ord[0] << " aguardando reg " << ord[3] << endl << flush;
-			rs[pos]->qk = regst;
-			cat.at(pos).text(QK,std::to_string(regst));
-		}
+		out_rob->write("N");
 		rs[pos]->Busy = true;
 		cat.at(pos).text(BUSY,"True");
 		rs[pos]->exec_event.notify(1,SC_NS);
@@ -114,18 +142,24 @@ void res_vector_rob::leitura_issue()
 
 void res_vector_rob::leitura_rob()
 {
-	auto cat = table.at(0);
-	for(unsigned int i = 0 ; i < rs.size() ; i++)
+	string p;
+	in_rob->nb_read(p);
+	if(p == "F")
 	{
-		if(rs[i]->Busy)
+		in_rob->notify();
+		auto cat = table.at(0);
+		for(unsigned int i = 0 ; i < rs.size() ; i++)
 		{
-			auto table_item = cat.at(i);
-			rs[i]->isFlushed = true;
-			rs[i]->qj = rs[i]->qk = 0;
-			table_item.text(BUSY,"False");
-			for(unsigned int k = 3 ; k < table_item.columns() ; k++)
-				table_item.text(k,"");
-			rs[i]->isFlushed_event.notify();
+			if(rs[i]->Busy)
+			{
+				auto table_item = cat.at(i);
+				rs[i]->isFlushed = true;
+				rs[i]->qj = rs[i]->qk = 0;
+				table_item.text(BUSY,"False");
+				for(unsigned int k = 3 ; k < table_item.columns() ; k++)
+					table_item.text(k,"");
+				rs[i]->isFlushed_event.notify();
+			}
 		}
 	}
 }
@@ -144,6 +178,16 @@ float res_vector_rob::ask_value(string reg)
 	out_rb->write("R V " + reg);
 	in_rb->read(res);
 	return std::stof(res);
+}
+string res_vector_rob::ask_rob_value(string rob_pos)
+{
+	string res;
+	out_rob->write(rob_pos);
+	in_rob->nb_read(res);
+	while(res == "F")
+		wait(out_rb->default_event());
+	in_rob->notify();
+	return res;
 }
 unsigned int res_vector_rob::ask_status(string reg)
 {

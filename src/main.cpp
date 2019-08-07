@@ -19,7 +19,6 @@ using std::fstream;
 int sc_main(int argc, char *argv[])
 {
 	using namespace nana;
-	vector<string> columns = {"#","Name","Busy","Op","Vj","Vk","Qj","Qk","A"}; 
 	vector<string> instruction_queue;
 	int nadd,nmul,nls;
 	nadd = 3;
@@ -356,11 +355,14 @@ int sc_main(int argc, char *argv[])
 			}
 		}
 	});
+	vector<string> columns = {"#","Name","Busy","Op","Vj","Vk","Qj","Qk","A"}; 
 	for(unsigned int i = 0 ; i < columns.size() ; i++)
 	{
 		table.append_header(columns[i].c_str());
-		if(i)
+		if(i && i != 3)
 			table.column_at(i).width(45);
+		else if (i == 3)
+			table.column_at(i).width(60);
 		else
 			table.column_at(i).width(30);
 	}
@@ -399,7 +401,10 @@ int sc_main(int argc, char *argv[])
 	srand(static_cast <unsigned> (time(0)));
 	for(int i = 0 ; i < 32 ; i++)
 	{
-		reg_gui.at(i).text(1,std::to_string(rand()%100));
+		if(i)
+			reg_gui.at(i).text(1,std::to_string(rand()%100));
+		else
+			reg_gui.at(i).text(1,std::to_string(0));
 		reg_gui.at(i).text(2,"0");
 		reg_gui.at(i).text(4,std::to_string(static_cast <float> (rand()) / static_cast <float> (RAND_MAX/100.0)));
 		reg_gui.at(i).text(5,"0");

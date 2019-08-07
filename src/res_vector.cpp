@@ -60,7 +60,6 @@ void res_vector::leitura_issue()
 		rs[pos]->fp = ord[0].at(0) == 'F';
 		rs[pos]->instr_pos = std::stoi(ord[4]);
 		cat.at(pos).text(OP,ord[0]);
-		ask_status(false,ord[1],pos+1);
 		regst = ask_status(true,ord[2]);
 		if(regst == 0)
 		{
@@ -78,27 +77,31 @@ void res_vector::leitura_issue()
 			cat.at(pos).text(QJ,std::to_string(regst));
 
 		}
-		regst = ask_status(true,ord[3]);
 		if(ord[0].at(ord[0].size()-1) == 'I')
 		{
 			rs[pos]->vk = std::stoi(ord[3]);
 			cat.at(pos).text(VK,ord[3]);
 		}
-		else if(regst == 0)
+		else 
 		{
-			value = ask_value(ord[3]);
-			rs[pos]->vk = value;
-			if(ord[3].at(0) != 'F')
-				cat.at(pos).text(VK,std::to_string((int)value));
+			regst = ask_status(true,ord[3]);
+			if(regst == 0)
+			{
+				value = ask_value(ord[3]);
+				rs[pos]->vk = value;
+				if(ord[3].at(0) != 'F')
+					cat.at(pos).text(VK,std::to_string((int)value));
+				else
+					cat.at(pos).text(VK,std::to_string(value));
+			}
 			else
-				cat.at(pos).text(VK,std::to_string(value));
+			{
+				cout << "instruçao " << ord[0] << " aguardando reg R" << ord[3] << endl << flush;
+				rs[pos]->qk = regst;
+				cat.at(pos).text(QK,std::to_string(regst));
+			}
 		}
-		else
-		{
-			cout << "instruçao " << ord[0] << " aguardando reg R" << ord[3] << endl << flush;
-			rs[pos]->qk = regst;
-			cat.at(pos).text(QK,std::to_string(regst));
-		}
+		ask_status(false,ord[1],pos+1);
 		rs[pos]->Busy = true;
 		cat.at(pos).text(BUSY,"True");
 		rs[pos]->exec_event.notify(1,SC_NS);

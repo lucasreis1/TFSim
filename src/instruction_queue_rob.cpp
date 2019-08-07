@@ -57,10 +57,10 @@ void instruction_queue_rob::leitura_rob()
 	}
 	else if(ord[0] == "S")
 	{
-		last_pc = pc;
-		cat.at(pc).select(false);
+		last_pc = pc - 1;
+		cat.at(pc-1).select(false);
 		old_pc = pc;
-		pc += std::stoi(ord[1]);
+		pc += std::stoi(ord[1]) - 1;
 	}
 	else
 	{

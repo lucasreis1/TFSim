@@ -14,8 +14,10 @@ void branch_predictor::update_state(bool taken)
 {
 	if(taken)
 	{
-		state = (state + 1)%max;
+		state = ++state>max?max:state; 
 	}
 	else if(state)
-		state--;
+	{
+		state =	--state<0?0:state;
+	}
 }

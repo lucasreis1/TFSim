@@ -14,7 +14,7 @@ instr_queue_gui(instr_gui)
 	for(unsigned int i = 0 ; i < tam ; i++)
 	{
 		ptrs[i] = new rob_slot(i+1);
-		gui_table.at(0).append({std::to_string(i+1),"False"});
+		gui_table.at(0).append({std::to_string(i+1),"False","","","",""});
 	}
 	SC_THREAD(leitura_issue);
 	sensitive << in_issue;
@@ -27,6 +27,9 @@ instr_queue_gui(instr_gui)
 	dont_initialize();
 	SC_THREAD(leitura_adu);
 	sensitive << in_adu;
+	dont_initialize();
+	SC_THREAD(res_v_check);
+	sensitive << in_resv;
 	dont_initialize();
 	SC_THREAD(check_conflict);
 	sensitive << in_slb;
@@ -64,6 +67,7 @@ void reorder_buffer::leitura_issue()
 		ptrs[pos]->busy = true;
 		cat.at(pos).text(R_BUSY,"True");
 		cat.at(pos).text(DESTINATION,"");
+		cat.at(pos).text(VALUE,"");
 		ptrs[pos]->ready = false;
 		ptrs[pos]->instruction = ord[0];
 		cat.at(pos).text(INSTRUCTION,inst);
@@ -116,6 +120,7 @@ void reorder_buffer::leitura_issue()
 		{
 			ptrs[pos]->destination = ord[1];
 			cat.at(pos).text(DESTINATION,ord[1]);
+			wait(resv_read_oper_event);
 			ask_status(false,ord[1],pos+1);
 		}
 		if(rob_buff.empty())
@@ -125,7 +130,7 @@ void reorder_buffer::leitura_issue()
 	}
 }
 
-void reorder_buffer::new_rob_head()
+void reorder_buffer::new_rob_head() 
 {
 	unsigned int instr_type;
 	bool pred;
@@ -162,9 +167,13 @@ void reorder_buffer::new_rob_head()
 				out_slb->write("F");
 				out_rb->write("F");
 			}
+			preditor.update_state(pred);
 		}
 		else
+		{
+			wait(SC_ZERO_TIME);
 			ask_value(false,rob_buff[0]->destination,rob_buff[0]->value);
+		}
 		if(!rob_buff.empty())
 		{
 			rob_buff[0]->busy = false;
@@ -329,6 +338,27 @@ void reorder_buffer::check_dependencies(unsigned int index, float value)
 			if(rob_buff[0]->entry == index && ptrs[i]->ready)
 				rob_head_value_event.notify(1,SC_NS);
 		}
+	}
+}
+void reorder_buffer::res_v_check()
+{
+	string p,value;
+	auto cat = gui_table.at(0);
+	while(true)
+	{
+		in_resv->read(p);
+		if(p == "N")
+			resv_read_oper_event.notify();
+		else
+		{
+			int index = std::stoi(p);
+			value = cat.at(index-1).text(VALUE);
+			if(value != "")
+				out_resv->write(value);
+			else
+				out_resv->write("EMPTY");
+		}
+		wait();
 	}
 }
 void reorder_buffer::_flush()

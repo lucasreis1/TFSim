@@ -23,8 +23,8 @@ public:
 	sc_port<read_if_f> in_slb;
 	sc_port<write_if_f> out_slb;
 	sc_port<write_if> out_iq;
-	sc_port<write_if> out_resv;
-
+	sc_port<write_if_f> out_resv;
+	sc_port<read_if_f> in_resv;
 	SC_HAS_PROCESS(reorder_buffer);
 	reorder_buffer(sc_module_name name,unsigned int sz,unsigned int pred_size, nana::listbox &gui, nana::listbox::cat_proxy instr_gui);
 	~reorder_buffer();
@@ -32,6 +32,7 @@ public:
 	void new_rob_head();
 	void leitura_cdb();
 	void leitura_adu();
+	void res_v_check();
 	void check_conflict();
 
 private:
@@ -64,7 +65,7 @@ private:
 	unsigned int last_rob;
 	rob_slot **ptrs;
 	deque<rob_slot *> rob_buff;
-	sc_event free_rob_event,new_rob_head_event,rob_head_value_event;
+	sc_event free_rob_event,new_rob_head_event,rob_head_value_event,resv_read_oper_event;
 	branch_predictor preditor;
 	map<string,unsigned int> branch_instr;
 	nana::listbox &gui_table;

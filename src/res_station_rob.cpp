@@ -95,6 +95,7 @@ void res_station_rob::exec()
 
 void res_station_rob::leitura()
 {
+	in->read(p);
 	if(qj || qk)
 	{
 		int rs_source;
