@@ -13,13 +13,14 @@ public:
 	sc_port<read_if> in_rob;
 
 	SC_HAS_PROCESS(instruction_queue_rob);
-	instruction_queue_rob(sc_module_name name, vector<string> inst_q, nana::listbox &instr);
+	instruction_queue_rob(sc_module_name name, vector<string> inst_q,int rb_sz, nana::listbox &instr);
 	void main();
 	void leitura_rob();
 	void clear_gui(unsigned int pos);
 
 private:
-	unsigned int pc,last_pc,next_pc;
+	unsigned int pc;
 	vector<string> instruct_queue;
+	vector<unsigned int> last_pc;
 	nana::listbox &instructions;
 };

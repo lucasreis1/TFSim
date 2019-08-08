@@ -21,9 +21,15 @@ void memory_rob::leitura_bus()
 		in->read(p);
 		ord = instruction_split(p);
 		pos = std::stoi(ord[1]);
+		if(pos%4)
+		{
+			cerr << "Endereço " << pos << " não é múltiplo de quatro!" << endl;
+			sc_stop();
+			nana::API::exit();
+		}
+		pos/=4;
 		if(ord[0] == "L")
 		{
-			cout << "Instrucao terminada com resultado " << mem.Get(pos) << " para escrever no ROB #" << ord[2] << endl << flush;
 			escrita_saida = ord[2] + ' ' + mem.Get(pos);
 			out->write(escrita_saida);
 		}

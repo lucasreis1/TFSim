@@ -15,6 +15,7 @@ public:
 	string type_name;
 	bool Busy;
 	bool isFlushed;
+	bool isMemory;
 	bool fp;
 	string op;
 	float vj,vk;
@@ -28,7 +29,7 @@ public:
 	sc_event exec_event,isFlushed_event;
 	SC_HAS_PROCESS(res_station_rob);
 
-	res_station_rob(sc_module_name name,int i, string n, map<string,int> inst_map, const nana::listbox::item_proxy item, const nana::listbox::cat_proxy c, const nana::listbox::cat_proxy rgui);
+	res_station_rob(sc_module_name name,int i, string n, bool isMem, map<string,int> inst_map, const nana::listbox::item_proxy item, const nana::listbox::cat_proxy c, const nana::listbox::cat_proxy rgui);
 	void exec();
 	void leitura();
 	void clean_item();

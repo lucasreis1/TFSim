@@ -110,9 +110,9 @@ void reorder_buffer::leitura_issue()
 			else
 				ptrs[pos]->destination = ord[2];
 			if(preditor.predict())
-				out_iq->write("S " + ptrs[pos]->destination);
+				out_iq->write("S " + std::to_string(ptrs[pos]->entry) +  ' ' + ptrs[pos]->destination);
 			else
-				out_iq->write("S");
+				out_iq->write("S " + std::to_string(ptrs[pos]->entry));
 			if(ptrs[pos]->qj == 0 && ptrs[pos]->qk == 0)
 				ptrs[pos]->ready = true;
 		}
@@ -120,7 +120,8 @@ void reorder_buffer::leitura_issue()
 		{
 			ptrs[pos]->destination = ord[1];
 			cat.at(pos).text(DESTINATION,ord[1]);
-			wait(resv_read_oper_event);
+			if(ord[0].at(0) != 'L')
+				wait(resv_read_oper_event);
 			ask_status(false,ord[1],pos+1);
 		}
 		if(rob_buff.empty())
@@ -158,9 +159,9 @@ void reorder_buffer::new_rob_head()
 			if(pred != preditor.predict())
 			{
 				if(pred)
-					out_iq->write(rob_buff[0]->destination);
+					out_iq->write(rob_buff[0]->destination + ' ' + std::to_string(rob_buff[0]->entry));
 				else
-					out_iq->write("R");
+					out_iq->write("R " + std::to_string(rob_buff[0]->entry));
 				cout << "-----------------LIMPANDO ROB no ciclo " << sc_time_stamp() << " -----------------" << endl << flush;
 				_flush(); //Esvazia o ROB
 				out_resv->write("F");
@@ -202,17 +203,23 @@ void reorder_buffer::leitura_cdb()
 		index = std::stoi(ord[0]);
 		value = std::stof(ord[1]);
 		wait(SC_ZERO_TIME);
+		wait(SC_ZERO_TIME);
+		wait(SC_ZERO_TIME);
+		wait(SC_ZERO_TIME);
 		check_dependencies(index,value);
-		ptrs[index-1]->ready = true;
-		ptrs[index-1]->value = value;
-		if(ptrs[index-1]->destination.at(0) != 'F')
-			cat.at(index-1).text(VALUE,std::to_string((int)value));
-		else
-			cat.at(index-1).text(VALUE,std::to_string(value));
-		ptrs[index-1]->state = WRITE;
-		cat.at(index-1).text(STATE,"Write Result");
-		if(rob_buff[0]->entry == index)
-			rob_head_value_event.notify(1,SC_NS);
+		if(ptrs[index-1]->busy)
+		{
+			ptrs[index-1]->ready = true;
+			ptrs[index-1]->value = value;
+			if(ptrs[index-1]->destination.at(0) != 'F')
+				cat.at(index-1).text(VALUE,std::to_string((int)value));
+			else
+				cat.at(index-1).text(VALUE,std::to_string(value));
+			ptrs[index-1]->state = WRITE;
+			cat.at(index-1).text(STATE,"Write Result");
+			if(rob_buff[0]->entry == index)
+				rob_head_value_event.notify(1,SC_NS);
+		}
 		wait();
 	}
 }

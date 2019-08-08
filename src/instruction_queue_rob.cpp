@@ -1,9 +1,10 @@
 #include "instruction_queue_rob.hpp"
 #include "general.hpp"
 
-instruction_queue_rob::instruction_queue_rob(sc_module_name name, vector<string> inst_q, nana::listbox &instr):
+instruction_queue_rob::instruction_queue_rob(sc_module_name name, vector<string> inst_q,int rb_sz, nana::listbox &instr):
 sc_module(name),
 instruct_queue(inst_q),
+last_pc(rb_sz),
 instructions(instr)
 {
 	SC_THREAD(main);
@@ -40,35 +41,37 @@ void instruction_queue_rob::leitura_rob()
 	bool pc_moved = true;
 	string p;
 	vector<string> ord;
-	unsigned int old_pc;
+	vector<unsigned int> old_pc(last_pc.size());
+	unsigned int index;
 	in_rob->read(p);
 	ord = instruction_split(p);
 	auto cat = instructions.at(0);
+	index = std::stoi(ord[1]) - 1;
 	if(ord[0] == "R")
 	{
 		cat.at(pc).select(false);
-		old_pc = pc;
-		pc = last_pc;
+		old_pc[index] = pc;
+		pc = last_pc[index];
 	}
-	else if(ord[0] == "S" && ord.size() == 1)
+	else if(ord[0] == "S" && ord.size() == 2)
 	{
-		last_pc = pc - 1;
+		last_pc[index] = pc - 1;
 		pc_moved = false;
 	}
 	else if(ord[0] == "S")
 	{
-		last_pc = pc - 1;
+		last_pc[index] = pc - 1;
 		cat.at(pc-1).select(false);
-		old_pc = pc;
-		pc += std::stoi(ord[1]) - 1;
+		old_pc[index] = pc;
+		pc += std::stoi(ord[2]) - 1;
 	}
 	else
 	{
 		cat.at(pc-1).select(false);
-		old_pc = pc;
-		pc = last_pc + std::stoi(p);
+		old_pc[index] = pc;
+		pc = last_pc[index] + std::stoi(p);
 	}
-	if(pc_moved && pc < old_pc)
+	if(pc_moved && pc < old_pc[index])
 		clear_gui(pc+1);
 }
 

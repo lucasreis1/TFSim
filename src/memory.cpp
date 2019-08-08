@@ -21,6 +21,13 @@ void memory::leitura_bus()
 		in->read(p);
 		ord = instruction_split(p);
 		pos = std::stoi(ord[1]);
+		if(pos%4)
+		{
+			cerr << "Endereço " << pos << " não é múltiplo de quatro!" << endl;
+			sc_stop();
+			nana::API::exit();
+		}
+		pos/=4;
 		if(ord[0] == "L")
 		{
 			cout << "Instrucao terminada com resultado " << mem.Get(pos) << " para escrever na estaçao de reserva " << ord[2] << endl << flush;

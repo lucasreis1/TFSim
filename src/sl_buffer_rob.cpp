@@ -14,7 +14,7 @@ table(lsbox)
 	{
 		texto = "Load" + std::to_string(i+1);
 		cat.append({std::to_string(cat.size()+1),texto,"False"});
-		ptrs[i] = new res_station_rob(texto.c_str(),i+t_outros,texto,instruct_time,cat.at(i+t_outros),ct,r_ct);
+		ptrs[i] = new res_station_rob(texto.c_str(),i+t_outros,texto,true,instruct_time,cat.at(i+t_outros),ct,r_ct);
 		ptrs[i]->in(in_cdb);
 		ptrs[i]->out(out_cdb);
 		ptrs[i]->out_mem(out_mem);

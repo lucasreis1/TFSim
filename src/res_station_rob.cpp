@@ -2,10 +2,11 @@
 #include "general.hpp"
 
 
-res_station_rob::res_station_rob(sc_module_name name,int i, string n, map<string,int> inst_map, const nana::listbox::item_proxy item, const nana::listbox::cat_proxy c, const nana::listbox::cat_proxy rgui):
+res_station_rob::res_station_rob(sc_module_name name,int i, string n,bool isMem, map<string,int> inst_map, const nana::listbox::item_proxy item, const nana::listbox::cat_proxy c, const nana::listbox::cat_proxy rgui):
 sc_module(name),
 id(i),
 type_name(n),
+isMemory(isMem),
 instruct_time(inst_map),
 table_item(item),
 instr_queue_gui(c),
@@ -50,13 +51,13 @@ void res_station_rob::exec()
 				else
 					cout << "Divisao por 0, instrucao ignorada!" << endl;
 			}
-			else if(a)
+			else if(isMemory)
 			{
 				a += vk;
 				table_item->text(A,std::to_string(a));
 				table_item->text(VK,"");
 			}
-			if(!a)
+			if(!isMemory)
 			{
 				wait(sc_time(instruct_time[op],SC_NS),isFlushed_event);
 				if(!isFlushed)
