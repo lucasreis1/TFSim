@@ -16,6 +16,7 @@ issue_control_rob::issue_control_rob(sc_module_name name): sc_module(name)
 
 void issue_control_rob::issue_select()
 {
+	string slb_p;
 	while(true)
 	{
 		in->nb_read(p);
@@ -29,7 +30,8 @@ void issue_control_rob::issue_select()
 				break;
 			case 2:
 				out_slbuff->write(p + ' ' + rob_pos);
-				out_adu->write(p + ' ' + rob_pos);
+				in_slbuff->read(slb_p);
+				out_adu->write(p + ' ' + rob_pos + ' ' +  slb_p);
 				break;
 			case 3:
 				out_adu->write(p + ' ' + rob_pos);

@@ -95,8 +95,8 @@ void cons_bus_fast::read(string &p)
 		wait(write_event);
 	empty = true;
 	p = palavra;
-	read_event.notify();
 	palavra = " ";
+	read_event.notify();
 }
 void cons_bus_fast::nb_read(string &p)
 {
@@ -106,6 +106,7 @@ void cons_bus_fast::nb_read(string &p)
 void cons_bus_fast::notify()
 {
 	empty = true;
+	palavra = " ";
 	read_event.notify();
 }
 const sc_event& cons_bus_fast::default_event() const

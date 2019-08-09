@@ -106,9 +106,14 @@ void reorder_buffer::leitura_issue()
 				else
 					ptrs[pos]->qk = regst;
 				ptrs[pos]->destination = ord[3];
+				cat.at(pos).text(DESTINATION,ord[3]);
 			}
 			else
+			{
+				cat.at(pos).text(DESTINATION,ord[2]);
 				ptrs[pos]->destination = ord[2];
+			}
+			ptrs[pos]->prediction = preditor.predict();
 			if(preditor.predict())
 				out_iq->write("S " + std::to_string(ptrs[pos]->entry) +  ' ' + ptrs[pos]->destination);
 			else
@@ -155,8 +160,8 @@ void reorder_buffer::new_rob_head()
 			if(instr_type < 2)
 				pred = branch(instr_type,rob_buff[0]->vj,rob_buff[0]->vk);
 			else
-				pred = branch(instr_type,rob_buff[0]->vj);
-			if(pred != preditor.predict())
+				pred = branch(instr_type,(float)rob_buff[0]->vj);
+			if(pred != rob_buff[0]->prediction)
 			{
 				if(pred)
 					out_iq->write(rob_buff[0]->destination + ' ' + std::to_string(rob_buff[0]->entry));
@@ -386,7 +391,7 @@ void reorder_buffer::_flush()
 		cat.at(i).text(VALUE,"");
 	}
 }
-bool reorder_buffer::branch(int optype,unsigned int rs,unsigned int rt)
+bool reorder_buffer::branch(int optype,int rs,int rt)
 {
 	switch(optype)
 	{

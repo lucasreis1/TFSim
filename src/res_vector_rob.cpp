@@ -134,6 +134,7 @@ void res_vector_rob::leitura_issue()
 				cat.at(pos).text(QK,std::to_string(regst));
 			}
 		}
+		wait(SC_ZERO_TIME);
 		out_rob->write("N");
 		rs[pos]->Busy = true;
 		cat.at(pos).text(BUSY,"True");
@@ -187,7 +188,7 @@ string res_vector_rob::ask_rob_value(string rob_pos)
 	out_rob->write(rob_pos);
 	in_rob->nb_read(res);
 	while(res == "F")
-		wait(out_rb->default_event());
+		wait(out_rob->default_event());
 	in_rob->notify();
 	return res;
 }

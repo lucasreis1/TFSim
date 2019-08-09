@@ -11,6 +11,7 @@ public:
 	sc_port<read_if_f> in;
 	sc_port<write_if_f> out_rsv;
 	sc_port<write_if_f> out_slbuff;
+	sc_port<read_if_f> in_slbuff;
 	sc_port<read_if_f> in_rob;
 	sc_port<write_if_f> out_rob;
 	sc_port<write_if_f> out_adu;

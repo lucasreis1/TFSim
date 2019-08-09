@@ -41,6 +41,7 @@ int sc_main(int argc, char *argv[])
 	button exit(fm);
 	group clock_group(fm);
 	label clock_count(clock_group);
+	fm.caption("TomaSim");
 	clock_group.caption("Ciclo de Clock");
 	clock_group.div("count");
 	grid memory(fm,rectangle(),10,50);

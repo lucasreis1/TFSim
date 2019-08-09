@@ -44,7 +44,8 @@ private:
 		string destination;
 		float value;
 		bool ready;
-		unsigned int vj,vk;
+		bool prediction;
+		int vj,vk;
 		unsigned int qj,qk;
 		unsigned int instr_pos;
 		rob_slot(unsigned int id)
@@ -77,7 +78,7 @@ private:
 	void mem_write(unsigned int addr,float value,unsigned int rob_pos);
 	void check_dependencies(unsigned int index, float value);
 	void _flush();
-	bool branch(int optype,unsigned int rs = 0,unsigned int rt = 0);
+	bool branch(int optype,int rs = 0,int rt = 0);
 	bool branch(int optype,float value);
 	int instruction_pos_finder(string p);
 };

@@ -14,6 +14,7 @@ class sl_buffer_rob: public sc_module
 {
 public:
 	sc_port<read_if_f> in_issue;
+	sc_port<write_if_f> out_issue;
 	sc_port<read_if> in_mem;
 	sc_port<write_if> out_mem;
 	sc_port<read_if> in_cdb;

@@ -62,7 +62,8 @@ void top::rob_mode(unsigned int nadd, unsigned int nmul,unsigned int nload,map<s
 	adu_sl_bus = unique_ptr<bus>(new bus("adu_sl_bus"));
 	mem_slb_bus = unique_ptr<bus>(new bus("mem_slb_bus"));
 	iq_rob_bus = unique_ptr<bus>(new bus("iq_rob_bus"));
-	rob_rv_bus = unique_ptr<cons_bus>(new cons_bus("rob_rv_bus"));
+	rob_rv_bus = unique_ptr<cons_bus_fast>(new cons_bus_fast("rob_rv_bus"));
+	rob_rv_bus = unique_ptr<cons_bus_fast>(new cons_bus_fast("rob_rv_bus"));
 	inst_bus = unique_ptr<cons_bus>(new cons_bus("inst_bus"));
 	rst_bus = unique_ptr<cons_bus>(new cons_bus("rst_bus"));
 	sl_bus = unique_ptr<cons_bus>(new cons_bus("sl_bus"));
@@ -75,7 +76,7 @@ void top::rob_mode(unsigned int nadd, unsigned int nmul,unsigned int nload,map<s
 	iss_ctrl_r = unique_ptr<issue_control_rob>(new issue_control_rob("issue_control_rob"));
 	fila_r = unique_ptr<instruction_queue_rob>(new instruction_queue_rob("fila_inst_rob",instruct_queue,rob_size,instr_gui));
 	rob = unique_ptr<reorder_buffer>(new reorder_buffer("rob",rob_size,2,rob_gui,instr_gui.at(0)));
-	adu = unique_ptr<address_unit>(new address_unit("address_unit",instruct_time["MEM"],instr_gui.at(0)));
+	adu = unique_ptr<address_unit>(new address_unit("address_unit",instruct_time["MEM"],instr_gui.at(0),table.at(0),nadd+nmul));
 	rs_ctrl_r = unique_ptr<res_vector_rob>(new res_vector_rob("rs_vc",nadd,nmul,instruct_time,table,instr_gui.at(0),rob_gui.at(0)));
 	rb_r = unique_ptr<register_bank_rob>(new register_bank_rob("register_bank_rob",regs));
 	slb_r = unique_ptr<sl_buffer_rob>(new sl_buffer_rob("sl_buffer_rob",nload,nadd+nmul,instruct_time,table,instr_gui.at(0),rob_gui.at(0)));
@@ -90,6 +91,7 @@ void top::rob_mode(unsigned int nadd, unsigned int nmul,unsigned int nload,map<s
 	iss_ctrl_r->in(*inst_bus);
 	iss_ctrl_r->out_rsv(*rst_bus);
 	iss_ctrl_r->out_slbuff(*sl_bus);
+	iss_ctrl_r->in_slbuff(*sl_bus);
 	iss_ctrl_r->in_rob(*rob_bus);
 	iss_ctrl_r->out_rob(*rob_bus);
 	iss_ctrl_r->out_adu(*ad_bus);
@@ -102,7 +104,6 @@ void top::rob_mode(unsigned int nadd, unsigned int nmul,unsigned int nload,map<s
 	rob->out_mem(*mem_bus);
 	rob->in_adu(*adu_bus);
 	rob->out_iq(*iq_rob_bus);
-	//rob->in_resv(*resv_rob_bus);
 	rob->in_resv(*rob_rv_bus);
 	rob->out_resv(*rob_rv_bus);
 	rob->in_slb(*rob_slb_bus);
@@ -123,9 +124,9 @@ void top::rob_mode(unsigned int nadd, unsigned int nmul,unsigned int nload,map<s
 	rs_ctrl_r->out_mem(*mem_bus);
 	rs_ctrl_r->in_rob(*rob_rv_bus);
 	rs_ctrl_r->out_rob(*rob_rv_bus);
-	//rs_ctrl_r->out_rob(*resv_rob_bus);
 
 	slb_r->in_issue(*sl_bus);
+	slb_r->out_issue(*sl_bus);
 	slb_r->in_cdb(*CDB);
 	slb_r->out_cdb(*CDB);
 	slb_r->out_mem(*mem_bus);

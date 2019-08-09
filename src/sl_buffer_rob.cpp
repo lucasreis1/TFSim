@@ -59,6 +59,7 @@ void sl_buffer_rob::leitura_issue()
 		}
 		wait(SC_ZERO_TIME);
 		in_issue->notify();
+		out_issue->write(std::to_string(pos));
 		cout << "Instrução " << p << " conseguiu espaço para usar uma estação de reserva em " << sc_time_stamp() << endl << flush;
 		rob_pos = std::stoi(ord[4]);
 		ptrs[pos]->op = ord[0];
@@ -90,6 +91,7 @@ void sl_buffer_rob::add_rec()
 				cout << "Instrucao " << ptrs[i]->op << " concluiu o calculo do endereco no ciclo " << sc_time_stamp() << endl << flush;
 				ptrs[i]->a = addr;
 				cat.at(i+tam_outros).text(A,std::to_string(addr));
+				cat.at(i+tam_outros).text(VK,"");
 				chk = check_conflict(rob_pos,addr);
 				if(!chk)
 					ptrs[i]->exec_event.notify(1,SC_NS);

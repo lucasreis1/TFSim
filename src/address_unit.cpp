@@ -1,10 +1,12 @@
 #include "address_unit.hpp"
 #include "general.hpp"
 
-address_unit::address_unit(sc_module_name name,unsigned int t, nana::listbox::cat_proxy instr_t):
+address_unit::address_unit(sc_module_name name,unsigned int t, nana::listbox::cat_proxy instr_t, nana::listbox::cat_proxy rst_t, int rst_tm):
 sc_module(name),
 delay_time(t),
-instruct_table(instr_t)
+instruct_table(instr_t),
+res_station_table(rst_t),
+rst_tam(rst_tm)
 {
 	SC_THREAD(leitura_issue);
 	sensitive << in_issue;
@@ -29,11 +31,14 @@ void address_unit::leitura_issue()
 		a = std::stoi(mem_ord[0]);
 		instr_pos = std::stoi(ord[3]);
 		rob_pos = std::stoi(ord[4]);
+		rst_pos = std::stoi(ord[5]);
 		regst = ask_status(true,mem_ord[1]);
 		if(ord[0].at(0) == 'S')
 			store = true;
 		else
 			store = false;
+		if(!store)
+			res_station_table.at(rst_pos+rst_tam).text(A,mem_ord[0]);
 		if(regst == 0)
 		{
 			wait(SC_ZERO_TIME);
@@ -43,17 +48,19 @@ void address_unit::leitura_issue()
 			{
 				if(addr_queue.empty())
 					addr_queue_event.notify(delay_time,SC_NS);
-				addr_queue.push({store,true,regst,rob_pos,instr_pos,a});
+				addr_queue.push({store,true,regst,rob_pos,instr_pos,rst_pos,a});
 			}
 			else
 			{
-				offset_buff.push_back({store,true,regst,rob_pos,instr_pos,a});
+				offset_buff.push_back({store,true,regst,rob_pos,instr_pos,rst_pos,a});
 				check_loads();
 			}
 		}
 		else
 		{
-			offset_buff.push_back({store,false,regst,rob_pos,instr_pos,a});
+			offset_buff.push_back({store,false,regst,rob_pos,instr_pos,rst_pos,a});
+			if(!store)
+				res_station_table.at(rst_pos+rst_tam).text(QK,std::to_string(regst));
 			cout << "Instrucao " << ord[0] << " aguardando o resultado do ROB " << regst << endl << flush;
 		}
 		wait();
@@ -68,6 +75,7 @@ void address_unit::leitura_cdb()
 	{
 		in_cdb->read(p_c);
 		ord_c = instruction_split(p_c);
+		bool found = false;
 		for(unsigned int i = 0 ; i < offset_buff.size() ; i++)
 		{
 			if(std::stoi(ord_c[0]) == offset_buff[i].regst)
@@ -83,10 +91,16 @@ void address_unit::leitura_cdb()
 					offset_buff.erase(offset_buff.begin() + i);
 				}
 				else
+				{
+					res_station_table.at(offset_buff[i].rst_pos+rst_tam).text(QK,"");
+					res_station_table.at(offset_buff[i].rst_pos+rst_tam).text(VK,ord_c[1]);
 					offset_buff[i].addr_calc = true;
-				check_loads();
+				}
+				found = true;
 			}
 		}
+		if(found)
+			check_loads();
 	wait();
 	}
 }
@@ -154,5 +168,6 @@ void address_unit::check_loads()
 				addr_queue_event.notify(delay_time,SC_NS);
 			addr_queue.push(offset_buff[i]);
 			offset_buff.erase(offset_buff.begin()+i);
+			i--;
 		}
 }
