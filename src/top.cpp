@@ -53,7 +53,7 @@ void top::simple_mode(unsigned int nadd, unsigned int nmul,unsigned int nload,ma
 
 void top::rob_mode(unsigned int nadd, unsigned int nmul,unsigned int nload,map<string,int> instruct_time, vector<string> instruct_queue, nana::listbox &table, nana::grid &mem_gui, nana::listbox &regs, nana::listbox &instr_gui, nana::label &ccount, nana::listbox &rob_gui)
 {
-	int rob_size = 10;
+	int rob_size = 10; //Tamanho do REORDER BUFFER
 	//resv_rob_bus = unique_ptr<bus>(new bus("resv_rob_bus"));
 	CDB = unique_ptr<bus>(new bus("CDB"));
 	mem_bus = unique_ptr<bus>(new bus("mem_bus"));

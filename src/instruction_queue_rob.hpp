@@ -17,10 +17,15 @@ public:
 	void main();
 	void leitura_rob();
 	void clear_gui(unsigned int pos);
+	void replace_instructions(unsigned int pos,unsigned int index);
+	void add_instructions(unsigned int pos, vector<string> instructions);
+
 
 private:
 	unsigned int pc;
 	vector<string> instruct_queue;
+	vector<string> original_instruct;
+	vector<vector<string>> last_instr;
 	vector<unsigned int> last_pc;
 	nana::listbox &instructions;
 };

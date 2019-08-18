@@ -60,6 +60,7 @@ void res_station_rob::exec()
 			if(!isMemory)
 			{
 				wait(sc_time(instruct_time[op],SC_NS),isFlushed_event);
+				wait(SC_ZERO_TIME);
 				if(!isFlushed)
 				{
 					string escrita_saida,rs;

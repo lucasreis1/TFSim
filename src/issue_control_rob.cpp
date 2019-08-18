@@ -20,6 +20,7 @@ void issue_control_rob::issue_select()
 	while(true)
 	{
 		in->nb_read(p);
+		cout << "###########despachando instrucao " << p << endl;
 		out_rob->write(p);
 		in_rob->read(rob_pos);
 		ord = instruction_split(p);

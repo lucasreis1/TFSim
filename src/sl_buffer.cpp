@@ -74,10 +74,11 @@ void sl_buffer::leitura_issue()
 			}
 			else
 			{
-				cout << "instruçao " << ord[0] << " aguardando reg R" << ord[1] << endl << flush;
+				cout << "instruçao " << ord[0] << " aguardando reg " << ord[1] << endl << flush;
+				cout << regst << endl;
 				ptrs[pos]->qj = regst;
-				cat.at(pos+tam_outros).text(QJ,std::to_string(regst+1));
-			}	
+				cat.at(pos+tam_outros).text(QJ,std::to_string(regst));
+			}
 		}
 		regst = ask_status(true,mem_ord[1]);
 		if(regst == 0)

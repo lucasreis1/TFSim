@@ -6,6 +6,7 @@ using std::string;
 using std::vector;
 
 enum{
+	INSTR = 0,
 	ISS = 1,
 	EXEC = 2,
 	WRITE = 3
