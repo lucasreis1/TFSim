@@ -31,14 +31,18 @@ void address_unit::leitura_issue()
 		a = std::stoi(mem_ord[0]);
 		instr_pos = std::stoi(ord[3]);
 		rob_pos = std::stoi(ord[4]);
-		rst_pos = std::stoi(ord[5]);
 		regst = ask_status(true,mem_ord[1]);
 		if(ord[0].at(0) == 'S')
 			store = true;
 		else
 			store = false;
 		if(!store)
+		{
+			rst_pos = std::stoi(ord[5]);
 			res_station_table.at(rst_pos+rst_tam).text(A,mem_ord[0]);
+		}
+		else
+			rst_pos = -1;
 		if(regst == 0)
 		{
 			wait(SC_ZERO_TIME);

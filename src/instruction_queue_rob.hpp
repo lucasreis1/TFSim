@@ -16,16 +16,21 @@ public:
 	instruction_queue_rob(sc_module_name name, vector<string> inst_q,int rb_sz, nana::listbox &instr);
 	void main();
 	void leitura_rob();
-	void clear_gui(unsigned int pos);
-	void replace_instructions(unsigned int pos,unsigned int index);
-	void add_instructions(unsigned int pos, vector<string> instructions);
-
-
 private:
 	unsigned int pc;
-	vector<string> instruct_queue;
+	
+	struct instr_q
+	{
+		string instruction;
+		unsigned int pc;
+	};
+
+	vector<instr_q> instruct_queue;
 	vector<string> original_instruct;
-	vector<vector<string>> last_instr;
+	vector<vector<instr_q>> last_instr;
 	vector<unsigned int> last_pc;
 	nana::listbox &instructions;
+
+	void replace_instructions(unsigned int pos,unsigned int index);
+	void add_instructions(unsigned int pos, vector<instr_q> instructions);
 };

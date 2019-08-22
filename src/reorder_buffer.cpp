@@ -126,11 +126,7 @@ void reorder_buffer::leitura_issue()
 			ptrs[pos]->destination = ord[1];
 			cat.at(pos).text(DESTINATION,ord[1]);
 			if(ord[0].at(0) != 'L')
-			{
-				cout << "@@@@teste" << endl;
 				wait(resv_read_oper_event);
-				cout << "####testando" << endl;
-			}
 			ask_status(false,ord[1],pos+1);
 		}
 		if(rob_buff.empty())

@@ -16,8 +16,10 @@ void instruction_queue::main()
 	auto cat = instructions.at(0);
 	for(pc = 0; pc < instruct_queue.size() ; pc++)
 	{
-		cat.at(pc).text(ISS,"X");
+		cat.at(pc).select(true,true);
+		cat.at(pc).text(ISS,"");
 		out->write(instruct_queue[pc] + " " + std::to_string(pc));
+		cat.at(pc).text(ISS,"X");
 		wait();
 	}
 }

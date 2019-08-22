@@ -16,6 +16,26 @@ using std::vector;
 using std::map;
 using std::fstream;
 
+bool add_instructions(ifstream &File,vector<string> &queue, nana::listbox &instruction_gui)
+{
+	if(!File.is_open())
+		return false;
+	if(queue.size())
+	{
+		queue.clear();
+		instruction_gui.clear(0);	
+	}
+	auto inst_gui_cat = instruction_gui.at(0);
+	string line;
+	while(getline(File,line))
+	{
+		queue.push_back(line);
+		inst_gui_cat.append(line);
+	}
+	File.close();
+	return true;
+}
+
 int sc_main(int argc, char *argv[])
 {
 	using namespace nana;
@@ -47,7 +67,6 @@ int sc_main(int argc, char *argv[])
 	grid memory(fm,rectangle(),10,50);
 	map<string,int> instruct_time{{"DADD",4},{"DADDI",4},{"DSUB",6},{"DSUBI",6},{"DMUL",10},{"DDIV",16},{"MEM",2}};
 	top top1("top");
-	mnbar.push_back("&Opções");
 	botao.caption("START");
 	clock_control.caption("NEXT CYCLE");
 	exit.caption("EXIT");
@@ -62,8 +81,10 @@ int sc_main(int argc, char *argv[])
 	clock_group["count"] << clock_count;
 	clock_group.collocate();
 	plc.collocate();
+
+	mnbar.push_back("Opções");
 	menu &op = mnbar.at(0);
-	op.append("Especulação",[&](menu::item_proxy &ip)
+	menu::item_proxy spec_ip = op.append("Especulação",[&](menu::item_proxy &ip)
 	{
 		if(ip.checked())
 		{
@@ -124,24 +145,14 @@ int sc_main(int argc, char *argv[])
 		{
 			auto path = caminho.value();
 			inFile.open(path);
-			if(!inFile.is_open())
+			if(!add_instructions(inFile,instruction_queue,instruct))
 			{
 				msgbox msg("Arquivo inválido");
 				msg << "Não foi possível abrir o arquivo!";
 				msg.show();
 			}
 			else
-			{
 				fila = true;
-				string line;
-				auto instr_gui = instruct.at(0);
-				while(getline(inFile,line))
-				{
-					instruction_queue.push_back(line);
-					instr_gui.append(line);
-				}
-				inFile.close();
-			}
 		}
 	});
 	sub->append("Valores de registradores inteiros",[&](menu::item_proxy &ip)
@@ -356,6 +367,44 @@ int sc_main(int argc, char *argv[])
 			}
 		}
 	});
+	op.append("Benchmarks");
+	auto bench_sub = op.create_sub_menu(3);
+	bench_sub->append("Fibonacci",[&](menu::item_proxy &ip){
+		string path = "in/benchmarks/fibonacci.txt";		
+		inFile.open(path);
+		if(!add_instructions(inFile,instruction_queue,instruct))
+		{
+			msgbox msg("Arquivo inválido");
+			msg << "Não foi possível abrir o arquivo!";
+			msg.show();
+		}
+		else
+			fila = true;
+	});
+	bench_sub->append("Busca em Vetor",[&](menu::item_proxy &ip){
+		string path = "in/benchmarks/vector_search.txt";		
+		inFile.open(path);
+		if(!add_instructions(inFile,instruction_queue,instruct))
+		{
+			msgbox msg("Arquivo inválido");
+			msg << "Não foi possível abrir o arquivo!";
+			msg.show();
+		}
+		else
+			fila = true;
+	});
+	bench_sub->append("Ordenação em Vetor",[&](menu::item_proxy &ip){
+		string path = "in/benchmarks/vector_sort.txt";		
+		inFile.open(path);
+		if(!add_instructions(inFile,instruction_queue,instruct))
+		{
+			msgbox msg("Arquivo inválido");
+			msg << "Não foi possível abrir o arquivo!";
+			msg.show();
+		}
+		else
+			fila = true;
+	});
 	vector<string> columns = {"#","Name","Busy","Op","Vj","Vk","Qj","Qk","A"}; 
 	for(unsigned int i = 0 ; i < columns.size() ; i++)
 	{
@@ -428,24 +477,14 @@ int sc_main(int argc, char *argv[])
 			{
 				case 'q':
 					inFile.open(argv[k+1]);
-					if(!inFile.is_open())
+					if(!add_instructions(inFile,instruction_queue,instruct))
 					{
 						msgbox msg("Arquivo inválido");
-						msg << "Não foi possível abrir o arquivo " << argv[k+1];
+						msg << "Não foi possível abrir o arquivo!";
 						msg.show();
 					}
 					else
-					{
 						fila = true;
-						auto c = instruct.at(0);
-						string line;
-						while(getline(inFile,line))
-						{
-							instruction_queue.push_back(line);
-							c.append(line);
-						}
-						inFile.close();
-					}
 					break;
 				case 'i':
 					inFile.open(argv[k+1]);
@@ -539,6 +578,7 @@ int sc_main(int argc, char *argv[])
 					plc.div("<vert <weight = 5%><vert weight=85% < <weight = 1% ><instr> <rst> <weight = 1%> <weight = 20% regs> <weight = 1%> > < <weight = 1%> <memor> <weight = 1%> <rob> <weight = 1%> > > < <weight = 1%> <clk_c weight=15%> <weight=50%> <gap = 10btns> <weight = 1%> > <weight = 2%> >");
 					plc.collocate();
 					spec = true;
+					spec_ip.checked(true);
 					k--;
 					break;
 				case 'l':
@@ -579,8 +619,11 @@ int sc_main(int argc, char *argv[])
 			//Desativa os menus
 			op.enabled(0,false);
 			op.enabled(1,false);
+			op.enabled(3,false);
 			for(int i = 0 ; i < 6 ; i++)
 				sub->enabled(i,false);
+			for(int i = 0 ; i < 3 ; i++)
+				bench_sub->enabled(i,false);
 			if(spec)
 				top1.rob_mode(nadd,nmul,nls,instruct_time,instruction_queue,table,memory,reg,instruct,clock_count,rob);
 			else
