@@ -73,7 +73,7 @@ with open(sys.argv[iq_pos]) as f:
             split_line = linha.split('(')
             split_line = split_line[0].split(',')
             mem_int = split_line[-1]
-            linha = linha.replace(mem_int,hex(0x10010000 + 4*int(mem_int)))
+            linha = linha.replace(mem_int,hex(0x10010000 + int(mem_int)))
         output.append(linha)
         pos+=1
 branches.sort(key=branch_sort)

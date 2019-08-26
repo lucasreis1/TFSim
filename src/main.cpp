@@ -29,8 +29,11 @@ bool add_instructions(ifstream &File,vector<string> &queue, nana::listbox &instr
 	string line;
 	while(getline(File,line))
 	{
-		queue.push_back(line);
-		inst_gui_cat.append(line);
+		if(line.rfind("//", 0) == string::npos) //ignora linhas que começam com "//"
+		{
+			queue.push_back(line);
+			inst_gui_cat.append(line);
+		}
 	}
 	File.close();
 	return true;
@@ -393,8 +396,32 @@ int sc_main(int argc, char *argv[])
 		else
 			fila = true;
 	});
-	bench_sub->append("Ordenação em Vetor",[&](menu::item_proxy &ip){
-		string path = "in/benchmarks/vector_sort.txt";		
+	bench_sub->append("Stall por Divisão",[&](menu::item_proxy &ip){
+		string path = "in/benchmarks/division_stall.txt";		
+		inFile.open(path);
+		if(!add_instructions(inFile,instruction_queue,instruct))
+		{
+			msgbox msg("Arquivo inválido");
+			msg << "Não foi possível abrir o arquivo!";
+			msg.show();
+		}
+		else
+			fila = true;
+	});
+	bench_sub->append("Stress de Memória (Stores)",[&](menu::item_proxy &ip){
+		string path = "in/benchmarks/store_stress.txt";		
+		inFile.open(path);
+		if(!add_instructions(inFile,instruction_queue,instruct))
+		{
+			msgbox msg("Arquivo inválido");
+			msg << "Não foi possível abrir o arquivo!";
+			msg.show();
+		}
+		else
+			fila = true;
+	});
+	bench_sub->append("Stall por hazard estrutural (Adds)",[&](menu::item_proxy &ip){
+		string path = "in/benchmarks/res_stations_stall.txt";		
 		inFile.open(path);
 		if(!add_instructions(inFile,instruction_queue,instruct))
 		{
@@ -622,7 +649,7 @@ int sc_main(int argc, char *argv[])
 			op.enabled(3,false);
 			for(int i = 0 ; i < 6 ; i++)
 				sub->enabled(i,false);
-			for(int i = 0 ; i < 3 ; i++)
+			for(int i = 0 ; i < 5 ; i++)
 				bench_sub->enabled(i,false);
 			if(spec)
 				top1.rob_mode(nadd,nmul,nls,instruct_time,instruction_queue,table,memory,reg,instruct,clock_count,rob);

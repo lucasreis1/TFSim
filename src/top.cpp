@@ -61,7 +61,8 @@ void top::rob_mode(unsigned int nadd, unsigned int nmul,unsigned int nload,map<s
 	adu_sl_bus = unique_ptr<bus>(new bus("adu_sl_bus"));
 	mem_slb_bus = unique_ptr<bus>(new bus("mem_slb_bus"));
 	iq_rob_bus = unique_ptr<bus>(new bus("iq_rob_bus"));
-	rob_rv_bus = unique_ptr<cons_bus_fast>(new cons_bus_fast("rob_rv_bus"));
+	rob_statval_bus = unique_ptr<cons_bus_fast>(new cons_bus_fast("rob_statval_bus"));//Este canal se comunida com rs_ctrl_r e com adu
+	rob_adu_bus = unique_ptr<cons_bus>(new cons_bus("rob_adu_bus")); //usado para flush
 	inst_bus = unique_ptr<cons_bus>(new cons_bus("inst_bus"));
 	rst_bus = unique_ptr<cons_bus>(new cons_bus("rst_bus"));
 	sl_bus = unique_ptr<cons_bus>(new cons_bus("sl_bus"));
@@ -102,17 +103,21 @@ void top::rob_mode(unsigned int nadd, unsigned int nmul,unsigned int nload,map<s
 	rob->out_mem(*mem_bus);
 	rob->in_adu(*adu_bus);
 	rob->out_iq(*iq_rob_bus);
-	rob->in_resv(*rob_rv_bus);
-	rob->out_resv(*rob_rv_bus);
+	rob->in_resv_adu(*rob_statval_bus);
+	rob->out_resv_adu(*rob_statval_bus);
 	rob->in_slb(*rob_slb_bus);
 	rob->out_slb(*rob_slb_bus);
+	rob->out_adu(*rob_adu_bus);
 
 	adu->in_issue(*ad_bus);
 	adu->in_cdb(*CDB);
 	adu->out_slbuff(*adu_sl_bus);
+	adu->in_rob(*rob_adu_bus);
 	adu->out_rob(*adu_bus);
 	adu->in_rb(*rb_bus);
 	adu->out_rb(*rb_bus);
+	adu->in_rob_svl(*rob_statval_bus);
+	adu->out_rob_svl(*rob_statval_bus);
 
 	rs_ctrl_r->in_issue(*rst_bus);
 	rs_ctrl_r->in_cdb(*CDB);
@@ -120,8 +125,8 @@ void top::rob_mode(unsigned int nadd, unsigned int nmul,unsigned int nload,map<s
 	rs_ctrl_r->in_rb(*rb_bus);
 	rs_ctrl_r->out_rb(*rb_bus);
 	rs_ctrl_r->out_mem(*mem_bus);
-	rs_ctrl_r->in_rob(*rob_rv_bus);
-	rs_ctrl_r->out_rob(*rob_rv_bus);
+	rs_ctrl_r->in_rob(*rob_statval_bus);
+	rs_ctrl_r->out_rob(*rob_statval_bus);
 
 	slb_r->in_issue(*sl_bus);
 	slb_r->out_issue(*sl_bus);

@@ -86,7 +86,7 @@ void sl_buffer_rob::add_rec()
 		addr = std::stoi(ord[1]);
 		for(unsigned int i = 0 ; i < tam ; i++)
 		{
-			if(ptrs[i]->dest == rob_pos)
+			if(ptrs[i]->dest == rob_pos && ptrs[i]->isFlushed == false)
 			{
 				cout << "Instrucao " << ptrs[i]->op << " concluiu o calculo do endereco no ciclo " << sc_time_stamp() << endl << flush;
 				ptrs[i]->a = addr;
@@ -152,6 +152,7 @@ int sl_buffer_rob::busy_check()
 			return i;
 	return -1;
 }
+
 int sl_buffer_rob::check_conflict(unsigned int rob_pos, unsigned int addr)
 {
 	string res;

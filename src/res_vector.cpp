@@ -18,7 +18,7 @@ table(lsbox)
 		else
 			texto = "Mult" + std::to_string(i-t1+1);
 		cat.append({std::to_string(cat.size()+1),texto,"False"});
-		rs[i] = new res_station(texto.c_str(),i+1,texto,instruct_time,cat.at(i),ct);
+		rs[i] = new res_station(texto.c_str(),i+1,texto,false,instruct_time,cat.at(i),ct);
 		rs[i]->in(in_cdb);
 		rs[i]->out(out_cdb);
 		rs[i]->out_mem(out_mem);

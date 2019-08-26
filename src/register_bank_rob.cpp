@@ -66,15 +66,9 @@ void register_bank_rob::le_bus()
 				else
 				{
 					if(fp)
-					{
 						cat.at(index).text(FVALUE,ord[3]);
-						cat.at(index).text(FQ,"0");
-					}
 					else
-					{
 						cat.at(index).text(IVALUE,std::to_string(std::stoi(ord[3])));
-						cat.at(index).text(IQ,"0");
-					}
 				}
 			}
 		}

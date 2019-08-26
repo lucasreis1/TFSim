@@ -37,6 +37,9 @@ void instruction_queue_rob::main()
 			cat.at(pc).text(ISS,"");
 			cat.at(pc).text(EXEC,"");
 			cat.at(pc).text(WRITE,"");
+			wait(SC_ZERO_TIME);
+			wait(SC_ZERO_TIME);
+			wait(SC_ZERO_TIME);
 			out->write(instruct_queue[pc].instruction + " " + std::to_string(pc));
 			pc++;
 			wait(SC_ZERO_TIME);
@@ -57,8 +60,9 @@ void instruction_queue_rob::leitura_rob()
 	index = std::stoi(ord[1])-1;
 	if(ord[0] == "R") //reverter salto incorreto
 	{
-		replace_instructions(last_pc[index],index);
-		pc = last_pc[index];
+		instructions.at(0).at(pc-1).select(false);
+		replace_instructions(last_pc[index]-1,index);
+		pc = last_pc[index]-1;
 		instruct_queue = last_instr[index]; 
 	}
 	else if(ord[0] == "S" && ord.size() == 3) //realiza salto (especulado) e armazena informacoes pre-salto

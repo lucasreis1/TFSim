@@ -28,8 +28,8 @@ instr_queue_gui(instr_gui)
 	SC_THREAD(leitura_adu);
 	sensitive << in_adu;
 	dont_initialize();
-	SC_THREAD(res_v_check);
-	sensitive << in_resv;
+	SC_THREAD(value_check);
+	sensitive << in_resv_adu;
 	dont_initialize();
 	SC_THREAD(check_conflict);
 	sensitive << in_slb;
@@ -50,6 +50,7 @@ void reorder_buffer::leitura_issue()
 	vector<string> ord;
 	int pos,regst;
 	float value;
+	bool check_value;
 	auto cat = gui_table.at(0);
 	while(true)
 	{
@@ -76,16 +77,26 @@ void reorder_buffer::leitura_issue()
 		ptrs[pos]->instr_pos = std::stoi(ord[ord.size()-1]);
 		if(ord[0].at(0) == 'S')
 		{
+			check_value = false;
 			regst = ask_status(true,ord[1]);
-			if(regst == 0)
+			if(regst != 0)
 			{
-				value = ask_value(true,ord[1]);
+				if(ptrs[regst-1]->ready == true)
+				{
+					value = std::stof(cat.at(regst-1).text(VALUE));
+					check_value = true;
+				}
+			}
+			if(regst == 0 || check_value == true)
+			{
+				if(check_value == false)
+					value = ask_value(true,ord[1]);
 				ptrs[pos]->value = value;
 				if(ord[1].at(0) != 'F')
 					cat.at(pos).text(VALUE,std::to_string((int)value));
 				else
 					cat.at(pos).text(VALUE,std::to_string(value));
-
+				ptrs[pos]->qj = 0;
 			}
 			else
 				ptrs[pos]->qj = regst;
@@ -94,15 +105,41 @@ void reorder_buffer::leitura_issue()
 		{
 			ptrs[pos]->destination = ord[1];
 			regst = ask_status(true,ord[1]);
-			if(!regst)
-				ptrs[pos]->vj = ask_value(true,ord[1]);
+			check_value = false;
+			if(regst != 0)
+			{
+				if(ptrs[regst-1]->ready == true)
+				{
+					value = std::stof(cat.at(regst-1).text(VALUE));
+					check_value = true;
+				}
+			}
+			if(regst == 0 || check_value == true)
+			{
+				if(check_value == false)
+					value = ask_value(true,ord[1]);
+				ptrs[pos]->vj = value;
+			}
 			else
 				ptrs[pos]->qj = regst;
 			if(branch_instr[ord[0]] < 2) //instrucao com 2 operandos (BEQ,BNE)
 			{
 				regst = ask_status(true,ord[2]);
-				if(!regst)
-					ptrs[pos]->vk = ask_value(true,ord[2]);
+				check_value = false;
+				if(regst != 0)
+				{
+					if(ptrs[regst-1]->ready == true)
+					{
+						value = std::stof(cat.at(regst-1).text(VALUE));
+						check_value = true;
+					}
+				}
+				if(regst == 0 || check_value == true)
+				{
+					if(check_value == false)
+						value = ask_value(true,ord[2]);
+					ptrs[pos]->vk = value;
+				}
 				else
 					ptrs[pos]->qk = regst;
 				ptrs[pos]->destination = ord[3];
@@ -169,16 +206,20 @@ void reorder_buffer::new_rob_head()
 					out_iq->write("R " + std::to_string(rob_buff[0]->entry));
 				cout << "-----------------LIMPANDO ROB no ciclo " << sc_time_stamp() << " -----------------" << endl << flush;
 				_flush(); //Esvazia o ROB
-				out_resv->write("F");
+				out_resv_adu->write("F");
 				out_slb->write("F");
 				out_rb->write("F");
+				out_adu->write("F");
 			}
 			preditor.update_state(pred);
 		}
 		else
 		{
 			wait(SC_ZERO_TIME);
+			unsigned int regst = ask_status(true,rob_buff[0]->destination);
 			ask_value(false,rob_buff[0]->destination,rob_buff[0]->value);
+			if(regst == rob_buff[0]->entry)
+				ask_status(false,rob_buff[0]->destination,0);
 		}
 		if(!rob_buff.empty())
 		{
@@ -194,6 +235,7 @@ void reorder_buffer::new_rob_head()
 		wait(1,SC_NS);
 	}
 }
+
 void reorder_buffer::leitura_cdb()
 {
 	unsigned int index;
@@ -207,10 +249,6 @@ void reorder_buffer::leitura_cdb()
 		ord = instruction_split(p);
 		index = std::stoi(ord[0]);
 		value = std::stof(ord[1]);
-		wait(SC_ZERO_TIME);
-		wait(SC_ZERO_TIME);
-		wait(SC_ZERO_TIME);
-		wait(SC_ZERO_TIME);
 		check_dependencies(index,value);
 		if(ptrs[index-1]->busy)
 		{
@@ -228,6 +266,7 @@ void reorder_buffer::leitura_cdb()
 		wait();
 	}
 }
+
 void reorder_buffer::leitura_adu()
 {
 	string p;
@@ -261,9 +300,10 @@ void reorder_buffer::check_conflict()
 	while(true)
 	{
 		last_st = 0;
-		in_slb->read(p);
+		in_slb->nb_read(p);
 		if(p != "F")
 		{
+			in_slb->notify();
 			ord = instruction_split(p);
 			rob_pos = std::stoi(ord[0]);
 			for(unsigned int i = 0 ; i < rob_pos-1 ; i++)
@@ -352,23 +392,22 @@ void reorder_buffer::check_dependencies(unsigned int index, float value)
 		}
 	}
 }
-void reorder_buffer::res_v_check()
+void reorder_buffer::value_check()
 {
 	string p,value;
 	auto cat = gui_table.at(0);
 	while(true)
 	{
-		in_resv->read(p);
+		in_resv_adu->read(p);
 		if(p == "N")
 			resv_read_oper_event.notify();
-		else
+		if(p != "N")
 		{
 			int index = std::stoi(p);
-			value = cat.at(index-1).text(VALUE);
-			if(value != "")
-				out_resv->write(value);
+			if(ptrs[index-1]->ready)
+				out_resv_adu->write(cat.at(index-1).text(VALUE));
 			else
-				out_resv->write("EMPTY");
+				out_resv_adu->write("EMPTY");
 		}
 		wait();
 	}

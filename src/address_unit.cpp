@@ -17,11 +17,16 @@ rst_tam(rst_tm)
 	SC_THREAD(addr_issue);
 	sensitive << addr_queue_event;
 	dont_initialize();
+	SC_THREAD(leitura_rob);
+	sensitive << in_rob;
+	dont_initialize();
 }
 
 void address_unit::leitura_issue()
 {
 	bool store;
+	bool check_value;
+	int value;
 	while(true)
 	{
 		in_issue->read(p);
@@ -32,6 +37,16 @@ void address_unit::leitura_issue()
 		instr_pos = std::stoi(ord[3]);
 		rob_pos = std::stoi(ord[4]);
 		regst = ask_status(true,mem_ord[1]);
+		check_value = false;
+		if(regst != 0)
+		{
+			string check = ask_rob_value(std::to_string(regst));
+			if(check != "EMPTY")
+			{
+				value = std::stof(check);
+				check_value = true;
+			}	
+		}
 		if(ord[0].at(0) == 'S')
 			store = true;
 		else
@@ -43,11 +58,13 @@ void address_unit::leitura_issue()
 		}
 		else
 			rst_pos = -1;
-		if(regst == 0)
+		if(regst == 0 || check_value == true)
 		{
+			if(check_value == false)
+				value = ask_value(mem_ord[1]);
 			wait(SC_ZERO_TIME);
 			instruct_table.at(instr_pos).text(EXEC,"X");
-			a += ask_value(mem_ord[1]);
+			a += value;
 			if(store)
 			{
 				if(addr_queue.empty())
@@ -85,20 +102,23 @@ void address_unit::leitura_cdb()
 			if(std::stoi(ord_c[0]) == offset_buff[i].regst)
 			{
 				offset_buff[i].a+= std::stoi(ord_c[1]);
+				wait(SC_ZERO_TIME);
+				instruct_table.at(offset_buff[i].instr_pos).text(EXEC,"X");
 				if(offset_buff[i].store)
 				{
-					wait(SC_ZERO_TIME);
-					instruct_table.at(offset_buff[i].instr_pos).text(EXEC,"X");
 					if(addr_queue.empty())
 						addr_queue_event.notify(delay_time,SC_NS);
 					addr_queue.push(offset_buff[i]);
+					cout << "Instrucao no ROB " << offset_buff[i].rob_pos << " obteve o resultado do ROB " << ord_c[0] << endl;
 					offset_buff.erase(offset_buff.begin() + i);
+					i--;
 				}
 				else
 				{
 					res_station_table.at(offset_buff[i].rst_pos+rst_tam).text(QK,"");
 					res_station_table.at(offset_buff[i].rst_pos+rst_tam).text(VK,ord_c[1]);
 					offset_buff[i].addr_calc = true;
+					cout << "Instrucao no ROB " << offset_buff[i].rob_pos << " obteve o resultado do ROB " << ord_c[0] << endl;
 				}
 				found = true;
 			}
@@ -128,9 +148,29 @@ void address_unit::addr_issue()
 
 void address_unit::leitura_rob()
 {
-	queue<addr_node> empty;
-	std::swap(addr_queue,empty);
-	offset_buff.clear();
+	string p;
+	while(1)
+	{
+		in_rob->read(p);
+		if(p == "F")
+		{
+			queue<addr_node> empty;
+			std::swap(addr_queue,empty);
+			offset_buff.clear();
+		}
+		wait();
+	}
+}
+
+string address_unit::ask_rob_value(string rob_pos)
+{
+	string res;
+	out_rob_svl->write(rob_pos);
+	in_rob_svl->nb_read(res);
+	while(res == "F")
+		wait(out_rob->default_event());
+	in_rob_svl->notify();
+	return res;
 }
 
 vector<string> address_unit::offset_split(string p)
@@ -143,6 +183,7 @@ vector<string> address_unit::offset_split(string p)
 	ord[1] = p.substr(i+1,p.size()-i-2);
 	return ord;
 }
+
 float address_unit::ask_value(string reg)
 {
 	string res;
@@ -168,6 +209,7 @@ void address_unit::check_loads()
 	for(unsigned i = 0 ; i < offset_buff.size() && !offset_buff[i].store ; i++)
 		if(offset_buff[i].addr_calc)
 		{
+			instruct_table.at(offset_buff[i].instr_pos).text(EXEC,"X");
 			if(addr_queue.empty())
 				addr_queue_event.notify(delay_time,SC_NS);
 			addr_queue.push(offset_buff[i]);

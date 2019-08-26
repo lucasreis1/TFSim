@@ -41,8 +41,8 @@ private:
 	//Para especulacao
 	unique_ptr<bus> resv_rob_bus; //sincronizacao de leitura de operandos para evitar conflitos no reg_bank
 	unique_ptr<bus> adu_bus,adu_sl_bus,mem_slb_bus,iq_rob_bus,rob_rt_bus;
-	unique_ptr<cons_bus> rob_bus,ad_bus;
-	unique_ptr<cons_bus_fast> rob_slb_bus,rob_rv_bus;
+	unique_ptr<cons_bus> rob_bus,ad_bus,rob_adu_bus;
+	unique_ptr<cons_bus_fast> rob_slb_bus,rob_statval_bus;
 	unique_ptr<address_unit> adu;
 	unique_ptr<issue_control_rob> iss_ctrl_r;
 	unique_ptr<reorder_buffer> rob;

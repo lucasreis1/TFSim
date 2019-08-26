@@ -14,7 +14,7 @@ table(lsbox)
 	{
 		texto = "Load" + std::to_string(i+1);
 		cat.append({std::to_string(cat.size()+1),texto,"False"});
-		ptrs[i] = new res_station(texto.c_str(),i+t_outros+1,texto,instruct_time,cat.at(i+t_outros),ct);
+		ptrs[i] = new res_station(texto.c_str(),i+t_outros+1,texto,true,instruct_time,cat.at(i+t_outros),ct);
 		ptrs[i]->in(in_cdb);
 		ptrs[i]->out(out_cdb);
 		ptrs[i]->out_mem(out_mem);
@@ -75,7 +75,6 @@ void sl_buffer::leitura_issue()
 			else
 			{
 				cout << "instruçao " << ord[0] << " aguardando reg " << ord[1] << endl << flush;
-				cout << regst << endl;
 				ptrs[pos]->qj = regst;
 				cat.at(pos+tam_outros).text(QJ,std::to_string(regst));
 			}

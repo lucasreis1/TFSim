@@ -14,6 +14,7 @@ public:
 	string type_name;
 	bool Busy;
 	bool isFirst;
+	bool isMemory;
 	bool fp;
 	string op;
 	float vj,vk;
@@ -28,7 +29,7 @@ public:
 	sc_event isFirst_event;
 	SC_HAS_PROCESS(res_station);
 
-	res_station(sc_module_name name,int i, string n, map<string,int> inst_map, const nana::listbox::item_proxy item, const nana::listbox::cat_proxy c);
+	res_station(sc_module_name name,int i, string n,bool isMem,  map<string,int> inst_map, const nana::listbox::item_proxy item, const nana::listbox::cat_proxy c);
 	void exec();
 	void leitura();
 	void clean_item();

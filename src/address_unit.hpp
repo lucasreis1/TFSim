@@ -12,6 +12,9 @@ public:
 	sc_port<read_if_f> in_issue;
 	sc_port<read_if> in_cdb;
 	sc_port<write_if> out_slbuff;
+	sc_port<read_if_f> in_rob_svl; //usada pra obter valores de destino ainda nao escrito em registradores
+	sc_port<write_if_f> out_rob_svl;//usada pra obter valores de destino ainda nao escrito em registradores
+	sc_port<read_if_f> in_rob; //usada para flush no rob
 	sc_port<write_if> out_rob;
 	sc_port<read_if_f> in_rb;
 	sc_port<write_if_f> out_rb;
@@ -49,4 +52,5 @@ private:
 	float ask_value(string reg);
 	unsigned int ask_status(bool read,string reg,unsigned int pos = 0);
 	void check_loads();
+	string ask_rob_value(string rob_pos);
 };

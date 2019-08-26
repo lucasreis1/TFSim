@@ -20,11 +20,12 @@ public:
 	sc_port<write_if_f> out_rb;
 	sc_port<write_if> out_mem;
 	sc_port<read_if> in_adu;
+	sc_port<write_if_f> out_adu;
 	sc_port<read_if_f> in_slb;
 	sc_port<write_if_f> out_slb;
 	sc_port<write_if> out_iq;
-	sc_port<write_if_f> out_resv;
-	sc_port<read_if_f> in_resv;
+	sc_port<write_if_f> out_resv_adu;
+	sc_port<read_if_f> in_resv_adu;
 	SC_HAS_PROCESS(reorder_buffer);
 	reorder_buffer(sc_module_name name,unsigned int sz,unsigned int pred_size, nana::listbox &gui, nana::listbox::cat_proxy instr_gui);
 	~reorder_buffer();
@@ -32,7 +33,7 @@ public:
 	void new_rob_head();
 	void leitura_cdb();
 	void leitura_adu();
-	void res_v_check();
+	void value_check();
 	void check_conflict();
 
 private:
