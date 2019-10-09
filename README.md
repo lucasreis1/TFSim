@@ -7,22 +7,22 @@ out-of-order execution on modern microprocessors.
 
 # Guia de Execução
 
-1) Baixe o [SystemC](http://www.accellera.org/downloads/standards/systemc)
+1. Baixe o [SystemC](http://www.accellera.org/downloads/standards/systemc)
     1-1. Extrair systemC e entrar na pasta padrão
     1-2. Crie uma pasta build dentro da pasta do SystemC e entre nela
-	```
-	mkdir build
-	cd build
-	```
-	1-3. Gere os arquivos de compilação usando cmake
-	```
-	cmake .. -DCMAKE_CXX_STANDARD=17 -DCMAKE_INSTALL_PREFIX=/opt/systemc
-	```
-	1-4. Compile e instale a biblioteca
-	```
-	make
-	sudo make install
-	```
+    ```
+    mkdir build
+    cd build
+    ```
+    1-3. Gere os arquivos de compilação usando cmake
+    ```
+    cmake .. -DCMAKE_CXX_STANDARD=17 -DCMAKE_INSTALL_PREFIX=/opt/systemc
+    ```
+    1-4. Compile e instale a biblioteca
+    ```
+    make
+    sudo make install
+    ```
 2. Baixe o [Nana](http://nanapro.org/en-us)
 	2-1. Crie uma pasta qualquer (não pode se chamar build) dentro da pasta raiz do Nana e acesse-a
 	```
