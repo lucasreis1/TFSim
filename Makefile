@@ -1,4 +1,4 @@
-EXEC_NAME = simulador
+EXEC_NAME = tfsim
 
 C++ = g++
 INCLUDEDIR = include/

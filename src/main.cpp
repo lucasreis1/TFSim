@@ -50,7 +50,7 @@ int sc_main(int argc, char *argv[])
 	bool spec = false;
 	bool fila = false;
 	ifstream inFile;
-	form fm(API::make_center(1000,600));
+	form fm(API::make_center(1024,700));
 	place plc(fm);
 	place upper(fm);
 	place lower(fm);
@@ -444,7 +444,7 @@ int sc_main(int argc, char *argv[])
 			table.column_at(i).width(30);
 	}
 	columns = {"","Value","Qi"};
-	sizes = {30,60,40};
+	sizes = {30,75,40};
 	for(unsigned int k = 0 ; k < 2 ; k++)
 		for(unsigned int i = 0 ; i < columns.size() ; i++)
 		{
