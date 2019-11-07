@@ -10,34 +10,13 @@
 #include<nana/gui/widgets/textbox.hpp>
 #include<nana/gui/filebox.hpp>
 #include "top.hpp"
+#include "gui.hpp"
 
 using std::string;
 using std::vector;
 using std::map;
 using std::fstream;
 
-bool add_instructions(ifstream &File,vector<string> &queue, nana::listbox &instruction_gui)
-{
-	if(!File.is_open())
-		return false;
-	if(queue.size())
-	{
-		queue.clear();
-		instruction_gui.clear(0);	
-	}
-	auto inst_gui_cat = instruction_gui.at(0);
-	string line;
-	while(getline(File,line))
-	{
-		if(line.rfind("//", 0) == string::npos) //ignora linhas que começam com "//"
-		{
-			queue.push_back(line);
-			inst_gui_cat.append(line);
-		}
-	}
-	File.close();
-	return true;
-}
 
 int sc_main(int argc, char *argv[])
 {
@@ -68,12 +47,13 @@ int sc_main(int argc, char *argv[])
 	clock_group.caption("Ciclo de Clock");
 	clock_group.div("count");
 	grid memory(fm,rectangle(),10,50);
+    // Tempo de latencia de uma instrucao
+    // Novas instrucoes devem ser inseridas manualmente aqui
 	map<string,int> instruct_time{{"DADD",4},{"DADDI",4},{"DSUB",6},{"DSUBI",6},{"DMUL",10},{"DDIV",16},{"MEM",2}};
 	top top1("top");
 	botao.caption("START");
 	clock_control.caption("NEXT CYCLE");
 	exit.caption("EXIT");
-	plc.div("<vert <weight = 5%><vert weight=85% < <weight = 1% ><instr> <weight = 1%> <rst> <weight = 1%> > < <weight = 1%> <memor> <weight = 1%> <weight = 29% regs> <weight = 1%> > > < <weight = 1%> <clk_c weight=15%> <weight=50%> <gap = 10btns> <weight = 1%> > <weight = 2%> >");
 	plc["rst"] << table;
 	plc["btns"] << botao << clock_control << exit;
 	plc["memor"] << memory;
@@ -83,24 +63,20 @@ int sc_main(int argc, char *argv[])
 	plc["clk_c"] << clock_group;
 	clock_group["count"] << clock_count;
 	clock_group.collocate();
+
+    set_spec(plc,false);
 	plc.collocate();
+
+    inFile.open("instruct_lat.txt"); 
 
 	mnbar.push_back("Opções");
 	menu &op = mnbar.at(0);
 	menu::item_proxy spec_ip = op.append("Especulação",[&](menu::item_proxy &ip)
 	{
 		if(ip.checked())
-		{
-			plc.div("<vert <weight = 5%><vert weight=85% < <weight = 1% ><instr> <rst> <weight = 1%> <weight = 20% regs> <weight = 1%> > < <weight = 1%> <memor> <weight = 1%> <rob> <weight = 1%> > > < <weight = 1%> <clk_c weight=15%> <weight=50%> <gap = 10btns> <weight = 1%> > <weight = 2%> >");
-			plc.collocate();
-			spec = true;
-		}
+            set_spec(plc,true);
 		else
-		{
-			plc.div("<vert <weight = 5%><vert weight=85% < <weight = 1% ><instr> <weight = 1%> <rst> <weight = 1%> > < <weight = 1%> <memor> <weight = 1%> <weight = 29% regs> <weight = 1%> > > < <weight = 1%> <clk_c weight=15%> <weight=50%> <gap = 10btns> <weight = 1%> > <weight = 2%> >");
-			plc.collocate();
-			spec = false;
-		}
+            set_spec(plc,false);
 	});
 	op.check_style(0,menu::checks::highlight);
 	op.append("Modificar valores...");
@@ -118,6 +94,8 @@ int sc_main(int argc, char *argv[])
 			nls = sl.value();
 		}
 	});
+    // Menu de ajuste dos tempos de latencia na interface
+    // Novas instrucoes devem ser adcionadas manualmente aqui
 	sub->append("Tempos de latência", [&](menu::item_proxy &ip)
 	{
 		inputbox ibox(fm,"","Tempos de latência para instruções");
@@ -149,11 +127,7 @@ int sc_main(int argc, char *argv[])
 			auto path = caminho.value();
 			inFile.open(path);
 			if(!add_instructions(inFile,instruction_queue,instruct))
-			{
-				msgbox msg("Arquivo inválido");
-				msg << "Não foi possível abrir o arquivo!";
-				msg.show();
-			}
+                show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
 			else
 				fila = true;
 		}
@@ -168,11 +142,7 @@ int sc_main(int argc, char *argv[])
 			auto path = caminho.value();
 			inFile.open(path);
 			if(!inFile.is_open())
-			{
-				msgbox msg("Arquivo inválido");
-				msg << "Não foi possível abrir o arquivo!";
-				msg.show();
-			}
+                show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
 			else
 			{
 				auto reg_gui = reg.at(0);
@@ -198,11 +168,7 @@ int sc_main(int argc, char *argv[])
 			auto path = caminho.value();
 			inFile.open(path);
 			if(!inFile.is_open())
-			{
-				msgbox msg("Arquivo inválido");
-				msg << "Não foi possível abrir o arquivo!";
-				msg.show();
-			}
+                show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
 			else
 			{
 				auto reg_gui = reg.at(0);
@@ -229,11 +195,7 @@ int sc_main(int argc, char *argv[])
 			auto path = caminho.value();
 			inFile.open(path);
 			if(!inFile.is_open())
-			{
-				msgbox msg("Arquivo inválido");
-				msg << "Não foi possível abrir o arquivo!";
-				msg.show();
-			}
+                show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
 			else
 			{
 				int i = 0;
@@ -262,11 +224,7 @@ int sc_main(int argc, char *argv[])
 			auto path = caminho.value();
 			inFile.open(path);
 			if(!inFile.is_open())
-			{
-				msgbox msg("Arquivo inválido");
-				msg << "Não foi possível abrir o arquivo!";
-				msg.show();
-			}
+                show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
 			else
 			{
 				string str;
@@ -278,9 +236,9 @@ int sc_main(int argc, char *argv[])
 					if(str[0] == '$')
 					{
 						if(str[1] == 'f')
-					       	{ 
+                        { 
 							i = 2;
-						       	is_float = true; 
+                            is_float = true; 
 						}
 					       	else 
 						{ 
@@ -335,11 +293,7 @@ int sc_main(int argc, char *argv[])
 			auto path = caminho.value();
 			inFile.open(path);
 			if(!inFile.is_open())
-			{
-				msgbox msg("Arquivo inválido");
-				msg << "Não foi possível abrir o arquivo!";
-				msg.show();
-			}
+                show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
 			else
 			{
 				string value;
@@ -376,11 +330,7 @@ int sc_main(int argc, char *argv[])
 		string path = "in/benchmarks/fibonacci.txt";		
 		inFile.open(path);
 		if(!add_instructions(inFile,instruction_queue,instruct))
-		{
-			msgbox msg("Arquivo inválido");
-			msg << "Não foi possível abrir o arquivo!";
-			msg.show();
-		}
+            show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
 		else
 			fila = true;
 	});
@@ -388,11 +338,7 @@ int sc_main(int argc, char *argv[])
 		string path = "in/benchmarks/vector_search.txt";		
 		inFile.open(path);
 		if(!add_instructions(inFile,instruction_queue,instruct))
-		{
-			msgbox msg("Arquivo inválido");
-			msg << "Não foi possível abrir o arquivo!";
-			msg.show();
-		}
+            show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
 		else
 			fila = true;
 	});
@@ -400,11 +346,7 @@ int sc_main(int argc, char *argv[])
 		string path = "in/benchmarks/division_stall.txt";		
 		inFile.open(path);
 		if(!add_instructions(inFile,instruction_queue,instruct))
-		{
-			msgbox msg("Arquivo inválido");
-			msg << "Não foi possível abrir o arquivo!";
-			msg.show();
-		}
+            show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
 		else
 			fila = true;
 	});
@@ -412,11 +354,7 @@ int sc_main(int argc, char *argv[])
 		string path = "in/benchmarks/store_stress.txt";		
 		inFile.open(path);
 		if(!add_instructions(inFile,instruction_queue,instruct))
-		{
-			msgbox msg("Arquivo inválido");
-			msg << "Não foi possível abrir o arquivo!";
-			msg.show();
-		}
+            show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
 		else
 			fila = true;
 	});
@@ -424,11 +362,7 @@ int sc_main(int argc, char *argv[])
 		string path = "in/benchmarks/res_stations_stall.txt";		
 		inFile.open(path);
 		if(!add_instructions(inFile,instruction_queue,instruct))
-		{
-			msgbox msg("Arquivo inválido");
-			msg << "Não foi possível abrir o arquivo!";
-			msg.show();
-		}
+            show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
 		else
 			fila = true;
 	});
@@ -492,11 +426,7 @@ int sc_main(int argc, char *argv[])
 	{
 		int i;
 		if (strlen(argv[k]) > 2)
-		{
-			msgbox msg("Opção inválida");
-			msg << "Opção \"" << argv[k] << "\" inválida";
-			msg.show();
-		}
+            show_message("Opção inválida",string("Opção \"") + string(argv[k]) + string("\" inválida"));
 		else
 		{
 			char c = argv[k][1];
@@ -505,11 +435,7 @@ int sc_main(int argc, char *argv[])
 				case 'q':
 					inFile.open(argv[k+1]);
 					if(!add_instructions(inFile,instruction_queue,instruct))
-					{
-						msgbox msg("Arquivo inválido");
-						msg << "Não foi possível abrir o arquivo!";
-						msg.show();
-					}
+                        show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
 					else
 						fila = true;
 					break;
@@ -518,11 +444,7 @@ int sc_main(int argc, char *argv[])
 					int value;
 					i = 0;
 					if(!inFile.is_open())
-					{
-						msgbox msg("Arquivo inválido");
-						msg << "Não foi possível abrir o arquivo " << argv[k+1];
-						msg.show();
-					}
+                        show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
 					else
 					{
 						while(inFile >> value && i < 32)
@@ -540,11 +462,7 @@ int sc_main(int argc, char *argv[])
 					i = 0;
 					inFile.open(argv[k+1]);
 					if(!inFile.is_open())
-					{
-						msgbox msg("Arquivo inválido");
-						msg << "Não foi possível abrir o arquivo " << argv[k+1];
-						msg.show();
-					}
+                        show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
 					else
 					{
 						while(inFile >> value_fp && i < 32)
@@ -560,11 +478,7 @@ int sc_main(int argc, char *argv[])
 				case 'm':
 					inFile.open(argv[k+1]);
 					if(!inFile.is_open())
-					{
-						msgbox msg("Arquivo inválido");
-						msg << "Não foi possível abrir o arquivo " << argv[k+1];
-						msg.show();
-					}
+                        show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
 					else
 					{
 						int value;
@@ -584,11 +498,7 @@ int sc_main(int argc, char *argv[])
 				case 'r':
 					inFile.open(argv[k+1]);
 					if(!inFile.is_open())
-					{
-						msgbox msg("Arquivo inválido");
-						msg << "Não foi possível abrir o arquivo " << argv[k+1];
-						msg.show();
-					}
+                        show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
 					else
 					{
 						int value;
@@ -602,8 +512,7 @@ int sc_main(int argc, char *argv[])
 					}
 					break;
 				case 's':
-					plc.div("<vert <weight = 5%><vert weight=85% < <weight = 1% ><instr> <rst> <weight = 1%> <weight = 20% regs> <weight = 1%> > < <weight = 1%> <memor> <weight = 1%> <rob> <weight = 1%> > > < <weight = 1%> <clk_c weight=15%> <weight=50%> <gap = 10btns> <weight = 1%> > <weight = 2%> >");
-					plc.collocate();
+                    set_spec(plc,true); 
 					spec = true;
 					spec_ip.checked(true);
 					k--;
@@ -611,11 +520,7 @@ int sc_main(int argc, char *argv[])
 				case 'l':
 					inFile.open(argv[k+1]);
 					if(!inFile.is_open())
-					{
-						msgbox msg("Arquivo inválido");
-						msg << "Não foi possível abrir o arquivo " << argv[k+1];
-						msg.show();
-					}
+                        show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
 					else
 					{
 						string inst;
@@ -629,9 +534,7 @@ int sc_main(int argc, char *argv[])
 					inFile.close();
 					break;
 				default:
-					msgbox msg("Opção inválida");
-					msg << "Opção \"" << argv[k] << "\" inválida";
-					msg.show();
+                    show_message("Opção inválida",string("Opção \"") + string(argv[k]) + string("\" inválida"));
 					break;
 			}
 		}
@@ -643,7 +546,7 @@ int sc_main(int argc, char *argv[])
 		{
 			botao.enabled(false);
 			clock_control.enabled(true);
-			//Desativa os menus
+			//Desativa os menus apos inicio da execucao
 			op.enabled(0,false);
 			op.enabled(1,false);
 			op.enabled(3,false);
@@ -658,11 +561,7 @@ int sc_main(int argc, char *argv[])
 			sc_start();
 		}
 		else
-		{
-			msgbox msg("Fila de instruções vazia");
-			msg << "A fila de instruções está vazia. Insira um conjunto de instruções para iniciar.";
-			msg.show();
-		}
+			show_message("Fila de instruções vazia","A fila de instruções está vazia. Insira um conjunto de instruções para iniciar.");
 	});
 	clock_control.events().click([]
 	{

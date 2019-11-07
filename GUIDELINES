@@ -1,0 +1,16 @@
+Esse arquivo contem um pequeno guia para contribuições com o desenvolvimento do simulador. Leve em consideração:
+
+* Adicionar novas instruções requer a mudança em muitos dos modulos, já que o simulador utiliza a comunicação de vários módulos para sua execução. Alguns dos arquivos onde novas instruções devem ter valores inseridos manualmente:
+    - res_control (designa para qual estaçao de reserva a isntrução será enviada)
+    - res_station (onde o calculo da instrucao ocorre)
+    - main (controle de latências de cada instrução)
+    - sl_buffer (designa para qual estaçao de reserva a isntrução será enviada)
+    - issue_control (define para quais modulos a instrucao sera enviada no despacho)
+
+
+* Adicionar novos preditores nao deve requerir mais do que a mudança nos arquivos branch_predictor, o reorder_buffer opera assumindo que essa classe esta bem definida
+* Arquivos que tem final '_rob' são módulos semelhantes àqueles sem esse final, porém preparados para execução com especulação. Qualquer mudança feita em arquivos que não acompanham esse prefixo DEVE ser feita em arquivos que acompanham, caso ele exista.
+
+* É importante entender como funciona o fluxo de conexão de módulos do SystemC para entender como o simulador funciona. Os arquivos top.cpp e top.hpp descrevem a conexão de todos os módulos do simulador. Entender bem como cada um deles se conecta é essencial para entender a comunicação entre eles. Há uma imagem na raíz do repositório mostrando um diagrama com as conexões de módulos para o modo de especulação (nem todos os módulos e canais estão descritos nela). Use a imagem para entender como eles se conectam no código fonte do arquivo top. 
+
+Quaisquer dúvidas, meu e-mail é lucas.reis091997@gmail.com

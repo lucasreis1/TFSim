@@ -4,6 +4,7 @@ res_vector::res_vector(sc_module_name name,unsigned int t1, unsigned int t2,map<
 sc_module(name),
 table(lsbox)
 {
+    //Divisao entre instrucoes de multiplicacao/divisao e subtracao/soma, novas instrucoes devem ser adcionadas manualmente aqui
 	res_type = {{"DADD",0},{"DADDI",0},{"DADDU",0},{"DADDIU",0},{"DSUB",0},{"DSUBU",0},{"DMUL",1},{"DMULU",1},{"DDIV",1},{"DDIVU",1}};
 	auto cat = table.at(0);
 	string texto;
@@ -108,7 +109,7 @@ void res_vector::leitura_issue()
 		wait();
 	}
 }
-
+// Determina para qual estacao de reserva a instrucao sera enviada
 int res_vector::busy_check(string inst)
 {
 	unsigned int inst_type = res_type[inst];

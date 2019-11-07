@@ -3,6 +3,8 @@
 
 issue_control_rob::issue_control_rob(sc_module_name name): sc_module(name)
 {
+    //Tipo da instrucao define para onde ela sera enviada no fluxo de modulos do SystemC
+    //Novas instrucoes devem ser adcionadas manualmente aqui
 	res_type = {{"DADD",1},{"DADDI",1},{"DADDU",1},
 				{"DADDIU",1},{"DSUB",1},{"DSUBU",1},
 				{"DMUL",1},{"DMULU",1},{"DDIV",1},
