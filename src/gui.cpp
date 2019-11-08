@@ -32,23 +32,23 @@ void set_spec(nana::place &plc, bool is_spec)
 
 bool add_instructions(ifstream &File,vector<string> &queue, nana::listbox &instruction_gui)
 {
-	if(!File.is_open())
-		return false;
-	if(queue.size())
-	{
-		queue.clear();
-		instruction_gui.clear(0);	
-	}
-	auto inst_gui_cat = instruction_gui.at(0);
-	string line;
-	while(getline(File,line))
-	{
-		if(line.rfind("//", 0) == string::npos) //ignora linhas que começam com "//"
-		{
-			queue.push_back(line);
-			inst_gui_cat.append(line);
-		}
-	}
-	File.close();
-	return true;
+    if(!File.is_open())
+        return false;
+    if(queue.size())
+    {
+        queue.clear();
+        instruction_gui.clear(0);   
+    }
+    auto inst_gui_cat = instruction_gui.at(0);
+    string line;
+    while(getline(File,line))
+    {
+        if(line.rfind("//", 0) == string::npos) //ignora linhas que começam com "//"
+        {
+            queue.push_back(line);
+            inst_gui_cat.append(line);
+        }
+    }
+    File.close();
+    return true;
 }
