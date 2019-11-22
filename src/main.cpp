@@ -64,7 +64,8 @@ int sc_main(int argc, char *argv[])
     clock_group["count"] << clock_count;
     clock_group.collocate();
 
-    set_spec(plc,false);
+    spec = false;
+    set_spec(plc,spec);
     plc.collocate();
 
     mnbar.push_back("Opções");
@@ -72,9 +73,10 @@ int sc_main(int argc, char *argv[])
     menu::item_proxy spec_ip = op.append("Especulação",[&](menu::item_proxy &ip)
     {
         if(ip.checked())
-            set_spec(plc,true);
+            spec = true;
         else
-            set_spec(plc,false);
+            spec = false;
+        set_spec(plc,spec);
     });
     op.check_style(0,menu::checks::highlight);
     op.append("Modificar valores...");
@@ -510,8 +512,8 @@ int sc_main(int argc, char *argv[])
                     }
                     break;
                 case 's':
-                    set_spec(plc,true); 
                     spec = true;
+                    set_spec(plc,spec); 
                     spec_ip.checked(true);
                     k--;
                     break;
