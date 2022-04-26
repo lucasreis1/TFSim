@@ -8,7 +8,7 @@ SYSTEMC_INCLUDE=$(ROOT)/systemc-2.3.3/src
 NANA_INCLUDE=$(ROOT)/nana/include
 NANA_LIB=$(ROOT)/nana/built
 
-C++ = g++
+CXX = g++
 INCLUDEDIR = include/
 SRC_DIR = src
 OBJ_DIR = obj
@@ -28,13 +28,13 @@ all: EXE
 nofs: EXE_NOFS
 
 EXE: $(OBJ)
-	$(C++) $(LDLFLAGS) $^ $(LIBS) -lstdc++fs -o $(EXEC_NAME)
+	$(CXX) $(LDLFLAGS) $^ $(LIBS) -lstdc++fs -o $(EXEC_NAME)
 
 EXE_NOFS: $(OBJ)
-	$(C++) $(LDLFLAGS) $^ $(LIBS) -o $(EXEC_NAME)
+	$(CXX) $(LDLFLAGS) $^ $(LIBS) -o $(EXEC_NAME)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
-	$(C++) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+	$(CXX) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
 clean:
 	rm $(OBJ)

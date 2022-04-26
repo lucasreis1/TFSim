@@ -1,3 +1,4 @@
+
 # TFSim
 
 Event-driven simulation of the Tomasulo Algorithm using the C++ interface SystemC, with a complete GUI.
@@ -7,55 +8,14 @@ out-of-order execution on modern microprocessors.
 
 # Guia de Execução
 
-1. Baixe o [SystemC](http://www.accellera.org/downloads/standards/systemc)
-    1-1. Extrair systemC e entrar na pasta padrão
-    1-2. Crie uma pasta build dentro da pasta do SystemC e entre nela
-    ```
-    mkdir build
-    cd build
-    ```
-    1-3. Gere os arquivos de compilação usando cmake
-    ```
-    cmake .. -DCMAKE_CXX_STANDARD=17 -DCMAKE_INSTALL_PREFIX=/opt/systemc
-    ```
-    1-4. Compile e instale a biblioteca
-    ```
-    make
-    sudo make install
-    ```
-2. Baixe o [Nana](http://nanapro.org/en-us)
-	2-1. Crie uma pasta qualquer (não pode se chamar build) dentro da pasta raiz do Nana e acesse-a
-	```
-	mkdir build2
-	cd build2
-	```
-	2-2. Instale as seguintes bibliotecas necessárias antes de compilar o nana:
-	```
-	sudo apt install -y libx11-dev libxft-dev libasound2-dev libxcursor-dev
-	```
-	2-3. Crie os arquivos de compilação usando cmake
-	```
-	cmake .. -DNANA_CMAKE_INSTALL=TRUE
-	```
-	2-4. Compile e instale o nana usando make
-	```
-	make
-	sudo make install
-	```
- 3. Crie uma pasta qualquer para armazenar esse repositório
-	3-1. Clone usando git
-	```	
-	git clone https://github.com/lucasreis1/TFsim.git
-	```
-	3-2. Compile o código usando o makefile incluido
-	```
-	make
-	```
-
-	3-3. Execute com ./tfsim
+1. Instale os pacotes necessários para uso da biblioteca Nana
+	```apt install -y unzip libx11-dev libxft-dev libasound2-dev libxcursor-dev```
+2. Execute o script na raíz do repositório para instalar as dependências do simulador
+	`sh get_dep.sh`
+3. Execute com `./tfsim`
 		
 
-	 - Os valores iniciais de registradores e de memória são gerados aleatoriamente para cada execução. É possível alterá-los (assim como inserir a lista de instruções) por linha de comando ou pela barra de opções da interface. Por linha de comando, utilize:
+- Os valores iniciais de registradores e de memória são gerados aleatoriamente para cada execução. É possível alterá-los (assim como inserir a lista de instruções) por linha de comando ou pela barra de opções da interface. Por linha de comando, utilize:
 			
 
 		-  '-q' para fila de instruções
