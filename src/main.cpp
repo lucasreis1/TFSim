@@ -65,6 +65,7 @@ int sc_main(int argc, char *argv[])
     clock_group.collocate();
 
     spec = false;
+    //set_spec eh so visual
     set_spec(plc,spec);
     plc.collocate();
 
@@ -366,6 +367,34 @@ int sc_main(int argc, char *argv[])
         else
             fila = true;
     });
+    // novo menu para escolha de preditores
+    op.append("Preditores");
+    auto pred_sub = op.create_sub_menu(4);
+    pred_sub->append("1 bit",[&](menu::item_proxy &ip){
+        if(ip.checked()){
+            pred_sub->checked(1, false);
+            pred_sub->checked(2, false);
+            //todo
+        }
+    });
+    pred_sub->append("2 bits",[&](menu::item_proxy &ip){
+        if(ip.checked()){
+            pred_sub->checked(0, false);
+            pred_sub->checked(2, false);
+            //todo
+        }
+    });
+    pred_sub->append("3 bits", [&](menu::item_proxy &ip){
+        if(ip.checked()){
+            pred_sub->checked(0, false);
+            pred_sub->checked(1, false);
+            //todo
+        }
+    });
+    pred_sub->check_style(0,menu::checks::highlight);
+    pred_sub->check_style(1,menu::checks::highlight);
+    pred_sub->check_style(2,menu::checks::highlight);
+
     vector<string> columns = {"#","Name","Busy","Op","Vj","Vk","Qj","Qk","A"}; 
     for(unsigned int i = 0 ; i < columns.size() ; i++)
     {

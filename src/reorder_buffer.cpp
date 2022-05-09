@@ -191,8 +191,8 @@ void reorder_buffer::new_rob_head()
             mem_write(std::stoi(rob_buff[0]->destination),rob_buff[0]->value,rob_buff[0]->entry);
         else if(rob_buff[0]->instruction.at(0) == 'B')
         {
-            instr_queue_gui.at(rob_buff[0]->instr_pos).text(EXEC,"X");
-            instr_queue_gui.at(rob_buff[0]->instr_pos).text(WRITE,"X");
+            instr_queue_gui.at(rob_buff[0]->instr_pos).text(EXEC,sc_time_stamp().to_string()); //text(EXEC,"X");
+            instr_queue_gui.at(rob_buff[0]->instr_pos).text(WRITE,sc_time_stamp().to_string()); //text(WRITE,"X");
             instr_type = branch_instr[rob_buff[0]->instruction];
             if(instr_type < 2)
                 pred = branch(instr_type,rob_buff[0]->vj,rob_buff[0]->vk);
@@ -285,7 +285,7 @@ void reorder_buffer::leitura_adu()
         {
             ptrs[index-1]->ready = true;
             cat.at(index-1).text(STATE,"Write Result");
-            instr_queue_gui.at(ptrs[index-1]->instr_pos).text(WRITE,"X");
+            instr_queue_gui.at(ptrs[index-1]->instr_pos).text(WRITE,sc_time_stamp().to_string()); //text(WRITE,"X");
         }
         if(rob_buff[0]->entry == index && ptrs[index-1]->ready)
             rob_head_value_event.notify(1,SC_NS); 
@@ -366,7 +366,7 @@ void reorder_buffer::check_dependencies(unsigned int index, float value)
                 if(ptrs[i]->destination != "")
                 {
                     cat.at(i).text(STATE,"Write Result");
-                    instr_queue_gui.at(ptrs[i]->instr_pos).text(WRITE,"X");
+                    instr_queue_gui.at(ptrs[i]->instr_pos).text(WRITE,sc_time_stamp().to_string()); //text(WRITE,"X");
                     ptrs[i]->ready = true;
                 }
                 if(rob_buff[0]->entry == index && ptrs[i]->ready)
