@@ -22,9 +22,10 @@ int sc_main(int argc, char *argv[])
 {
     using namespace nana;
     vector<string> instruction_queue;
-    int nadd,nmul,nls;
+    int nadd,nmul,nls, n_bits;
     nadd = 3;
     nmul = nls = 2;
+    n_bits = 2;
     std::vector<int> sizes;
     bool spec = false;
     bool fila = false;
@@ -374,21 +375,21 @@ int sc_main(int argc, char *argv[])
         if(ip.checked()){
             pred_sub->checked(1, false);
             pred_sub->checked(2, false);
-            //todo
+            n_bits = 1;
         }
     });
     pred_sub->append("2 bits",[&](menu::item_proxy &ip){
         if(ip.checked()){
             pred_sub->checked(0, false);
             pred_sub->checked(2, false);
-            //todo
+            n_bits = 2;
         }
     });
     pred_sub->append("3 bits", [&](menu::item_proxy &ip){
         if(ip.checked()){
             pred_sub->checked(0, false);
             pred_sub->checked(1, false);
-            //todo
+            n_bits = 3;
         }
     });
     pred_sub->check_style(0,menu::checks::highlight);
@@ -579,12 +580,15 @@ int sc_main(int argc, char *argv[])
             op.enabled(0,false);
             op.enabled(1,false);
             op.enabled(3,false);
+            op.enabled(4,false);
             for(int i = 0 ; i < 6 ; i++)
                 sub->enabled(i,false);
             for(int i = 0 ; i < 5 ; i++)
                 bench_sub->enabled(i,false);
+            for(int i = 0; i < 3; i++)
+                pred_sub->enabled(i, false);
             if(spec)
-                top1.rob_mode(nadd,nmul,nls,instruct_time,instruction_queue,table,memory,reg,instruct,clock_count,rob);
+                top1.rob_mode(n_bits,nadd,nmul,nls,instruct_time,instruction_queue,table,memory,reg,instruct,clock_count,rob);
             else
                 top1.simple_mode(nadd,nmul,nls,instruct_time,instruction_queue,table,memory,reg,instruct,clock_count);
             sc_start();
