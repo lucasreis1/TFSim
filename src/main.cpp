@@ -367,6 +367,14 @@ int sc_main(int argc, char *argv[])
             show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
         else
             fila = true;
+    }); 
+    bench_sub->append("Branch inside branch",[&](menu::item_proxy &ip){
+        string path = "in/benchmarks/branch_in_branch.txt";
+        inFile.open(path);
+        if(!add_instructions(inFile,instruction_queue,instruct))
+            show_message("Arquivo inválido","Não foi possível abrir o arquivo");
+        else
+            fila = true;
     });
     // novo menu para escolha de preditores
     op.append("Preditores");
