@@ -86,8 +86,12 @@ void res_station_rob::exec()
             }
         }
         wait(SC_ZERO_TIME);
-        if(!isFlushed)
-            instr_queue_gui.at(instr_pos).text(WRITE,sc_time_stamp().to_string()); //text(WRITE,"X");
+        if(!isFlushed){
+            //TODO: ver o porque desse if
+            if(instr_pos < instr_queue_gui.size())
+                instr_queue_gui.at(instr_pos).text(WRITE,sc_time_stamp().to_string()); //text(WRITE,"X");
+        }
+        
         Busy = isFlushed = false;
         cout << "estacao " << id << " liberada no ciclo " << sc_time_stamp() << endl << flush;
         clean_item(); //Limpa a tabela na interface grafica

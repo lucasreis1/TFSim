@@ -1,10 +1,12 @@
 #include <nana/gui.hpp>
 #include "reorder_buffer.hpp"
 
-reorder_buffer::reorder_buffer(sc_module_name name,unsigned int sz,unsigned int pred_size, nana::listbox &gui, nana::listbox::cat_proxy instr_gui): 
+reorder_buffer::reorder_buffer(sc_module_name name,unsigned int sz,unsigned int pred_size, unsigned int buffer_size, int flag_mode, nana::listbox &gui, nana::listbox::cat_proxy instr_gui): 
 sc_module(name),
 tam(sz),
+flag_mode(flag_mode),
 preditor(pred_size),
+branch_prediction_buffer(buffer_size, pred_size),
 gui_table(gui),
 instr_queue_gui(instr_gui)
 {
@@ -60,7 +62,7 @@ void reorder_buffer::leitura_issue()
             cout << "ROB esta totalmente ocupado" << endl << flush;
             wait(free_rob_event);
         }
-        in_issue->read(p);
+        in_issue->read(p); // example, "DADDI R1,R1,1 0 1", instruction + general_pc + original_pc
         out_issue->write(std::to_string(pos+1));
         ord = instruction_split(p);
         inst = p.substr(0,instruction_pos_finder(p));
@@ -74,7 +76,11 @@ void reorder_buffer::leitura_issue()
         cat.at(pos).text(INSTRUCTION,inst);
         ptrs[pos]->state = ISSUE;
         cat.at(pos).text(STATE,"Issue");
-        ptrs[pos]->instr_pos = std::stoi(ord[ord.size()-1]);
+
+        ptrs[pos]->instr_pos = std::stoi(ord[ord.size()- 2]);
+        ptrs[pos]->pc = std::stoi(ord[ord.size() - 1]);
+        //cout << "PC: " << ptrs[pos]->pc << endl;
+        //cout << "instr_pos: " << ptrs[pos]->instr_pos << endl;
         if(ord[0].at(0) == 'S')
         {
             check_value = false;
@@ -150,11 +156,25 @@ void reorder_buffer::leitura_issue()
                 cat.at(pos).text(DESTINATION,ord[2]);
                 ptrs[pos]->destination = ord[2];
             }
-            ptrs[pos]->prediction = preditor.predict();
-            if(preditor.predict())
+            
+            // Novo modo -> Se escolhido no menu, 1 preditor entra no if
+            //se escolhido o bpb, vai pro else
+            if(flag_mode == 1){
+                ptrs[pos]->prediction = preditor.predict();
+            }
+            else{
+                ptrs[pos]->prediction = branch_prediction_buffer.bpb_predict(ptrs[pos]->pc);
+            }
+            
+            if(ptrs[pos]->prediction){
+                cout << "Prediction of instruction " << ptrs[pos]->instr_pos << " | " << ptrs[pos]->instruction << "taken" << endl;
                 out_iq->write("S " + std::to_string(ptrs[pos]->entry) +  ' ' + ptrs[pos]->destination);
-            else
+            }
+            else{
+                cout << "Prediction of instruction " << ptrs[pos]->instr_pos << " | " << ptrs[pos]->instruction << " not taken" << endl;
                 out_iq->write("S " + std::to_string(ptrs[pos]->entry));
+            }
+                
             if(ptrs[pos]->qj == 0 && ptrs[pos]->qk == 0)
                 ptrs[pos]->ready = true;
         }
@@ -176,7 +196,7 @@ void reorder_buffer::leitura_issue()
 void reorder_buffer::new_rob_head() 
 {
     unsigned int instr_type;
-    bool pred;
+    bool pred, hit;
     auto cat = gui_table.at(0);
     while(true)
     {
@@ -187,40 +207,52 @@ void reorder_buffer::new_rob_head()
         rob_buff[0]->state = COMMIT;
         wait(SC_ZERO_TIME);
         cat.at(rob_buff[0]->entry-1).text(STATE,"Commit");
-        if(rob_buff[0]->instruction.at(0) == 'S')
-            mem_write(std::stoi(rob_buff[0]->destination),rob_buff[0]->value,rob_buff[0]->entry);
-        else if(rob_buff[0]->instruction.at(0) == 'B')
-        {
-            instr_queue_gui.at(rob_buff[0]->instr_pos).text(EXEC,sc_time_stamp().to_string()); //text(EXEC,"X");
-            instr_queue_gui.at(rob_buff[0]->instr_pos).text(WRITE,sc_time_stamp().to_string()); //text(WRITE,"X");
-            instr_type = branch_instr[rob_buff[0]->instruction];
-            if(instr_type < 2)
-                pred = branch(instr_type,rob_buff[0]->vj,rob_buff[0]->vk);
-            else
-                pred = branch(instr_type,(float)rob_buff[0]->vj);
-            if(pred != rob_buff[0]->prediction)
-            {
-                if(pred)
-                    out_iq->write(rob_buff[0]->destination + ' ' + std::to_string(rob_buff[0]->entry));
+
+        switch(rob_buff[0]->instruction.at(0)){
+            case 'S':
+                mem_write(std::stoi(rob_buff[0]->destination),rob_buff[0]->value,rob_buff[0]->entry);
+                break;
+            
+            case 'B':
+                instr_queue_gui.at(rob_buff[0]->instr_pos).text(EXEC,sc_time_stamp().to_string()); //text(EXEC,"X");
+                instr_queue_gui.at(rob_buff[0]->instr_pos).text(WRITE,sc_time_stamp().to_string()); //text(WRITE,"X");
+                instr_type = branch_instr[rob_buff[0]->instruction];
+                if(instr_type < 2)
+                    pred = branch(instr_type,rob_buff[0]->vj,rob_buff[0]->vk);
                 else
-                    out_iq->write("R " + std::to_string(rob_buff[0]->entry));
-                cout << "-----------------LIMPANDO ROB no ciclo " << sc_time_stamp() << " -----------------" << endl << flush;
-                _flush(); //Esvazia o ROB
-                out_resv_adu->write("F");
-                out_slb->write("F");
-                out_rb->write("F");
-                out_adu->write("F");
-            }
-            preditor.update_state(pred);
+                    pred = branch(instr_type,(float)rob_buff[0]->vj);
+
+                hit = (pred == rob_buff[0]->prediction);
+
+                if(!hit){
+                    if(pred)
+                        out_iq->write(rob_buff[0]->destination + ' ' + std::to_string(rob_buff[0]->entry));
+                    else
+                        out_iq->write("R " + std::to_string(rob_buff[0]->entry));
+                    cout << "-----------------LIMPANDO ROB no ciclo " << sc_time_stamp() << " -----------------" << endl << flush;
+                    _flush(); //Esvazia o ROB
+                    out_resv_adu->write("F");
+                    out_slb->write("F");
+                    out_rb->write("F");
+                    out_adu->write("F");
+                }
+
+                cout << "Atualizando bpb" << endl << flush;
+                if(flag_mode == 1){
+                    preditor.update_state(pred);
+                }else{
+                    branch_prediction_buffer.bpb_update_state(rob_buff[0]->pc, pred, hit);
+                }
+                break;
+
+                default:
+                    wait(SC_ZERO_TIME);
+                    unsigned int regst = ask_status(true,rob_buff[0]->destination);
+                    ask_value(false,rob_buff[0]->destination,rob_buff[0]->value);
+                    if(regst == rob_buff[0]->entry)
+                        ask_status(false,rob_buff[0]->destination,0);
         }
-        else
-        {
-            wait(SC_ZERO_TIME);
-            unsigned int regst = ask_status(true,rob_buff[0]->destination);
-            ask_value(false,rob_buff[0]->destination,rob_buff[0]->value);
-            if(regst == rob_buff[0]->entry)
-                ask_status(false,rob_buff[0]->destination,0);
-        }
+
         if(!rob_buff.empty())
         {
             rob_buff[0]->busy = false;

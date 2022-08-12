@@ -1,6 +1,7 @@
 #include "general.hpp"
 #include "interfaces.hpp"
 #include "branch_predictor.hpp"
+#include "bpb.hpp"
 #include <nana/gui/widgets/listbox.hpp>
 #include<vector>
 #include<deque>
@@ -27,7 +28,7 @@ public:
     sc_port<write_if_f> out_resv_adu;
     sc_port<read_if_f> in_resv_adu;
     SC_HAS_PROCESS(reorder_buffer);
-    reorder_buffer(sc_module_name name,unsigned int sz,unsigned int pred_size, nana::listbox &gui, nana::listbox::cat_proxy instr_gui);
+    reorder_buffer(sc_module_name name,unsigned int sz,unsigned int pred_size, unsigned int buffer_size, int flag_mode, nana::listbox &gui, nana::listbox::cat_proxy instr_gui);
     ~reorder_buffer();
     void leitura_issue();
     void new_rob_head();
@@ -48,7 +49,8 @@ private:
         bool prediction;
         int vj,vk;
         unsigned int qj,qk;
-        unsigned int instr_pos;
+        unsigned int instr_pos; // general pc (instruction position gui)
+        unsigned int pc; //original pc of instruction
         rob_slot(unsigned int id)
         {
             busy = ready = false;
@@ -68,7 +70,11 @@ private:
     rob_slot **ptrs;
     deque<rob_slot *> rob_buff;
     sc_event free_rob_event,new_rob_head_event,rob_head_value_event,resv_read_oper_event;
+    // flag to mode
+    // 1-> 1 preditor; 2-> bpb
+    int flag_mode;
     branch_predictor preditor;
+    bpb branch_prediction_buffer;
     map<string,unsigned int> branch_instr;
     nana::listbox &gui_table;
     nana::listbox::cat_proxy instr_queue_gui;

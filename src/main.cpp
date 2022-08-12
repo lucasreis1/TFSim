@@ -28,6 +28,7 @@ int sc_main(int argc, char *argv[])
     n_bits = 2;
     std::vector<int> sizes;
     bool spec = false;
+    int mode = 0;
     bool fila = false;
     ifstream inFile;
     form fm(API::make_center(1024,700));
@@ -51,6 +52,7 @@ int sc_main(int argc, char *argv[])
     // Tempo de latencia de uma instrucao
     // Novas instrucoes devem ser inseridas manualmente aqui
     map<string,int> instruct_time{{"DADD",4},{"DADDI",4},{"DSUB",6},{"DSUBI",6},{"DMUL",10},{"DDIV",16},{"MEM",2}};
+    // Responsavel pelos modos de execução
     top top1("top");
     botao.caption("START");
     clock_control.caption("NEXT CYCLE");
@@ -72,15 +74,41 @@ int sc_main(int argc, char *argv[])
 
     mnbar.push_back("Opções");
     menu &op = mnbar.at(0);
-    menu::item_proxy spec_ip = op.append("Especulação",[&](menu::item_proxy &ip)
+    //menu::item_proxy spec_ip = 
+    op.append("Especulação");
+    auto spec_sub = op.create_sub_menu(0);
+    // Modo com 1 preditor para todos os branchs
+    spec_sub->append("1 Preditor", [&](menu::item_proxy &ip)
     {
-        if(ip.checked())
+        if(ip.checked()){
             spec = true;
-        else
+            mode = 1;
+            spec_sub->checked(1, false);
+        }
+        else{
             spec = false;
+            mode = 0;
+        }
+
         set_spec(plc,spec);
     });
-    op.check_style(0,menu::checks::highlight);
+    // Modo com o bpb
+    spec_sub->append("Branch Target Buffer", [&](menu::item_proxy &ip)
+    {
+        if(ip.checked()){
+            spec = true;
+            mode = 2;
+            spec_sub->checked(0, false);
+        }
+        else{
+            spec = false;
+            mode = 0;
+        }
+
+        set_spec(plc, spec);
+    });
+    spec_sub->check_style(0,menu::checks::highlight);
+    spec_sub->check_style(1,menu::checks::highlight);
     op.append("Modificar valores...");
     auto sub = op.create_sub_menu(1);
     sub->append("Número de Estações de Reserva",[&](menu::item_proxy ip)
@@ -552,7 +580,7 @@ int sc_main(int argc, char *argv[])
                 case 's':
                     spec = true;
                     set_spec(plc,spec); 
-                    spec_ip.checked(true);
+                    //spec_ip.checked(true);
                     k--;
                     break;
                 case 'l':
@@ -589,14 +617,21 @@ int sc_main(int argc, char *argv[])
             op.enabled(1,false);
             op.enabled(3,false);
             op.enabled(4,false);
+            for(int i = 0; i < 2; i++)
+                spec_sub->enabled(i, false);
             for(int i = 0 ; i < 6 ; i++)
                 sub->enabled(i,false);
             for(int i = 0 ; i < 5 ; i++)
                 bench_sub->enabled(i,false);
             for(int i = 0; i < 3; i++)
                 pred_sub->enabled(i, false);
-            if(spec)
-                top1.rob_mode(n_bits,nadd,nmul,nls,instruct_time,instruction_queue,table,memory,reg,instruct,clock_count,rob);
+            if(spec){
+                // Flag mode setada pela escolha no menu
+                if(mode == 1)
+                    top1.rob_mode(n_bits,nadd,nmul,nls,instruct_time,instruction_queue,table,memory,reg,instruct,clock_count,rob);
+                else if(mode == 2)
+                    top1.rob_mode_bpb(nadd,nmul,nls,instruct_time,instruction_queue,table,memory,reg,instruct,clock_count,rob);
+            }
             else
                 top1.simple_mode(nadd,nmul,nls,instruct_time,instruction_queue,table,memory,reg,instruct,clock_count);
             sc_start();

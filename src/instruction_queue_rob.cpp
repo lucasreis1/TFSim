@@ -40,10 +40,13 @@ void instruction_queue_rob::main()
             wait(SC_ZERO_TIME);
             wait(SC_ZERO_TIME);
             wait(SC_ZERO_TIME);
-            out->write(instruct_queue[pc].instruction + " " + std::to_string(pc));
+            // Instructions + current_pc + pc_original_instruction
+            out->write(instruct_queue[pc].instruction + " " +
+                       std::to_string(pc)+ " " + 
+                       std::to_string(instruct_queue[pc].pc));
             pc++;
             wait(SC_ZERO_TIME);
-            cat.at(pc-1).text(ISS,"X");
+            cat.at(pc-1).text(ISS,sc_time_stamp().to_string()); //cat.at(pc-1).text(ISS,"X");
         }
         wait();
     }
@@ -57,12 +60,17 @@ void instruction_queue_rob::leitura_rob()
     int offset;
     in_rob->read(p);
     ord = instruction_split(p);
-    index = std::stoi(ord[1])-1;
+    index = std::stoi(ord[1])-1; //TODO: ROB position (?)
     if(ord[0] == "R") //reverter salto incorreto
     {
         instructions.at(0).at(pc-1).select(false);
-        replace_instructions(last_pc[index]-1,index);
-        pc = last_pc[index]-1;
+        //replace_instructions(last_pc[index]-1,index);
+        //pc = last_pc[index]-1;
+        
+        // Removeu o -1 por conta de um bug: branch instruction era despachada 2 vezes
+        replace_instructions(last_pc[index], index);
+        pc = last_pc[index];
+        
         instruct_queue = last_instr[index]; 
     }
     else if(ord[0] == "S" && ord.size() == 3) //realiza salto (especulado) e armazena informacoes pre-salto

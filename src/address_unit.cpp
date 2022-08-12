@@ -29,13 +29,21 @@ void address_unit::leitura_issue()
     int value;
     while(true)
     {
+        /* Example input
+           LD R6,0(R3) 3 2 4 0
+           instruction - LD R6,0(R3)
+           current pc general - 3
+           original pc instructions - 2
+           rob position - 4
+           rst_pos - 0
+           ord = {"LD", "R6", "0(R3)", "3", "1", "4", "0"} */
         in_issue->read(p);
         ord = instruction_split(p);
         wait(sc_time(1,SC_NS));
         mem_ord = offset_split(ord[2]);
         a = std::stoi(mem_ord[0]);
         instr_pos = std::stoi(ord[3]);
-        rob_pos = std::stoi(ord[4]);
+        rob_pos = std::stoi(ord[5]);
         regst = ask_status(true,mem_ord[1]);
         check_value = false;
         if(regst != 0)
@@ -53,7 +61,10 @@ void address_unit::leitura_issue()
             store = false;
         if(!store)
         {
-            rst_pos = std::stoi(ord[5]);
+            // Anteriormente era ord[5]
+            // Acréscimo devido à informação adicional (pc_original_instruction)
+            // Feita em instruction_queue_rob.cpp
+            rst_pos = std::stoi(ord[6]);
             res_station_table.at(rst_pos+rst_tam).text(A,mem_ord[0]);
         }
         else

@@ -47,6 +47,13 @@ void sl_buffer_rob::leitura_issue()
     auto cat = table.at(0);
     while(true)
     {
+        /* Example input
+           LD R6,0(R3) 3 1 4
+           instruction - LD R6,0(R3)
+           current pc general - 3
+           original pc instructions - 1
+           rob position - 4
+           ord = {"LD", "R6", "0(R3)", "3", "1", "4"} */
         in_issue->nb_read(p);
         ord = instruction_split(p);
         cout << "Issue da instrução " << ord[0] << " no ciclo " << sc_time_stamp() << " para " << ptrs[pos]->type_name << endl << flush;
@@ -61,7 +68,10 @@ void sl_buffer_rob::leitura_issue()
         in_issue->notify();
         out_issue->write(std::to_string(pos));
         cout << "Instrução " << p << " conseguiu espaço para usar uma estação de reserva em " << sc_time_stamp() << endl << flush;
-        rob_pos = std::stoi(ord[4]);
+        // Anteriormente era ord[4]
+        // Acréscimo devido à informação adicional (pc_original_instruction)
+        // Feita em instruction_queue_rob.cpp
+        rob_pos = std::stoi(ord[ord.size() - 1]); // Pode ser ord[5], last position
         ptrs[pos]->op = ord[0];
         ptrs[pos]->instr_pos = std::stoi(ord[3]);
         cat.at(pos+tam_outros).text(OP,ord[0]);

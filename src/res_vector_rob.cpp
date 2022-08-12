@@ -49,6 +49,14 @@ void res_vector_rob::leitura_issue()
     auto cat = table.at(0);
     while(true)
     {
+        /* Example input
+           DADDI R1,R1,1 0 0 1
+           instruction - DADDI R1,R1,1
+           current pc general - 0
+           original pc instructions - 0
+           rob position - 1
+           ord = {"DADDI", "R1", "R1", "1", "0", "0", "1"} */
+        // ver da onde chega o rob position!
         in_issue->nb_read(p);
         ord = instruction_split(p);
         pos = busy_check(ord[0]);
@@ -61,7 +69,10 @@ void res_vector_rob::leitura_issue()
         }
         in_issue->notify();
         cout << "Issue da instrução " << ord[0] << " no ciclo " << sc_time_stamp() << " para " << rs[pos]->type_name << endl << flush;
-        rob_pos = std::stoi(ord[5]);
+        // Anteriormente era ord[5]
+        // Acréscimo devido à informação adicional (pc_original_instruction)
+        // Feita em instruction_queue_rob.cpp
+        rob_pos = std::stoi(ord[ord.size() - 1]); //Pode ser ord[6], last position
         rs[pos]->op = ord[0];
         rs[pos]->fp = ord[0].at(0) == 'F';
         rs[pos]->dest = rob_pos;
