@@ -22,10 +22,11 @@ int sc_main(int argc, char *argv[])
 {
     using namespace nana;
     vector<string> instruction_queue;
-    int nadd,nmul,nls, n_bits;
+    int nadd,nmul,nls, n_bits, bpb_size;
     nadd = 3;
     nmul = nls = 2;
     n_bits = 2;
+    bpb_size = 4;
     std::vector<int> sizes;
     bool spec = false;
     int mode = 0;
@@ -109,8 +110,20 @@ int sc_main(int argc, char *argv[])
     });
     spec_sub->check_style(0,menu::checks::highlight);
     spec_sub->check_style(1,menu::checks::highlight);
+
     op.append("Modificar valores...");
+    // novo submenu para escolha do tamanho do bpb e do preditor
     auto sub = op.create_sub_menu(1);
+    sub->append("Tamanho do BPB e Preditor", [&](menu::item_proxy &ip)
+    {
+        inputbox ibox(fm, "", "Definir tamanhos");
+        inputbox::integer size("BPB", bpb_size, 2, 10, 2);
+        inputbox::integer bits("N_BITS", n_bits, 1, 3, 1);
+        if(ibox.show_modal(size, bits)){
+            bpb_size = size.value();
+            n_bits = bits.value();
+        }
+    });
     sub->append("Número de Estações de Reserva",[&](menu::item_proxy ip)
     {
         inputbox ibox(fm,"","Quantidade de Estações de Reserva");
@@ -404,33 +417,6 @@ int sc_main(int argc, char *argv[])
         else
             fila = true;
     });
-    // novo menu para escolha de preditores
-    op.append("Preditores");
-    auto pred_sub = op.create_sub_menu(4);
-    pred_sub->append("1 bit",[&](menu::item_proxy &ip){
-        if(ip.checked()){
-            pred_sub->checked(1, false);
-            pred_sub->checked(2, false);
-            n_bits = 1;
-        }
-    });
-    pred_sub->append("2 bits",[&](menu::item_proxy &ip){
-        if(ip.checked()){
-            pred_sub->checked(0, false);
-            pred_sub->checked(2, false);
-            n_bits = 2;
-        }
-    });
-    pred_sub->append("3 bits", [&](menu::item_proxy &ip){
-        if(ip.checked()){
-            pred_sub->checked(0, false);
-            pred_sub->checked(1, false);
-            n_bits = 3;
-        }
-    });
-    pred_sub->check_style(0,menu::checks::highlight);
-    pred_sub->check_style(1,menu::checks::highlight);
-    pred_sub->check_style(2,menu::checks::highlight);
 
     vector<string> columns = {"#","Name","Busy","Op","Vj","Vk","Qj","Qk","A"}; 
     for(unsigned int i = 0 ; i < columns.size() ; i++)
@@ -616,21 +602,18 @@ int sc_main(int argc, char *argv[])
             op.enabled(0,false);
             op.enabled(1,false);
             op.enabled(3,false);
-            op.enabled(4,false);
             for(int i = 0; i < 2; i++)
                 spec_sub->enabled(i, false);
-            for(int i = 0 ; i < 6 ; i++)
+            for(int i = 0 ; i < 7 ; i++)
                 sub->enabled(i,false);
-            for(int i = 0 ; i < 5 ; i++)
+            for(int i = 0 ; i < 6 ; i++)
                 bench_sub->enabled(i,false);
-            for(int i = 0; i < 3; i++)
-                pred_sub->enabled(i, false);
             if(spec){
                 // Flag mode setada pela escolha no menu
                 if(mode == 1)
                     top1.rob_mode(n_bits,nadd,nmul,nls,instruct_time,instruction_queue,table,memory,reg,instruct,clock_count,rob);
                 else if(mode == 2)
-                    top1.rob_mode_bpb(nadd,nmul,nls,instruct_time,instruction_queue,table,memory,reg,instruct,clock_count,rob);
+                    top1.rob_mode_bpb(n_bits, bpb_size, nadd,nmul,nls,instruct_time,instruction_queue,table,memory,reg,instruct,clock_count,rob);
             }
             else
                 top1.simple_mode(nadd,nmul,nls,instruct_time,instruction_queue,table,memory,reg,instruct,clock_count);
