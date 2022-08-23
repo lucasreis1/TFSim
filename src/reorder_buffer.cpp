@@ -167,7 +167,7 @@ void reorder_buffer::leitura_issue()
             }
             
             if(ptrs[pos]->prediction){
-                cout << "Prediction of instruction " << ptrs[pos]->instr_pos << " | " << ptrs[pos]->instruction << "taken" << endl;
+                cout << "Prediction of instruction " << ptrs[pos]->instr_pos << " | " << ptrs[pos]->instruction << " taken" << endl;
                 out_iq->write("S " + std::to_string(ptrs[pos]->entry) +  ' ' + ptrs[pos]->destination);
             }
             else{
@@ -177,6 +177,13 @@ void reorder_buffer::leitura_issue()
                 
             if(ptrs[pos]->qj == 0 && ptrs[pos]->qk == 0)
                 ptrs[pos]->ready = true;
+        }
+        else if(ord[0].at(0) == 'J'){
+            cat.at(pos).text(DESTINATION, ord[1]);
+            ptrs[pos]->destination = ord[1];
+            //std::to_string(ptrs[pos]->entry) = ROB position
+            out_iq->write("J " + std::to_string(ptrs[pos]->entry) +  ' ' + ptrs[pos]->destination);
+            ptrs[pos]->ready = true;
         }
         else
         {
@@ -193,6 +200,7 @@ void reorder_buffer::leitura_issue()
     }
 }
 
+// Onde há o commit das instruções
 void reorder_buffer::new_rob_head() 
 {
     unsigned int instr_type;
@@ -245,14 +253,20 @@ void reorder_buffer::new_rob_head()
                 }
                 break;
 
-                default:
-                    wait(SC_ZERO_TIME);
-                    unsigned int regst = ask_status(true,rob_buff[0]->destination);
-                    ask_value(false,rob_buff[0]->destination,rob_buff[0]->value);
-                    if(regst == rob_buff[0]->entry)
-                        ask_status(false,rob_buff[0]->destination,0);
+            case 'J':
+                instr_queue_gui.at(rob_buff[0]->instr_pos).text(EXEC,sc_time_stamp().to_string()); //text(EXEC,"X");
+                instr_queue_gui.at(rob_buff[0]->instr_pos).text(WRITE,sc_time_stamp().to_string()); //text(WRITE,"X");
+                break;
+                
+            default: // Write destination register
+                wait(SC_ZERO_TIME);
+                unsigned int regst = ask_status(true,rob_buff[0]->destination);
+                ask_value(false,rob_buff[0]->destination,rob_buff[0]->value);
+                if(regst == rob_buff[0]->entry)
+                    ask_status(false,rob_buff[0]->destination,0);
         }
 
+        // Remove head instruction from buffer
         if(!rob_buff.empty())
         {
             rob_buff[0]->busy = false;

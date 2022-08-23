@@ -35,8 +35,10 @@ void res_station_rob::exec()
         {
             float res = 0;
             cout << "Execuçao da instruçao " << op << " iniciada no ciclo " << sc_time_stamp() << " em " << name() << endl << flush;
-            if(!isMemory) //Se for store ou load, ja foi setado pelo address_unit
-                instr_queue_gui.at(instr_pos).text(EXEC,sc_time_stamp().to_string()); //text(EXEC,"X");
+            if(!isMemory){ //Se for store ou load, ja foi setado pelo address_unit
+                if(instr_pos < instr_queue_gui.size())
+                    instr_queue_gui.at(instr_pos).text(EXEC,sc_time_stamp().to_string()); //text(EXEC,"X");
+            }
             rob_gui.at(dest-1).text(STATE,"Execute");
             if(op.substr(0,4) == "DADD")
                 res = vj + vk;

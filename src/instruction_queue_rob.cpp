@@ -60,7 +60,7 @@ void instruction_queue_rob::leitura_rob()
     int offset;
     in_rob->read(p);
     ord = instruction_split(p);
-    index = std::stoi(ord[1])-1; //TODO: ROB position (?)
+    index = std::stoi(ord[1])-1; //ROB position
     if(ord[0] == "R") //reverter salto incorreto
     {
         instructions.at(0).at(pc-1).select(false);
@@ -84,9 +84,18 @@ void instruction_queue_rob::leitura_rob()
             new_instructions_vec.push_back({original_instruct[i],i});
         add_instructions(pc,new_instructions_vec);
     }
-    else if(ord[0] == "S")
+    else if(ord[0] == "S") //Não há salto, continua na instrução de baixo (especulado)
     {
         last_pc[index] = pc;
+    }
+    // else if para tratar JUMP, onde o salto ocorre e não é especulado.
+    else if(ord[0] == "J"){
+        vector<instr_q> new_instructions_vec;
+        offset = std::stoi(ord[2]);
+        unsigned int original_pc = instruct_queue[pc-1].pc;
+        for(unsigned int i = original_pc + offset; i < original_instruct.size(); i++)
+            new_instructions_vec.push_back({original_instruct[i], i});
+        add_instructions(pc, new_instructions_vec);
     }
     else //salta atrasado (quando foi predito que nao saltaria)
     {

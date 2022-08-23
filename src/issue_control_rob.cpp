@@ -10,7 +10,9 @@ issue_control_rob::issue_control_rob(sc_module_name name): sc_module(name)
                 {"DMUL",1},{"DMULU",1},{"DDIV",1},
                 {"DDIVU",1},{"LD",2},{"SD",3},
                 {"BEQ",4},{"BNE",4},{"BGTZ",4},
-                {"BLTZ",4},{"BGEZ",4},{"BLEZ",4}};
+                {"BLTZ",4},{"BGEZ",4},{"BLEZ",4},
+                {"J", 4}};
+
     SC_THREAD(issue_select);
     sensitive << in;
     dont_initialize();

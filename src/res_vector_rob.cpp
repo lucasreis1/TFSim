@@ -56,7 +56,7 @@ void res_vector_rob::leitura_issue()
            original pc instructions - 0
            rob position - 1
            ord = {"DADDI", "R1", "R1", "1", "0", "0", "1"} */
-        // ver da onde chega o rob position!
+           
         in_issue->nb_read(p);
         ord = instruction_split(p);
         pos = busy_check(ord[0]);
@@ -156,8 +156,8 @@ void res_vector_rob::leitura_rob()
     string p;
     in_rob->nb_read(p);
     if(p == "F")
-    {
-        in_rob->notify();
+    {        
+        in_rob->notify(); // O barramento espera uma notificação de que foi lido
         auto cat = table.at(0);
         for(unsigned int i = 0 ; i < rs.size() ; i++)
         {
