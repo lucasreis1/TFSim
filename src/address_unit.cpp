@@ -114,7 +114,7 @@ void address_unit::leitura_cdb()
             {
                 offset_buff[i].a+= std::stoi(ord_c[1]);
                 wait(SC_ZERO_TIME);
-                instruct_table.at(offset_buff[i].instr_pos).text(EXEC,"X"); //?
+                instruct_table.at(offset_buff[i].instr_pos).text(EXEC,sc_time_stamp().to_string()); //text(EXEC,"X")
                 if(offset_buff[i].store)
                 {
                     if(addr_queue.empty())
@@ -220,7 +220,7 @@ void address_unit::check_loads()
     for(unsigned i = 0 ; i < offset_buff.size() && !offset_buff[i].store ; i++)
         if(offset_buff[i].addr_calc)
         {
-            instruct_table.at(offset_buff[i].instr_pos).text(EXEC,"X"); //?
+            instruct_table.at(offset_buff[i].instr_pos).text(EXEC,sc_time_stamp().to_string()); //text(EXEC,"X")
             if(addr_queue.empty())
                 addr_queue_event.notify(delay_time,SC_NS);
             addr_queue.push(offset_buff[i]);

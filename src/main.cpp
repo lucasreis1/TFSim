@@ -41,7 +41,8 @@ int sc_main(int argc, char *argv[])
     listbox instruct(fm);
     listbox rob(fm);
     menubar mnbar(fm);
-    button botao(fm);
+    button start(fm);
+    button run_all(fm);
     button clock_control(fm);
     button exit(fm);
     group clock_group(fm);
@@ -55,11 +56,12 @@ int sc_main(int argc, char *argv[])
     map<string,int> instruct_time{{"DADD",4},{"DADDI",4},{"DSUB",6},{"DSUBI",6},{"DMUL",10},{"DDIV",16},{"MEM",2}};
     // Responsavel pelos modos de execução
     top top1("top");
-    botao.caption("START");
-    clock_control.caption("NEXT CYCLE");
-    exit.caption("EXIT");
+    start.caption("Start");
+    clock_control.caption("Next cycle");
+    run_all.caption("Run all");
+    exit.caption("Exit");
     plc["rst"] << table;
-    plc["btns"] << botao << clock_control << exit;
+    plc["btns"] << start << clock_control << run_all << exit;
     plc["memor"] << memory;
     plc["regs"] << reg;
     plc["rob"] << rob;
@@ -409,13 +411,51 @@ int sc_main(int argc, char *argv[])
         else
             fila = true;
     }); 
-    bench_sub->append("Branch inside branch",[&](menu::item_proxy &ip){
-        string path = "in/benchmarks/branch_in_branch.txt";
+    bench_sub->append("Linear Search",[&](menu::item_proxy &ip){
+        string path = "in/benchmarks/linear_search/linear_search.txt";
         inFile.open(path);
         if(!add_instructions(inFile,instruction_queue,instruct))
             show_message("Arquivo inválido","Não foi possível abrir o arquivo");
         else
             fila = true;
+        
+        path = "in/benchmarks/linear_search/memory.txt";
+        inFile.open(path);
+            if(!inFile.is_open())
+                show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
+            else
+            {
+                int i = 0;
+                int value;
+                while(inFile >> value && i < 500)
+                {
+                    memory.Set(i,std::to_string(value));
+                    i++;
+                }
+                for(; i < 500 ; i++)
+                {
+                    memory.Set(i,"0");
+                }
+                inFile.close();
+            }
+
+        path = "in/benchmarks/linear_search/regi_i.txt";
+        inFile.open(path);
+            if(!inFile.is_open())
+                show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
+            else
+            {
+                auto reg_gui = reg.at(0);
+                int value,i = 0;
+                while(inFile >> value && i < 32)
+                {
+                    reg_gui.at(i).text(1,std::to_string(value));
+                    i++;
+                }
+                for(; i < 32 ; i++)
+                    reg_gui.at(i).text(1,"0");
+                inFile.close();
+            }
     });
 
     vector<string> columns = {"#","Name","Busy","Op","Vj","Vk","Qj","Qk","A"}; 
@@ -591,13 +631,17 @@ int sc_main(int argc, char *argv[])
             }
         }
     }
+
     clock_control.enabled(false);
-    botao.events().click([&]
+    run_all.enabled(false);
+    
+    start.events().click([&]
     {
         if(fila)
         {
-            botao.enabled(false);
+            start.enabled(false);
             clock_control.enabled(true);
+            run_all.enabled(true);
             //Desativa os menus apos inicio da execucao
             op.enabled(0,false);
             op.enabled(1,false);
@@ -622,11 +666,21 @@ int sc_main(int argc, char *argv[])
         else
             show_message("Fila de instruções vazia","A fila de instruções está vazia. Insira um conjunto de instruções para iniciar.");
     });
+
     clock_control.events().click([]
     {
         if(sc_is_running())
             sc_start();
     });
+
+    run_all.events().click([&]{
+        // enquanto queue e rob nao estao vazios, roda ate o fim
+        while(!(top1.get_queue().queue_is_empty() && top1.get_rob().rob_is_empty())){
+            if(sc_is_running())
+                sc_start();
+        }
+    });
+
     exit.events().click([]
     {
         sc_stop();

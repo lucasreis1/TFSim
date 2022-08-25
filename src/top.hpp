@@ -27,6 +27,10 @@ public:
     void simple_mode(unsigned int nadd, unsigned int nmul,unsigned int nload,map<string,int> instruct_time,vector<string> instruct_queue, nana::listbox &table, nana::grid &mem_gui, nana::listbox &regs, nana::listbox &instr, nana::label &ccount);
     void rob_mode(int n_bits, unsigned int nadd, unsigned int nmul,unsigned int nload,map<string,int> instruct_time, vector<string> instruct_queue, nana::listbox &table, nana::grid &mem_gui, nana::listbox &regs, nana::listbox &instr, nana::label &count, nana::listbox &rob_gui);
     void rob_mode_bpb(int n_bits, int bpb_size, unsigned int nadd, unsigned int nmul,unsigned int nload,map<string,int> instruct_time, vector<string> instruct_queue, nana::listbox &table, nana::grid &mem_gui, nana::listbox &regs, nana::listbox &instr, nana::label &count, nana::listbox &rob_gui);
+
+    instruction_queue_rob & get_queue() {return *fila_r;}
+    reorder_buffer & get_rob() {return *rob;}
+
 private:
     //Para simple(sem especulacao)
     unique_ptr<bus> CDB,mem_bus,clock_bus;
