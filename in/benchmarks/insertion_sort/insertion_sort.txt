@@ -1,0 +1,23 @@
+// i = 1
+DADDI R2,R0,1
+// while1 i < array size
+BEQ R2,R1,16
+DMUL R15,R2,R30
+LD R6,0(R15)
+DADDI R3,R2,-1
+// while2 j >= 0 and A[j] > x
+DMUL R15,R3,R30
+LD R5,0(R15)
+DSUB R10,R5,R6
+BLEZ R10,6
+DADDI R16,R3,1
+DMUL R15,R16,R30
+SD R5,0(R15)
+DADDI R3,R3,-1
+BGEZ R3,-8
+//endWhile2
+SD R6,1(R3)
+DADDI R2,R2,1
+J -15
+//endWhile1
+DADD R0,R0,R0

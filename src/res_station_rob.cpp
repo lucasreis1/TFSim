@@ -59,6 +59,14 @@ void res_station_rob::exec()
                 table_item->text(A,std::to_string(a));
                 table_item->text(VK,"");
             }
+            else if(op.substr(0,3) == "SLT")
+            {
+                if(vj < vk){
+                    res = 1;
+                } else{
+                    res = 0;
+                }
+            }
             if(!isMemory)
             {
                 wait(sc_time(instruct_time[op],SC_NS),isFlushed_event);

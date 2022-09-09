@@ -143,11 +143,12 @@ void sl_buffer_rob::leitura_rob()
                 auto table_item = cat.at(i+tam_outros);
                 if(ptrs[i]->Busy)
                 {
-                    ptrs[i]->isFlushed = true;
+                    ptrs[i]->isFlushed = false;
                     ptrs[i]->Busy = false;
                     table_item.text(BUSY,"False");
                     for(unsigned int k = 3 ; k < table_item.columns() ; k++)
                         table_item.text(k,"");
+                    //ptrs[i]->isFlushed_event.notify();
                 }
             }
         }

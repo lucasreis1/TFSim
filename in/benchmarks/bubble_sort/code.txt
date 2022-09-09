@@ -1,0 +1,30 @@
+// Bubble sort
+
+for(i=0; i<size-1; i++){
+    for(j=0; j<size - i - 1; j++){
+        if(a[j] > a[j+1]){
+            temp = a[i];
+            a[i] = a[j];
+            a[j] = temp;
+        }
+    }
+}
+
+------------------------------
+Mapeamento de registradores
+------------------------------
+R1 -> size
+R2 -> i
+R3 -> j
+R5 -> a[i]
+R6 -> a[j]
+R8 -> helper if
+R16 -> inner loop control
+R20 -> size-1
+R21 -> size - i - 1
+
+------------------------------
+Mapeamento da memória
+------------------------------
+10 4 2 5 1 3 6 9 7 10 8 0 0 0 0 0 0 0 0 0 ...
+tam vetor, el1, el2,..., eln-1

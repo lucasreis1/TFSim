@@ -73,7 +73,7 @@ void reorder_buffer::leitura_issue()
         cat.at(pos).text(VALUE,"");
         ptrs[pos]->ready = false;
         ptrs[pos]->instruction = ord[0];
-        cat.at(pos).text(INSTRUCTION,inst);
+        cat.at(pos).text(INSTRUCTION,inst); // polir string de instr no rob
         ptrs[pos]->state = ISSUE;
         cat.at(pos).text(STATE,"Issue");
 
@@ -83,29 +83,38 @@ void reorder_buffer::leitura_issue()
         //cout << "instr_pos: " << ptrs[pos]->instr_pos << endl;
         if(ord[0].at(0) == 'S')
         {
-            check_value = false;
-            regst = ask_status(true,ord[1]);
-            if(regst != 0)
-            {
-                if(ptrs[regst-1]->ready == true)
+            if(ord[0].at(1) == 'D'){
+                check_value = false;
+                regst = ask_status(true,ord[1]);
+                if(regst != 0)
                 {
-                    value = std::stof(cat.at(regst-1).text(VALUE));
-                    check_value = true;
+                    if(ptrs[regst-1]->ready == true)
+                    {
+                        value = std::stof(cat.at(regst-1).text(VALUE));
+                        check_value = true;
+                    }
                 }
-            }
-            if(regst == 0 || check_value == true)
-            {
-                if(check_value == false)
-                    value = ask_value(true,ord[1]);
-                ptrs[pos]->value = value;
-                if(ord[1].at(0) != 'F')
-                    cat.at(pos).text(VALUE,std::to_string((int)value));
+                if(regst == 0 || check_value == true)
+                {
+                    if(check_value == false)
+                        value = ask_value(true,ord[1]);
+                    ptrs[pos]->value = value;
+                    if(ord[1].at(0) != 'F')
+                        cat.at(pos).text(VALUE,std::to_string((int)value));
+                    else
+                        cat.at(pos).text(VALUE,std::to_string(value));
+                    ptrs[pos]->qj = 0;
+                }
                 else
-                    cat.at(pos).text(VALUE,std::to_string(value));
-                ptrs[pos]->qj = 0;
+                    ptrs[pos]->qj = regst;
             }
-            else
-                ptrs[pos]->qj = regst;
+            else {
+                ptrs[pos]->destination = ord[1];
+                cat.at(pos).text(DESTINATION,ord[1]);
+                if(ord[0].at(0) != 'L')
+                    wait(resv_read_oper_event);
+                ask_status(false,ord[1],pos+1);
+            }
         }
         else if(ord[0].at(0) == 'B')
         {
@@ -218,7 +227,15 @@ void reorder_buffer::new_rob_head()
 
         switch(rob_buff[0]->instruction.at(0)){
             case 'S':
-                mem_write(std::stoi(rob_buff[0]->destination),rob_buff[0]->value,rob_buff[0]->entry);
+                if(rob_buff[0]->instruction.at(1) == 'D')
+                    mem_write(std::stoi(rob_buff[0]->destination),rob_buff[0]->value,rob_buff[0]->entry);
+                else {
+                    wait(SC_ZERO_TIME);
+                    unsigned int regst = ask_status(true,rob_buff[0]->destination);
+                    ask_value(false,rob_buff[0]->destination,rob_buff[0]->value);
+                    if(regst == rob_buff[0]->entry)
+                        ask_status(false,rob_buff[0]->destination,0);
+                }
                 break;
             
             case 'B':
@@ -404,19 +421,20 @@ void reorder_buffer::check_dependencies(unsigned int index, float value)
     {
         if(ptrs[i]->busy && ptrs[i]->instruction.at(0) == 'S')
         {
-            if(ptrs[i]->qj == index)
-            {
-                ptrs[i]->value = value;
-                cat.at(i).text(VALUE,std::to_string((int)value));
-                ptrs[i]->qj = 0;
-                if(ptrs[i]->destination != "")
-                {
-                    cat.at(i).text(STATE,"Write Result");
-                    instr_queue_gui.at(ptrs[i]->instr_pos).text(WRITE,sc_time_stamp().to_string()); //text(WRITE,"X");
-                    ptrs[i]->ready = true;
+            if(ptrs[i]->instruction.at(1) == 'D'){
+                if(ptrs[i]->qj == index){
+                    ptrs[i]->value = value;
+                    cat.at(i).text(VALUE,std::to_string((int)value));
+                    ptrs[i]->qj = 0;
+                    if(ptrs[i]->destination != "")
+                    {
+                        cat.at(i).text(STATE,"Write Result");
+                        instr_queue_gui.at(ptrs[i]->instr_pos).text(WRITE,sc_time_stamp().to_string()); //text(WRITE,"X");
+                        ptrs[i]->ready = true;
+                    }
+                    if(rob_buff[0]->entry == index && ptrs[i]->ready)
+                        rob_head_value_event.notify(1,SC_NS);
                 }
-                if(rob_buff[0]->entry == index && ptrs[i]->ready)
-                    rob_head_value_event.notify(1,SC_NS);
             }
         }
         else if(ptrs[i]->busy && ptrs[i]->instruction.at(0) == 'B')

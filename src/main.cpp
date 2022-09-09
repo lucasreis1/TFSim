@@ -53,7 +53,7 @@ int sc_main(int argc, char *argv[])
     grid memory(fm,rectangle(),10,50);
     // Tempo de latencia de uma instrucao
     // Novas instrucoes devem ser inseridas manualmente aqui
-    map<string,int> instruct_time{{"DADD",4},{"DADDI",4},{"DSUB",6},{"DSUBI",6},{"DMUL",10},{"DDIV",16},{"MEM",2}};
+    map<string,int> instruct_time{{"DADD",4},{"DADDI",4},{"DSUB",6},{"DSUBI",6},{"DMUL",10},{"DDIV",16},{"MEM",2},{"SLT",1}};
     // Responsavel pelos modos de execução
     top top1("top");
     start.caption("Start");
@@ -505,6 +505,80 @@ int sc_main(int argc, char *argv[])
             }
     });
 
+    bench_sub->append("Bubble Sort",[&](menu::item_proxy &ip){
+        string path = "in/benchmarks/bubble_sort/bubble_sort.txt";
+        inFile.open(path);
+        if(!add_instructions(inFile,instruction_queue,instruct))
+            show_message("Arquivo inválido","Não foi possível abrir o arquivo");
+        else
+            fila = true;
+        
+        path = "in/benchmarks/bubble_sort/memory.txt";
+        inFile.open(path);
+            if(!inFile.is_open())
+                show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
+            else
+            {
+                int i = 0;
+                int value;
+                while(inFile >> value && i < 500)
+                {
+                    memory.Set(i,std::to_string(value));
+                    i++;
+                }
+                for(; i < 500 ; i++)
+                {
+                    memory.Set(i,"0");
+                }
+                inFile.close();
+            }
+
+        path = "in/benchmarks/bubble_sort/regs.txt";
+        inFile.open(path);
+            if(!inFile.is_open())
+                show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
+            else
+            {
+                auto reg_gui = reg.at(0);
+                int value,i = 0;
+                while(inFile >> value && i < 32)
+                {
+                    reg_gui.at(i).text(1,std::to_string(value));
+                    i++;
+                }
+                for(; i < 32 ; i++)
+                    reg_gui.at(i).text(1,"0");
+                inFile.close();
+            }
+    });
+
+    bench_sub->append("Tick Tack",[&](menu::item_proxy &ip){
+        string path = "in/benchmarks/tick_tack/tick_tack.txt";
+        inFile.open(path);
+        if(!add_instructions(inFile,instruction_queue,instruct))
+            show_message("Arquivo inválido","Não foi possível abrir o arquivo");
+        else
+            fila = true;
+        
+        path = "in/benchmarks/tick_tack/regs.txt";
+        inFile.open(path);
+            if(!inFile.is_open())
+                show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
+            else
+            {
+                auto reg_gui = reg.at(0);
+                int value,i = 0;
+                while(inFile >> value && i < 32)
+                {
+                    reg_gui.at(i).text(1,std::to_string(value));
+                    i++;
+                }
+                for(; i < 32 ; i++)
+                    reg_gui.at(i).text(1,"0");
+                inFile.close();
+            }
+    });
+
     vector<string> columns = {"#","Name","Busy","Op","Vj","Vk","Qj","Qk","A"}; 
     for(unsigned int i = 0 ; i < columns.size() ; i++)
     {
@@ -697,7 +771,7 @@ int sc_main(int argc, char *argv[])
                 spec_sub->enabled(i, false);
             for(int i = 0 ; i < 7 ; i++)
                 sub->enabled(i,false);
-            for(int i = 0 ; i < 6 ; i++)
+            for(int i = 0 ; i < 9 ; i++)
                 bench_sub->enabled(i,false);
             if(spec){
                 // Flag mode setada pela escolha no menu
