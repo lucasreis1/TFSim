@@ -264,7 +264,7 @@ void reorder_buffer::new_rob_head()
 
                 cout << "Atualizando bpb" << endl << flush;
                 if(flag_mode == 1){
-                    preditor.update_state(pred);
+                    preditor.update_state(pred, hit);
                 }else{
                     branch_prediction_buffer.bpb_update_state(rob_buff[0]->pc, pred, hit);
                 }
@@ -560,4 +560,12 @@ bool reorder_buffer::rob_is_empty() {
             return false;
     
     return true;
+}
+
+branch_predictor reorder_buffer::get_preditor() {
+    return this->preditor;
+}
+
+bpb reorder_buffer::get_bpb() {
+    return this->branch_prediction_buffer;
 }

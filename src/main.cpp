@@ -22,11 +22,12 @@ int sc_main(int argc, char *argv[])
 {
     using namespace nana;
     vector<string> instruction_queue;
-    int nadd,nmul,nls, n_bits, bpb_size;
+    int nadd,nmul,nls, n_bits, bpb_size, cpu_freq;
     nadd = 3;
     nmul = nls = 2;
     n_bits = 2;
     bpb_size = 4;
+    cpu_freq = 500; // definido em Mhz - 500Mhz default
     std::vector<int> sizes;
     bool spec = false;
     int mode = 0;
@@ -162,6 +163,16 @@ int sc_main(int argc, char *argv[])
             instruct_time["MEM"] = std::stoi(mem_t.value());
         }
     });
+
+    sub->append("Frequência CPU", [&](menu::item_proxy &ip)
+    {
+        inputbox ibox(fm,"Em Mhz","Definir frequência da CPU");
+        inputbox::text freq("Frequência", std::to_string(cpu_freq));
+        if(ibox.show_modal(freq)){
+            cpu_freq = std::stoi(freq.value());
+        }
+    });
+
     sub->append("Fila de instruções", [&](menu::item_proxy &ip)
     {
         filebox fb(0,true);
@@ -769,7 +780,7 @@ int sc_main(int argc, char *argv[])
             op.enabled(3,false);
             for(int i = 0; i < 2; i++)
                 spec_sub->enabled(i, false);
-            for(int i = 0 ; i < 7 ; i++)
+            for(int i = 0 ; i < 8 ; i++)
                 sub->enabled(i,false);
             for(int i = 0 ; i < 9 ; i++)
                 bench_sub->enabled(i,false);
@@ -799,6 +810,16 @@ int sc_main(int argc, char *argv[])
         while(!(top1.get_queue().queue_is_empty() && top1.get_rob().rob_is_empty())){
             if(sc_is_running())
                 sc_start();
+        }
+        top1.metrics(cpu_freq);
+        if(mode == 1){
+            cout <<
+            "# Taxa de sucesso - 1 Preditor: " << 
+            top1.get_rob().get_preditor().get_predictor_hit_rate() << "%" << endl;
+        }else {
+            cout <<
+            "# Taxa de sucesso - BPB: " <<
+            top1.get_rob().get_bpb().bpb_get_hit_rate() << "%" << endl;
         }
     });
 

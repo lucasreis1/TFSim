@@ -240,3 +240,32 @@ void top::rob_mode_bpb(int n_bits, int bpb_size, unsigned int nadd, unsigned int
     mem_r->out(*CDB);
     mem_r->out_slb(*mem_slb_bus);
 }
+
+void top::metrics(int cpu_freq) {
+
+    // Periodo do clock
+    double tempo_ciclo_clock = 1 / static_cast<double>(cpu_freq * 1e6); // Por default -> 0,002*10^-6s ou 0,002us
+    double tempo_ciclo_clock_ns = tempo_ciclo_clock * 1e9; // 2ns
+
+    double ciclos = static_cast<double>((sc_time_stamp().to_double() / 1000) - 1);
+
+    if(fila_r != NULL && rob != NULL){
+        unsigned int total_instructions_exec = get_queue().get_instruction_counter();
+        
+        double cpi_medio = (double) ciclos / total_instructions_exec;
+        
+        double t_cpu = (double) cpi_medio * total_instructions_exec * tempo_ciclo_clock_ns;
+        
+        double mips = total_instructions_exec / (t_cpu * 1e-9 * 1e6); 
+
+        cout <<
+        "\n\n"
+        "MÉTRICAS:\n" <<
+        "# Total de Instruções Executadas: " << total_instructions_exec << "\n" <<
+        "# Ciclos: " << ciclos << "\n" <<
+        "# CPI Médio: " << cpi_medio << "\n" <<
+        "# t_CPU: " << t_cpu << " ns" << "\n" <<
+        "# MIPS: " << mips << " milhões de instruções por segundo" << endl;
+    }
+
+}

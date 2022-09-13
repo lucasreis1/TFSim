@@ -38,6 +38,8 @@ public:
     void check_conflict();
 
     bool rob_is_empty();
+    branch_predictor get_preditor();
+    bpb get_bpb();
 
 private:
     struct rob_slot{

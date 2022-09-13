@@ -184,3 +184,7 @@ bool instruction_queue_rob::queue_is_empty(){
     return pc == instruct_queue.size();
 
 }
+
+unsigned int instruction_queue_rob::get_instruction_counter() {
+    return pc;
+}

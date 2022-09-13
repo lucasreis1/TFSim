@@ -31,6 +31,8 @@ public:
     instruction_queue_rob & get_queue() {return *fila_r;}
     reorder_buffer & get_rob() {return *rob;}
 
+    void metrics(int cpu_freq);
+
 private:
     //Para simple(sem especulacao)
     unique_ptr<bus> CDB,mem_bus,clock_bus;
