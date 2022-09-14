@@ -1,23 +1,30 @@
+// R1 = size
+LD R1,16(R0)
 // i = 1
 DADDI R2,R0,1
-// while1 i < array size
-BEQ R2,R1,16
-DMUL R15,R2,R30
-LD R6,0(R15)
+// while i < size
+SLT R10,R2,R1
+BEQ R10,R0,14
+// x = A[i]
+LD R6,0(R2)
+// j = i - 1
 DADDI R3,R2,-1
-// while2 j >= 0 and A[j] > x
-DMUL R15,R3,R30
-LD R5,0(R15)
-DSUB R10,R5,R6
-BLEZ R10,6
-DADDI R16,R3,1
-DMUL R15,R16,R30
-SD R5,0(R15)
+// while j>=0 and A[j] > x
+BLTZ R3,8
+LD R5,0(R3)
+SGT R11,R5,R6
+BEQ R11,R0,5
+// A[j+1] = A[j]
+SD R5,1(R3)
+// j = j - 1
 DADDI R3,R3,-1
-BGEZ R3,-8
-//endWhile2
+DADD R0,R0,R0
+//DADD R0,R0,R0
+J -7
+// fim inner while - A[j+1] = x
 SD R6,1(R3)
+// i = i + 1
 DADDI R2,R2,1
-J -15
-//endWhile1
+J -14
+// fim outer while
 DADD R0,R0,R0

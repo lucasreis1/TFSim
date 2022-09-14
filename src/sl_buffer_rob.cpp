@@ -93,7 +93,7 @@ void sl_buffer_rob::add_rec()
         in_adu->read(p);
         ord = instruction_split(p);
         rob_pos = std::stoi(ord[0]);
-        addr = std::stoi(ord[1]);
+        addr = std::stoul(ord[1]);
         for(unsigned int i = 0 ; i < tam ; i++)
         {
             if(ptrs[i]->dest == rob_pos && ptrs[i]->isFlushed == false)

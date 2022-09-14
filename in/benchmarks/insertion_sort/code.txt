@@ -20,9 +20,8 @@ R2 -> i
 R3 -> j
 R5 -> A[i] ou A[j]
 R6 -> x (current A[i])
-R10 -> helper inner while
-R11 -> helper outer while
-R15 -> usado para i*4
+R10 -> helper outer while
+R11 -> helper inner while
 
 ------------------------------
 Mapeamento da memória

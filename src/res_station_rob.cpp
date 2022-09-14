@@ -67,6 +67,14 @@ void res_station_rob::exec()
                     res = 0;
                 }
             }
+            else if(op.substr(0,3) == "SGT"){
+                if(vj > vk){
+                    res = 1;
+                }
+                else{
+                    res = 0;
+                }
+            }
             if(!isMemory)
             {
                 wait(sc_time(instruct_time[op],SC_NS),isFlushed_event);
@@ -97,7 +105,6 @@ void res_station_rob::exec()
         }
         wait(SC_ZERO_TIME);
         if(!isFlushed){
-            //TODO: ver o porque desse if
             if(instr_pos < instr_queue_gui.size())
                 instr_queue_gui.at(instr_pos).text(WRITE,sc_time_stamp().to_string()); //text(WRITE,"X");
         }
