@@ -1,5 +1,5 @@
 // numero de elementos
-LD R1,16(R0)
+LD R1,50(R0)
 // endereço de inicio - i
 DADD R2,R0,R0
 // size - 1

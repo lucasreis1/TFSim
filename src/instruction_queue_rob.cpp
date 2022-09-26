@@ -46,7 +46,7 @@ void instruction_queue_rob::main()
                        std::to_string(instruct_queue[pc].pc));
             pc++;
             wait(SC_ZERO_TIME);
-            cat.at(pc-1).text(ISS,sc_time_stamp().to_string()); //cat.at(pc-1).text(ISS,"X");
+            cat.at(pc-1).text(ISS,std::to_string(sc_time_stamp().value() / 1000)); //cat.at(pc-1).text(ISS,"X");
         }
         wait();
     }

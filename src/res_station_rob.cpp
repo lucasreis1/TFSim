@@ -37,7 +37,7 @@ void res_station_rob::exec()
             cout << "Execuçao da instruçao " << op << " iniciada no ciclo " << sc_time_stamp() << " em " << name() << endl << flush;
             if(!isMemory){ //Se for store ou load, ja foi setado pelo address_unit
                 if(instr_pos < instr_queue_gui.size())
-                    instr_queue_gui.at(instr_pos).text(EXEC,sc_time_stamp().to_string()); //text(EXEC,"X");
+                    instr_queue_gui.at(instr_pos).text(EXEC,std::to_string(sc_time_stamp().value() / 1000)); //text(EXEC,"X");
             }
             rob_gui.at(dest-1).text(STATE,"Execute");
             if(op.substr(0,4) == "DADD")
@@ -106,7 +106,7 @@ void res_station_rob::exec()
         wait(SC_ZERO_TIME);
         if(!isFlushed){
             if(instr_pos < instr_queue_gui.size())
-                instr_queue_gui.at(instr_pos).text(WRITE,sc_time_stamp().to_string()); //text(WRITE,"X");
+                instr_queue_gui.at(instr_pos).text(WRITE,std::to_string(sc_time_stamp().value() / 1000)); //text(WRITE,"X");
         }
         
         Busy = isFlushed = false;

@@ -1,0 +1,27 @@
+// r1 = 0
+DADD R1,R0,R0
+// i = 0
+DADD R2,R0,R0
+// while i < n
+BEQ R2,R6,13
+// j = 0
+DADDI R3,R0,0
+// while j < n
+BEQ R3,R7,8
+// setup the address
+DMUL R22,R2,R7
+DADD R21,R22,R3
+DADD R20,R21,R0
+// A[i][j]
+LD R5,0(R20)
+// if(A[i][j] == x)
+BEQ R5,R8,5
+DADDI R3,R3,1
+J -7
+// fim coluna loop
+DADDI R2,R2,1
+J -11
+// END
+DADDI R1,R0,1
+// fim linha loop
+DADD R0,R0,R0

@@ -12,7 +12,7 @@ void clock_::main()
         sc_pause();
         wait(SC_ZERO_TIME);
         out->write("");
-        clock_count.caption(sc_time_stamp().to_string());
+        clock_count.caption(std::to_string(sc_time_stamp().value() / 1000));
         wait(delay,SC_NS);
     }
 }
