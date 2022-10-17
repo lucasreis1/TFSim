@@ -32,3 +32,7 @@ void bpb::bpb_update_state(unsigned int pc, bool taken, bool hit){
 float bpb::bpb_get_hit_rate(){
     return ((float)c_hits / (float)c_predictions) * 100;
 }
+
+int bpb::get_bpb_size(){
+    return size;
+}

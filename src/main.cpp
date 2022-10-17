@@ -22,6 +22,7 @@ int sc_main(int argc, char *argv[])
 {
     using namespace nana;
     vector<string> instruction_queue;
+    string bench_name = "";
     int nadd,nmul,nls, n_bits, bpb_size, cpu_freq;
     nadd = 3;
     nmul = nls = 2;
@@ -426,6 +427,7 @@ int sc_main(int argc, char *argv[])
     }); 
     bench_sub->append("Busca Linear",[&](menu::item_proxy &ip){
         string path = "in/benchmarks/linear_search/linear_search.txt";
+        bench_name = "linear_search";
         inFile.open(path);
         if(!add_instructions(inFile,instruction_queue,instruct))
             show_message("Arquivo inválido","Não foi possível abrir o arquivo");
@@ -473,6 +475,7 @@ int sc_main(int argc, char *argv[])
 
     bench_sub->append("Busca Binária",[&](menu::item_proxy &ip){
         string path = "in/benchmarks/binary_search/binary_search.txt";
+        bench_name = "binary_search";
         inFile.open(path);
         if(!add_instructions(inFile,instruction_queue,instruct))
             show_message("Arquivo inválido","Não foi possível abrir o arquivo");
@@ -520,6 +523,7 @@ int sc_main(int argc, char *argv[])
 
     bench_sub->append("Matriz Search",[&](menu::item_proxy &ip){
         string path = "in/benchmarks/matriz_search/matriz_search.txt";
+        bench_name = "matriz_search";
         inFile.open(path);
         if(!add_instructions(inFile,instruction_queue,instruct))
             show_message("Arquivo inválido","Não foi possível abrir o arquivo");
@@ -567,6 +571,7 @@ int sc_main(int argc, char *argv[])
 
     bench_sub->append("Bubble Sort",[&](menu::item_proxy &ip){
         string path = "in/benchmarks/bubble_sort/bubble_sort.txt";
+        bench_name = "bubble_sort";
         inFile.open(path);
         if(!add_instructions(inFile,instruction_queue,instruct))
             show_message("Arquivo inválido","Não foi possível abrir o arquivo");
@@ -614,6 +619,7 @@ int sc_main(int argc, char *argv[])
 
     bench_sub->append("Insertion Sort",[&](menu::item_proxy &ip){
         string path = "in/benchmarks/insertion_sort/insertion_sort.txt";
+        bench_name = "insertion_sort";
         inFile.open(path);
         if(!add_instructions(inFile,instruction_queue,instruct))
             show_message("Arquivo inválido","Não foi possível abrir o arquivo");
@@ -661,6 +667,7 @@ int sc_main(int argc, char *argv[])
 
     bench_sub->append("Tick Tack",[&](menu::item_proxy &ip){
         string path = "in/benchmarks/tick_tack/tick_tack.txt";
+        bench_name = "tick_tack";
         inFile.open(path);
         if(!add_instructions(inFile,instruction_queue,instruct))
             show_message("Arquivo inválido","Não foi possível abrir o arquivo");
@@ -909,16 +916,8 @@ int sc_main(int argc, char *argv[])
             if(sc_is_running())
                 sc_start();
         }
-        top1.metrics(cpu_freq);
-        if(mode == 1){
-            cout <<
-            "# Taxa de sucesso - 1 Preditor: " << 
-            top1.get_rob().get_preditor().get_predictor_hit_rate() << "%" << endl;
-        }else {
-            cout <<
-            "# Taxa de sucesso - BPB: " <<
-            top1.get_rob().get_bpb().bpb_get_hit_rate() << "%" << endl;
-        }
+
+        top1.metrics(cpu_freq, mode, bench_name, n_bits);
     });
 
     exit.events().click([]

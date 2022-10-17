@@ -227,8 +227,10 @@ void reorder_buffer::new_rob_head()
 
         switch(rob_buff[0]->instruction.at(0)){
             case 'S':
-                if(rob_buff[0]->instruction.at(1) == 'D')
+                if(rob_buff[0]->instruction.at(1) == 'D'){
                     mem_write(std::stoi(rob_buff[0]->destination),rob_buff[0]->value,rob_buff[0]->entry);
+                    mem_count++;
+                }
                 else {
                     wait(SC_ZERO_TIME);
                     unsigned int regst = ask_status(true,rob_buff[0]->destination);
@@ -276,6 +278,8 @@ void reorder_buffer::new_rob_head()
                 break;
                 
             default: // Write destination register
+                if(rob_buff[0]->instruction.at(0) == 'L')
+                    mem_count++;
                 wait(SC_ZERO_TIME);
                 unsigned int regst = ask_status(true,rob_buff[0]->destination);
                 ask_value(false,rob_buff[0]->destination,rob_buff[0]->value);
@@ -568,4 +572,8 @@ branch_predictor reorder_buffer::get_preditor() {
 
 bpb reorder_buffer::get_bpb() {
     return branch_prediction_buffer;
+}
+
+int reorder_buffer::get_mem_count(){
+    return mem_count;
 }

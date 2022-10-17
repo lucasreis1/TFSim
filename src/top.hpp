@@ -1,4 +1,7 @@
 #include<memory>
+#include <iostream>
+#include <fstream>
+#include <filesystem>
 #include "bus.hpp"
 #include "issue_control.hpp"
 #include "clock_.hpp"
@@ -31,7 +34,7 @@ public:
     instruction_queue_rob & get_queue() {return *fila_r;}
     reorder_buffer & get_rob() {return *rob;}
 
-    void metrics(int cpu_freq);
+    void metrics(int cpu_freq, int mode, string bench_name, int n_bits);
 
 private:
     //Para simple(sem especulacao)
@@ -58,4 +61,8 @@ private:
     unique_ptr<register_bank_rob> rb_r;
     unique_ptr<memory_rob> mem_r;
     unique_ptr<instruction_queue_rob> fila_r;
+
+    void dump_metrics(string bench_name, int cpu_freq, unsigned int total_instructions_exec,
+                       double ciclos, double cpi_medio, double t_cpu, double mips, int mode,
+                       float hit_rate, int tam_bpb, int mem_count, int n_bits);
 };

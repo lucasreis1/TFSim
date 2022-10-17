@@ -40,6 +40,7 @@ public:
     bool rob_is_empty();
     branch_predictor get_preditor();
     bpb get_bpb();
+    int get_mem_count();
 
 private:
     struct rob_slot{
@@ -82,6 +83,7 @@ private:
     map<string,unsigned int> branch_instr;
     nana::listbox &gui_table;
     nana::listbox::cat_proxy instr_queue_gui;
+    int mem_count = 0;
 
     int busy_check();
     unsigned int ask_status(bool read,string reg,unsigned int pos = 0);
