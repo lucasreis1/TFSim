@@ -100,7 +100,7 @@ int sc_main(int argc, char *argv[])
         set_spec(plc,spec);
     });
     // Modo com o bpb
-    spec_sub->append("Branch Target Buffer", [&](menu::item_proxy &ip)
+    spec_sub->append("Branch Prediction Buffer", [&](menu::item_proxy &ip)
     {
         if(ip.checked()){
             spec = true;
