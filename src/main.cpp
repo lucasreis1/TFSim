@@ -386,15 +386,8 @@ int sc_main(int argc, char *argv[])
     op.append("Benchmarks");
     auto bench_sub = op.create_sub_menu(3);
     bench_sub->append("Fibonacci",[&](menu::item_proxy &ip){
-        string path = "in/benchmarks/fibonacci.txt";        
-        inFile.open(path);
-        if(!add_instructions(inFile,instruction_queue,instruct))
-            show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
-        else
-            fila = true;
-    });
-    bench_sub->append("Busca em Vetor",[&](menu::item_proxy &ip){
-        string path = "in/benchmarks/vector_search.txt";        
+        string path = "in/benchmarks/fibonacci/fibonacci.txt";
+        bench_name = "fibonacci";        
         inFile.open(path);
         if(!add_instructions(inFile,instruction_queue,instruct))
             show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
@@ -410,7 +403,8 @@ int sc_main(int argc, char *argv[])
             fila = true;
     });
     bench_sub->append("Stress de Memória (Stores)",[&](menu::item_proxy &ip){
-        string path = "in/benchmarks/store_stress.txt";     
+        string path = "in/benchmarks/store_stress/store_stress.txt";   
+        bench_name = "store_stress";  
         inFile.open(path);
         if(!add_instructions(inFile,instruction_queue,instruct))
             show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
