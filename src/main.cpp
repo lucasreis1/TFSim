@@ -879,7 +879,7 @@ int sc_main(int argc, char *argv[])
                 spec_sub->enabled(i, false);
             for(int i = 0 ; i < 8 ; i++)
                 sub->enabled(i,false);
-            for(int i = 0 ; i < 11 ; i++)
+            for(int i = 0 ; i < 10 ; i++)
                 bench_sub->enabled(i,false);
             if(spec){
                 // Flag mode setada pela escolha no menu
