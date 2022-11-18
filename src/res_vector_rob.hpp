@@ -28,6 +28,7 @@ private:
     map<string,int> res_type;
     unsigned int tam_pos[3];
     nana::listbox &table;
+    //sc_event robFlushed;
 
     int busy_check(string inst);
     float ask_value(string reg);

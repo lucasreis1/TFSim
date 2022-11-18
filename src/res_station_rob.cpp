@@ -35,8 +35,10 @@ void res_station_rob::exec()
         {
             float res = 0;
             cout << "Execuçao da instruçao " << op << " iniciada no ciclo " << sc_time_stamp() << " em " << name() << endl << flush;
-            if(!isMemory) //Se for store ou load, ja foi setado pelo address_unit
-                instr_queue_gui.at(instr_pos).text(EXEC,"X");
+            if(!isMemory){ //Se for store ou load, ja foi setado pelo address_unit
+                if(instr_pos < instr_queue_gui.size())
+                    instr_queue_gui.at(instr_pos).text(EXEC,std::to_string(sc_time_stamp().value() / 1000)); //text(EXEC,"X");
+            }
             rob_gui.at(dest-1).text(STATE,"Execute");
             if(op.substr(0,4) == "DADD")
                 res = vj + vk;
@@ -56,6 +58,22 @@ void res_station_rob::exec()
                 a += vk;
                 table_item->text(A,std::to_string(a));
                 table_item->text(VK,"");
+            }
+            else if(op.substr(0,3) == "SLT")
+            {
+                if(vj < vk){
+                    res = 1;
+                } else{
+                    res = 0;
+                }
+            }
+            else if(op.substr(0,3) == "SGT"){
+                if(vj > vk){
+                    res = 1;
+                }
+                else{
+                    res = 0;
+                }
             }
             if(!isMemory)
             {
@@ -86,8 +104,11 @@ void res_station_rob::exec()
             }
         }
         wait(SC_ZERO_TIME);
-        if(!isFlushed)
-            instr_queue_gui.at(instr_pos).text(WRITE,"X");
+        if(!isFlushed){
+            if(instr_pos < instr_queue_gui.size())
+                instr_queue_gui.at(instr_pos).text(WRITE,std::to_string(sc_time_stamp().value() / 1000)); //text(WRITE,"X");
+        }
+        
         Busy = isFlushed = false;
         cout << "estacao " << id << " liberada no ciclo " << sc_time_stamp() << endl << flush;
         clean_item(); //Limpa a tabela na interface grafica

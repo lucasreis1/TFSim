@@ -1,0 +1,52 @@
+// numero de elementos
+LD R1,0(R0)
+//
+// valor alvo - ja setado em memory.txt
+LD R5,40(R0)
+//
+// endereço de inicio - segue estrutura: numElementos, el0, el1, el2..., eln-1
+DADDI R2,R0,1
+// 
+// constantes - precisa setar no registrador para usar DIV
+DADDI R31,R0,1
+DADDI R30,R0,2
+//
+// registrador de retorno (indice i do vetor, onde a[i]=alvo, cc -1)
+DADD R0,R0,R0
+DADDI R10,R0,-1
+//
+// endereço de fim - valor inicial = 20
+DADDI R3,R1,0
+DSUB R3,R3,R31
+DADD R3,R3,R2
+//
+// pos
+DADD R4,R2,R3
+DDIV R4,R4,R30
+//
+// controle do laço - qnd R6 < 0 (ini>fim), sai do laço
+DSUB R6,R3,R2
+BLTZ R6,15
+DSUB R3,R3,R31
+//
+// valor em a[pos]
+LD R7,0(R4)
+// encontrou, arrumar endereço
+BEQ R7,R5,9
+DSUB R7,R7,R5
+//
+// if(a[pos]<target) - if(R7 < R5)
+BGEZ R7,3
+//
+// else
+DADD R2,R0,R4
+J 2
+DADD R3,R0,R4
+DADD R4,R2,R3
+DDIV R4,R4,R30
+BGEZ R6,-12
+// JUMP BACK - J?
+//
+DADD R10,R0,R4
+SD R10,499(R0)
+DADD R0,R0,R0

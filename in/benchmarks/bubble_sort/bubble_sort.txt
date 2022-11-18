@@ -1,0 +1,35 @@
+// numero de elementos
+LD R1,50(R0)
+// endereço de inicio - i
+DADD R2,R0,R0
+// size - 1
+DADDI R20,R1,-1
+// outer loop
+BEQ R2,R20,17
+// swapped = 0
+DADD R30,R0,R0
+// j = 0
+DADD R3,R0,R0
+// size - 1 - i
+DSUB R21,R20,R2
+// inner loop
+BEQ R3,R21,10
+LD R5,0(R3)
+LD R6,1(R3)
+// if a[j] > a[j+1]
+SLT R8,R6,R5
+BEQ R8,R0,4
+//DADD R4,R5,R0
+//DADD R5,R6,R0
+//DADD R6,R4,R0
+SD R5,1(R3)
+SD R6,0(R3)
+DADDI R30,R0,1
+DADDI R3,R3,1
+J -9
+// fim inner loop
+BEQ R30,R0,3
+DADDI R2,R2,1
+J -16
+// fim outer loop
+DADD R0,R0,R0

@@ -1,4 +1,7 @@
 #include<memory>
+#include <iostream>
+#include <fstream>
+#include <filesystem>
 #include "bus.hpp"
 #include "issue_control.hpp"
 #include "clock_.hpp"
@@ -25,7 +28,14 @@ class top: public sc_module
 public:
     top(sc_module_name name);
     void simple_mode(unsigned int nadd, unsigned int nmul,unsigned int nload,map<string,int> instruct_time,vector<string> instruct_queue, nana::listbox &table, nana::grid &mem_gui, nana::listbox &regs, nana::listbox &instr, nana::label &ccount);
-    void rob_mode(unsigned int nadd, unsigned int nmul,unsigned int nload,map<string,int> instruct_time, vector<string> instruct_queue, nana::listbox &table, nana::grid &mem_gui, nana::listbox &regs, nana::listbox &instr, nana::label &count, nana::listbox &rob_gui);
+    void rob_mode(int n_bits, unsigned int nadd, unsigned int nmul,unsigned int nload,map<string,int> instruct_time, vector<string> instruct_queue, nana::listbox &table, nana::grid &mem_gui, nana::listbox &regs, nana::listbox &instr, nana::label &count, nana::listbox &rob_gui);
+    void rob_mode_bpb(int n_bits, int bpb_size, unsigned int nadd, unsigned int nmul,unsigned int nload,map<string,int> instruct_time, vector<string> instruct_queue, nana::listbox &table, nana::grid &mem_gui, nana::listbox &regs, nana::listbox &instr, nana::label &count, nana::listbox &rob_gui);
+
+    instruction_queue_rob & get_queue() {return *fila_r;}
+    reorder_buffer & get_rob() {return *rob;}
+
+    void metrics(int cpu_freq, int mode, string bench_name, int n_bits);
+
 private:
     //Para simple(sem especulacao)
     unique_ptr<bus> CDB,mem_bus,clock_bus;
@@ -51,4 +61,8 @@ private:
     unique_ptr<register_bank_rob> rb_r;
     unique_ptr<memory_rob> mem_r;
     unique_ptr<instruction_queue_rob> fila_r;
+
+    void dump_metrics(string bench_name, int cpu_freq, unsigned int total_instructions_exec,
+                       double ciclos, double cpi_medio, double t_cpu, double mips, int mode,
+                       float hit_rate, int tam_bpb, int mem_count, int n_bits);
 };

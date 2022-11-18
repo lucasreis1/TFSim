@@ -40,10 +40,13 @@ void instruction_queue_rob::main()
             wait(SC_ZERO_TIME);
             wait(SC_ZERO_TIME);
             wait(SC_ZERO_TIME);
-            out->write(instruct_queue[pc].instruction + " " + std::to_string(pc));
+            // Instructions + current_pc + pc_original_instruction
+            out->write(instruct_queue[pc].instruction + " " +
+                       std::to_string(pc)+ " " + 
+                       std::to_string(instruct_queue[pc].pc));
             pc++;
             wait(SC_ZERO_TIME);
-            cat.at(pc-1).text(ISS,"X");
+            cat.at(pc-1).text(ISS,std::to_string(sc_time_stamp().value() / 1000)); //cat.at(pc-1).text(ISS,"X");
         }
         wait();
     }
@@ -57,12 +60,17 @@ void instruction_queue_rob::leitura_rob()
     int offset;
     in_rob->read(p);
     ord = instruction_split(p);
-    index = std::stoi(ord[1])-1;
+    index = std::stoi(ord[1])-1; //ROB position
     if(ord[0] == "R") //reverter salto incorreto
     {
         instructions.at(0).at(pc-1).select(false);
-        replace_instructions(last_pc[index]-1,index);
-        pc = last_pc[index]-1;
+        //replace_instructions(last_pc[index]-1,index);
+        //pc = last_pc[index]-1;
+        
+        // Removeu o -1 por conta de um bug: branch instruction era despachada 2 vezes
+        replace_instructions(last_pc[index], index);
+        pc = last_pc[index];
+        
         instruct_queue = last_instr[index]; 
     }
     else if(ord[0] == "S" && ord.size() == 3) //realiza salto (especulado) e armazena informacoes pre-salto
@@ -76,9 +84,18 @@ void instruction_queue_rob::leitura_rob()
             new_instructions_vec.push_back({original_instruct[i],i});
         add_instructions(pc,new_instructions_vec);
     }
-    else if(ord[0] == "S")
+    else if(ord[0] == "S") //Não há salto, continua na instrução de baixo (especulado)
     {
         last_pc[index] = pc;
+    }
+    // else if para tratar JUMP, onde o salto ocorre e não é especulado.
+    else if(ord[0] == "J"){
+        vector<instr_q> new_instructions_vec;
+        offset = std::stoi(ord[2]);
+        unsigned int original_pc = instruct_queue[pc-1].pc;
+        for(unsigned int i = original_pc + offset; i < original_instruct.size(); i++)
+            new_instructions_vec.push_back({original_instruct[i], i});
+        add_instructions(pc, new_instructions_vec);
     }
     else //salta atrasado (quando foi predito que nao saltaria)
     {
@@ -160,4 +177,14 @@ void instruction_queue_rob::add_instructions(unsigned int pos, vector<instr_q> i
         }
     }
     instructions.auto_draw(true);
+}
+
+bool instruction_queue_rob::queue_is_empty(){
+    
+    return pc == instruct_queue.size();
+
+}
+
+unsigned int instruction_queue_rob::get_instruction_counter() {
+    return pc;
 }

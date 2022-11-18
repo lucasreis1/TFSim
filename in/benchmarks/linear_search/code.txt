@@ -1,0 +1,24 @@
+// Linear search
+
+r1 = 0
+for(i = 0; i != size; i++) {
+    if(A[i] == x){
+        r1 = 1
+        break
+    }
+}
+
+------------------------------
+Mapeamento de registradores
+------------------------------
+R1 -> retorno
+R5 -> start = 0
+R6 -> size
+R7 -> x
+R11 -> i
+R21 -> A[i]
+
+------------------------------
+Mapeamento da memória
+------------------------------
+0 0 0,..., 42

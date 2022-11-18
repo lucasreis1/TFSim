@@ -1,0 +1,30 @@
+// Matriz search
+
+r1 = 0
+for(i = 0; i != n; i++){
+    for(j = 0; j != n; j++){
+        if(A[i][j] == x)
+            goto END
+    }
+}
+END:
+    r1 = 1
+
+
+------------------------------
+Mapeamento de registradores
+------------------------------
+R1 -> retorno
+R2 -> i
+R3 -> j
+R5 -> A[i][j]
+R6 -> numero de linhas da matriz - n
+R7 -> numero de colunas da matriz - n
+R8 -> valor buscado
+R20 -> endereço
+
+------------------------------
+Mapeamento da memória
+------------------------------
+10 20 30 40 15 25 35 45...
+el[0][0],el[0][1],...,el[1][0],...,el[2][0],...

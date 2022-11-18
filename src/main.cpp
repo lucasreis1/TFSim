@@ -22,11 +22,16 @@ int sc_main(int argc, char *argv[])
 {
     using namespace nana;
     vector<string> instruction_queue;
-    int nadd,nmul,nls;
+    string bench_name = "";
+    int nadd,nmul,nls, n_bits, bpb_size, cpu_freq;
     nadd = 3;
     nmul = nls = 2;
+    n_bits = 2;
+    bpb_size = 4;
+    cpu_freq = 500; // definido em Mhz - 500Mhz default
     std::vector<int> sizes;
     bool spec = false;
+    int mode = 0;
     bool fila = false;
     ifstream inFile;
     form fm(API::make_center(1024,700));
@@ -38,24 +43,29 @@ int sc_main(int argc, char *argv[])
     listbox instruct(fm);
     listbox rob(fm);
     menubar mnbar(fm);
-    button botao(fm);
+    button start(fm);
+    button run_all(fm);
     button clock_control(fm);
     button exit(fm);
     group clock_group(fm);
     label clock_count(clock_group);
     fm.caption("TFSim");
-    clock_group.caption("Ciclo de Clock");
+    clock_group.caption("Ciclo");
     clock_group.div("count");
     grid memory(fm,rectangle(),10,50);
     // Tempo de latencia de uma instrucao
     // Novas instrucoes devem ser inseridas manualmente aqui
-    map<string,int> instruct_time{{"DADD",4},{"DADDI",4},{"DSUB",6},{"DSUBI",6},{"DMUL",10},{"DDIV",16},{"MEM",2}};
+    map<string,int> instruct_time{{"DADD",4},{"DADDI",4},{"DSUB",6},
+    {"DSUBI",6},{"DMUL",10},{"DDIV",16},{"MEM",2},
+    {"SLT",1},{"SGT", 1}};
+    // Responsavel pelos modos de execução
     top top1("top");
-    botao.caption("START");
-    clock_control.caption("NEXT CYCLE");
-    exit.caption("EXIT");
+    start.caption("Start");
+    clock_control.caption("Next cycle");
+    run_all.caption("Run all");
+    exit.caption("Exit");
     plc["rst"] << table;
-    plc["btns"] << botao << clock_control << exit;
+    plc["btns"] << start << clock_control << run_all << exit;
     plc["memor"] << memory;
     plc["regs"] << reg;
     plc["rob"] << rob;
@@ -65,22 +75,61 @@ int sc_main(int argc, char *argv[])
     clock_group.collocate();
 
     spec = false;
+    //set_spec eh so visual
     set_spec(plc,spec);
     plc.collocate();
 
     mnbar.push_back("Opções");
     menu &op = mnbar.at(0);
-    menu::item_proxy spec_ip = op.append("Especulação",[&](menu::item_proxy &ip)
+    //menu::item_proxy spec_ip = 
+    op.append("Especulação");
+    auto spec_sub = op.create_sub_menu(0);
+    // Modo com 1 preditor para todos os branchs
+    spec_sub->append("1 Preditor", [&](menu::item_proxy &ip)
     {
-        if(ip.checked())
+        if(ip.checked()){
             spec = true;
-        else
+            mode = 1;
+            spec_sub->checked(1, false);
+        }
+        else{
             spec = false;
+            mode = 0;
+        }
+
         set_spec(plc,spec);
     });
-    op.check_style(0,menu::checks::highlight);
+    // Modo com o bpb
+    spec_sub->append("Branch Prediction Buffer", [&](menu::item_proxy &ip)
+    {
+        if(ip.checked()){
+            spec = true;
+            mode = 2;
+            spec_sub->checked(0, false);
+        }
+        else{
+            spec = false;
+            mode = 0;
+        }
+
+        set_spec(plc, spec);
+    });
+    spec_sub->check_style(0,menu::checks::highlight);
+    spec_sub->check_style(1,menu::checks::highlight);
+
     op.append("Modificar valores...");
+    // novo submenu para escolha do tamanho do bpb e do preditor
     auto sub = op.create_sub_menu(1);
+    sub->append("Tamanho do BPB e Preditor", [&](menu::item_proxy &ip)
+    {
+        inputbox ibox(fm, "", "Definir tamanhos");
+        inputbox::integer size("BPB", bpb_size, 2, 10, 2);
+        inputbox::integer bits("N_BITS", n_bits, 1, 3, 1);
+        if(ibox.show_modal(size, bits)){
+            bpb_size = size.value();
+            n_bits = bits.value();
+        }
+    });
     sub->append("Número de Estações de Reserva",[&](menu::item_proxy ip)
     {
         inputbox ibox(fm,"","Quantidade de Estações de Reserva");
@@ -117,6 +166,16 @@ int sc_main(int argc, char *argv[])
             instruct_time["MEM"] = std::stoi(mem_t.value());
         }
     });
+
+    sub->append("Frequência CPU", [&](menu::item_proxy &ip)
+    {
+        inputbox ibox(fm,"Em Mhz","Definir frequência da CPU");
+        inputbox::text freq("Frequência", std::to_string(cpu_freq));
+        if(ibox.show_modal(freq)){
+            cpu_freq = std::stoi(freq.value());
+        }
+    });
+
     sub->append("Fila de instruções", [&](menu::item_proxy &ip)
     {
         filebox fb(0,true);
@@ -327,15 +386,8 @@ int sc_main(int argc, char *argv[])
     op.append("Benchmarks");
     auto bench_sub = op.create_sub_menu(3);
     bench_sub->append("Fibonacci",[&](menu::item_proxy &ip){
-        string path = "in/benchmarks/fibonacci.txt";        
-        inFile.open(path);
-        if(!add_instructions(inFile,instruction_queue,instruct))
-            show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
-        else
-            fila = true;
-    });
-    bench_sub->append("Busca em Vetor",[&](menu::item_proxy &ip){
-        string path = "in/benchmarks/vector_search.txt";        
+        string path = "in/benchmarks/fibonacci/fibonacci.txt";
+        bench_name = "fibonacci";        
         inFile.open(path);
         if(!add_instructions(inFile,instruction_queue,instruct))
             show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
@@ -351,7 +403,8 @@ int sc_main(int argc, char *argv[])
             fila = true;
     });
     bench_sub->append("Stress de Memória (Stores)",[&](menu::item_proxy &ip){
-        string path = "in/benchmarks/store_stress.txt";     
+        string path = "in/benchmarks/store_stress/store_stress.txt";   
+        bench_name = "store_stress";  
         inFile.open(path);
         if(!add_instructions(inFile,instruction_queue,instruct))
             show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
@@ -365,7 +418,275 @@ int sc_main(int argc, char *argv[])
             show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
         else
             fila = true;
+    }); 
+    bench_sub->append("Busca Linear",[&](menu::item_proxy &ip){
+        string path = "in/benchmarks/linear_search/linear_search.txt";
+        bench_name = "linear_search";
+        inFile.open(path);
+        if(!add_instructions(inFile,instruction_queue,instruct))
+            show_message("Arquivo inválido","Não foi possível abrir o arquivo");
+        else
+            fila = true;
+        
+        path = "in/benchmarks/linear_search/memory.txt";
+        inFile.open(path);
+            if(!inFile.is_open())
+                show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
+            else
+            {
+                int i = 0;
+                int value;
+                while(inFile >> value && i < 500)
+                {
+                    memory.Set(i,std::to_string(value));
+                    i++;
+                }
+                for(; i < 500 ; i++)
+                {
+                    memory.Set(i,"0");
+                }
+                inFile.close();
+            }
+
+        path = "in/benchmarks/linear_search/regi_i.txt";
+        inFile.open(path);
+            if(!inFile.is_open())
+                show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
+            else
+            {
+                auto reg_gui = reg.at(0);
+                int value,i = 0;
+                while(inFile >> value && i < 32)
+                {
+                    reg_gui.at(i).text(1,std::to_string(value));
+                    i++;
+                }
+                for(; i < 32 ; i++)
+                    reg_gui.at(i).text(1,"0");
+                inFile.close();
+            }
     });
+
+    bench_sub->append("Busca Binária",[&](menu::item_proxy &ip){
+        string path = "in/benchmarks/binary_search/binary_search.txt";
+        bench_name = "binary_search";
+        inFile.open(path);
+        if(!add_instructions(inFile,instruction_queue,instruct))
+            show_message("Arquivo inválido","Não foi possível abrir o arquivo");
+        else
+            fila = true;
+        
+        path = "in/benchmarks/binary_search/memory.txt";
+        inFile.open(path);
+            if(!inFile.is_open())
+                show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
+            else
+            {
+                int i = 0;
+                int value;
+                while(inFile >> value && i < 500)
+                {
+                    memory.Set(i,std::to_string(value));
+                    i++;
+                }
+                for(; i < 500 ; i++)
+                {
+                    memory.Set(i,"0");
+                }
+                inFile.close();
+            }
+
+        path = "in/benchmarks/binary_search/regs.txt";
+        inFile.open(path);
+            if(!inFile.is_open())
+                show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
+            else
+            {
+                auto reg_gui = reg.at(0);
+                int value,i = 0;
+                while(inFile >> value && i < 32)
+                {
+                    reg_gui.at(i).text(1,std::to_string(value));
+                    i++;
+                }
+                for(; i < 32 ; i++)
+                    reg_gui.at(i).text(1,"0");
+                inFile.close();
+            }
+    });
+
+    bench_sub->append("Matriz Search",[&](menu::item_proxy &ip){
+        string path = "in/benchmarks/matriz_search/matriz_search.txt";
+        bench_name = "matriz_search";
+        inFile.open(path);
+        if(!add_instructions(inFile,instruction_queue,instruct))
+            show_message("Arquivo inválido","Não foi possível abrir o arquivo");
+        else
+            fila = true;
+        
+        path = "in/benchmarks/matriz_search/memory.txt";
+        inFile.open(path);
+            if(!inFile.is_open())
+                show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
+            else
+            {
+                int i = 0;
+                int value;
+                while(inFile >> value && i < 500)
+                {
+                    memory.Set(i,std::to_string(value));
+                    i++;
+                }
+                for(; i < 500 ; i++)
+                {
+                    memory.Set(i,"0");
+                }
+                inFile.close();
+            }
+
+        path = "in/benchmarks/matriz_search/regs.txt";
+        inFile.open(path);
+            if(!inFile.is_open())
+                show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
+            else
+            {
+                auto reg_gui = reg.at(0);
+                int value,i = 0;
+                while(inFile >> value && i < 32)
+                {
+                    reg_gui.at(i).text(1,std::to_string(value));
+                    i++;
+                }
+                for(; i < 32 ; i++)
+                    reg_gui.at(i).text(1,"0");
+                inFile.close();
+            }
+    });
+
+    bench_sub->append("Bubble Sort",[&](menu::item_proxy &ip){
+        string path = "in/benchmarks/bubble_sort/bubble_sort.txt";
+        bench_name = "bubble_sort";
+        inFile.open(path);
+        if(!add_instructions(inFile,instruction_queue,instruct))
+            show_message("Arquivo inválido","Não foi possível abrir o arquivo");
+        else
+            fila = true;
+        
+        path = "in/benchmarks/bubble_sort/memory.txt";
+        inFile.open(path);
+            if(!inFile.is_open())
+                show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
+            else
+            {
+                int i = 0;
+                int value;
+                while(inFile >> value && i < 500)
+                {
+                    memory.Set(i,std::to_string(value));
+                    i++;
+                }
+                for(; i < 500 ; i++)
+                {
+                    memory.Set(i,"0");
+                }
+                inFile.close();
+            }
+
+        path = "in/benchmarks/bubble_sort/regs.txt";
+        inFile.open(path);
+            if(!inFile.is_open())
+                show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
+            else
+            {
+                auto reg_gui = reg.at(0);
+                int value,i = 0;
+                while(inFile >> value && i < 32)
+                {
+                    reg_gui.at(i).text(1,std::to_string(value));
+                    i++;
+                }
+                for(; i < 32 ; i++)
+                    reg_gui.at(i).text(1,"0");
+                inFile.close();
+            }
+    });
+
+    bench_sub->append("Insertion Sort",[&](menu::item_proxy &ip){
+        string path = "in/benchmarks/insertion_sort/insertion_sort.txt";
+        bench_name = "insertion_sort";
+        inFile.open(path);
+        if(!add_instructions(inFile,instruction_queue,instruct))
+            show_message("Arquivo inválido","Não foi possível abrir o arquivo");
+        else
+            fila = true;
+        
+        path = "in/benchmarks/insertion_sort/memory.txt";
+        inFile.open(path);
+            if(!inFile.is_open())
+                show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
+            else
+            {
+                int i = 0;
+                int value;
+                while(inFile >> value && i < 500)
+                {
+                    memory.Set(i,std::to_string(value));
+                    i++;
+                }
+                for(; i < 500 ; i++)
+                {
+                    memory.Set(i,"0");
+                }
+                inFile.close();
+            }
+
+        path = "in/benchmarks/insertion_sort/regs.txt";
+        inFile.open(path);
+            if(!inFile.is_open())
+                show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
+            else
+            {
+                auto reg_gui = reg.at(0);
+                int value,i = 0;
+                while(inFile >> value && i < 32)
+                {
+                    reg_gui.at(i).text(1,std::to_string(value));
+                    i++;
+                }
+                for(; i < 32 ; i++)
+                    reg_gui.at(i).text(1,"0");
+                inFile.close();
+            }
+    });
+
+    bench_sub->append("Tick Tack",[&](menu::item_proxy &ip){
+        string path = "in/benchmarks/tick_tack/tick_tack.txt";
+        bench_name = "tick_tack";
+        inFile.open(path);
+        if(!add_instructions(inFile,instruction_queue,instruct))
+            show_message("Arquivo inválido","Não foi possível abrir o arquivo");
+        else
+            fila = true;
+        
+        path = "in/benchmarks/tick_tack/regs.txt";
+        inFile.open(path);
+            if(!inFile.is_open())
+                show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
+            else
+            {
+                auto reg_gui = reg.at(0);
+                int value,i = 0;
+                while(inFile >> value && i < 32)
+                {
+                    reg_gui.at(i).text(1,std::to_string(value));
+                    i++;
+                }
+                for(; i < 32 ; i++)
+                    reg_gui.at(i).text(1,"0");
+                inFile.close();
+            }
+    });
+
     vector<string> columns = {"#","Name","Busy","Op","Vj","Vk","Qj","Qk","A"}; 
     for(unsigned int i = 0 ; i < columns.size() ; i++)
     {
@@ -514,7 +835,7 @@ int sc_main(int argc, char *argv[])
                 case 's':
                     spec = true;
                     set_spec(plc,spec); 
-                    spec_ip.checked(true);
+                    //spec_ip.checked(true);
                     k--;
                     break;
                 case 'l':
@@ -539,23 +860,34 @@ int sc_main(int argc, char *argv[])
             }
         }
     }
+
     clock_control.enabled(false);
-    botao.events().click([&]
+    run_all.enabled(false);
+    
+    start.events().click([&]
     {
         if(fila)
         {
-            botao.enabled(false);
+            start.enabled(false);
             clock_control.enabled(true);
+            run_all.enabled(true);
             //Desativa os menus apos inicio da execucao
             op.enabled(0,false);
             op.enabled(1,false);
             op.enabled(3,false);
-            for(int i = 0 ; i < 6 ; i++)
+            for(int i = 0; i < 2; i++)
+                spec_sub->enabled(i, false);
+            for(int i = 0 ; i < 8 ; i++)
                 sub->enabled(i,false);
-            for(int i = 0 ; i < 5 ; i++)
+            for(int i = 0 ; i < 10 ; i++)
                 bench_sub->enabled(i,false);
-            if(spec)
-                top1.rob_mode(nadd,nmul,nls,instruct_time,instruction_queue,table,memory,reg,instruct,clock_count,rob);
+            if(spec){
+                // Flag mode setada pela escolha no menu
+                if(mode == 1)
+                    top1.rob_mode(n_bits,nadd,nmul,nls,instruct_time,instruction_queue,table,memory,reg,instruct,clock_count,rob);
+                else if(mode == 2)
+                    top1.rob_mode_bpb(n_bits, bpb_size, nadd,nmul,nls,instruct_time,instruction_queue,table,memory,reg,instruct,clock_count,rob);
+            }
             else
                 top1.simple_mode(nadd,nmul,nls,instruct_time,instruction_queue,table,memory,reg,instruct,clock_count);
             sc_start();
@@ -563,11 +895,25 @@ int sc_main(int argc, char *argv[])
         else
             show_message("Fila de instruções vazia","A fila de instruções está vazia. Insira um conjunto de instruções para iniciar.");
     });
-    clock_control.events().click([]
+
+    clock_control.events().click([&]
     {
+        if(top1.get_queue().queue_is_empty() && top1.get_rob().rob_is_empty())
+            return;
         if(sc_is_running())
             sc_start();
     });
+
+    run_all.events().click([&]{
+        // enquanto queue e rob nao estao vazios, roda ate o fim
+        while(!(top1.get_queue().queue_is_empty() && top1.get_rob().rob_is_empty())){
+            if(sc_is_running())
+                sc_start();
+        }
+
+        top1.metrics(cpu_freq, mode, bench_name, n_bits);
+    });
+
     exit.events().click([]
     {
         sc_stop();

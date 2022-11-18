@@ -15,7 +15,8 @@ out-of-order execution on modern microprocessors.
 3. Execute com `./tfsim`
 		
 
-- Os valores iniciais de registradores e de memória são gerados aleatoriamente para cada execução. É possível alterá-los (assim como inserir a lista de instruções) por linha de comando ou pela barra de opções da interface. Por linha de comando, utilize:
+- Para maioria dos benchmarks, arquivos de memória e registradores são carregados juntamente com o conjunto de instruções.
+- É possível inserir a lista de instruções e outros valores por linha de comando ou pela barra de opções da interface. Por linha de comando, utilize:
 			
 
 		-  '-q' para fila de instruções
@@ -43,6 +44,6 @@ DSUB | BGTZ |
 DSUBI| BLTZ |
 DMUL | BGEZ | 
 DDIV| BLEZ |
-LD|
-SD|
-
+LD| SGT |
+SD| SLT |
+-- | J |
