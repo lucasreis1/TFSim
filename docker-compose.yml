@@ -1,0 +1,13 @@
+services:
+  tfsim:
+    build:
+      context: .  # Build from current directory
+      dockerfile: Dockerfile  # (Optional if named 'Dockerfile')
+    environment:
+      - DISPLAY=${DISPLAY:-:0}
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:ro
+      - ./in:/opt/TFSim/in
+    user: "${DOCKER_UID}:${DOCKER_GID}"
+    ipc: host
+    network_mode: host

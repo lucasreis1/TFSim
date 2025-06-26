@@ -11,12 +11,43 @@
 #include<nana/gui/filebox.hpp>
 #include "top.hpp"
 #include "gui.hpp"
+#include <unistd.h>
+#include <libgen.h>
 
 using std::string;
 using std::vector;
 using std::map;
 using std::fstream;
 
+
+const char* get_base_path(const char **argv) {
+    // 1. Try environment variable first
+    const char* env_path = getenv("TFSIM_BASE_PATH");
+    if (env_path != NULL && env_path[0] != '\0') {
+        return env_path;
+    }
+
+    // 2. Fall back to argv[0] derivation
+    static char base_path[PATH_MAX];
+    char executable_path[PATH_MAX];
+
+    // Get path to executable (Linux/macOS specific)
+    ssize_t len = readlink("/proc/self/exe", executable_path, sizeof(executable_path)-1);
+    if (len == -1) {
+        // Fallback for systems without /proc/self/exe
+        strncpy(executable_path, argv[0], sizeof(executable_path)-1);
+        executable_path[sizeof(executable_path)-1] = '\0';
+    } else {
+        executable_path[len] = '\0';
+    }
+
+    // Get directory containing executable
+    char* dir = dirname(executable_path);
+    strncpy(base_path, dir, sizeof(base_path)-1);
+    base_path[sizeof(base_path)-1] = '\0';
+
+    return base_path;
+}
 
 int sc_main(int argc, char *argv[])
 {
@@ -384,9 +415,10 @@ int sc_main(int argc, char *argv[])
         }
     });
     op.append("Benchmarks");
+    std::string base_path = std::string(get_base_path((const char **)argv));
     auto bench_sub = op.create_sub_menu(3);
     bench_sub->append("Fibonacci",[&](menu::item_proxy &ip){
-        string path = "in/benchmarks/fibonacci/fibonacci.txt";
+        string path = base_path + "/in/benchmarks/fibonacci/fibonacci.txt";
         bench_name = "fibonacci";        
         inFile.open(path);
         if(!add_instructions(inFile,instruction_queue,instruct))
@@ -395,7 +427,7 @@ int sc_main(int argc, char *argv[])
             fila = true;
     });
     bench_sub->append("Stall por Divisão",[&](menu::item_proxy &ip){
-        string path = "in/benchmarks/division_stall.txt";       
+        string path = base_path + "/in/benchmarks/division_stall.txt";       
         inFile.open(path);
         if(!add_instructions(inFile,instruction_queue,instruct))
             show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
@@ -403,7 +435,7 @@ int sc_main(int argc, char *argv[])
             fila = true;
     });
     bench_sub->append("Stress de Memória (Stores)",[&](menu::item_proxy &ip){
-        string path = "in/benchmarks/store_stress/store_stress.txt";   
+        string path = base_path + "/in/benchmarks/store_stress/store_stress.txt";   
         bench_name = "store_stress";  
         inFile.open(path);
         if(!add_instructions(inFile,instruction_queue,instruct))
@@ -412,7 +444,7 @@ int sc_main(int argc, char *argv[])
             fila = true;
     });
     bench_sub->append("Stall por hazard estrutural (Adds)",[&](menu::item_proxy &ip){
-        string path = "in/benchmarks/res_stations_stall.txt";       
+        string path = base_path + "/in/benchmarks/res_stations_stall.txt";       
         inFile.open(path);
         if(!add_instructions(inFile,instruction_queue,instruct))
             show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
@@ -420,7 +452,7 @@ int sc_main(int argc, char *argv[])
             fila = true;
     }); 
     bench_sub->append("Busca Linear",[&](menu::item_proxy &ip){
-        string path = "in/benchmarks/linear_search/linear_search.txt";
+        string path = base_path + "/in/benchmarks/linear_search/linear_search.txt";
         bench_name = "linear_search";
         inFile.open(path);
         if(!add_instructions(inFile,instruction_queue,instruct))
@@ -428,7 +460,7 @@ int sc_main(int argc, char *argv[])
         else
             fila = true;
         
-        path = "in/benchmarks/linear_search/memory.txt";
+        path = base_path + "/in/benchmarks/linear_search/memory.txt";
         inFile.open(path);
             if(!inFile.is_open())
                 show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
@@ -448,7 +480,7 @@ int sc_main(int argc, char *argv[])
                 inFile.close();
             }
 
-        path = "in/benchmarks/linear_search/regi_i.txt";
+        path = base_path + "/in/benchmarks/linear_search/regi_i.txt";
         inFile.open(path);
             if(!inFile.is_open())
                 show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
@@ -468,7 +500,7 @@ int sc_main(int argc, char *argv[])
     });
 
     bench_sub->append("Busca Binária",[&](menu::item_proxy &ip){
-        string path = "in/benchmarks/binary_search/binary_search.txt";
+        string path = base_path + "/in/benchmarks/binary_search/binary_search.txt";
         bench_name = "binary_search";
         inFile.open(path);
         if(!add_instructions(inFile,instruction_queue,instruct))
@@ -476,7 +508,7 @@ int sc_main(int argc, char *argv[])
         else
             fila = true;
         
-        path = "in/benchmarks/binary_search/memory.txt";
+        path = base_path + "/in/benchmarks/binary_search/memory.txt";
         inFile.open(path);
             if(!inFile.is_open())
                 show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
@@ -496,7 +528,7 @@ int sc_main(int argc, char *argv[])
                 inFile.close();
             }
 
-        path = "in/benchmarks/binary_search/regs.txt";
+        path = base_path + "/in/benchmarks/binary_search/regs.txt";
         inFile.open(path);
             if(!inFile.is_open())
                 show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
@@ -516,7 +548,7 @@ int sc_main(int argc, char *argv[])
     });
 
     bench_sub->append("Matriz Search",[&](menu::item_proxy &ip){
-        string path = "in/benchmarks/matriz_search/matriz_search.txt";
+        string path = base_path + "/in/benchmarks/matriz_search/matriz_search.txt";
         bench_name = "matriz_search";
         inFile.open(path);
         if(!add_instructions(inFile,instruction_queue,instruct))
@@ -524,7 +556,7 @@ int sc_main(int argc, char *argv[])
         else
             fila = true;
         
-        path = "in/benchmarks/matriz_search/memory.txt";
+        path = base_path + "/in/benchmarks/matriz_search/memory.txt";
         inFile.open(path);
             if(!inFile.is_open())
                 show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
@@ -544,7 +576,7 @@ int sc_main(int argc, char *argv[])
                 inFile.close();
             }
 
-        path = "in/benchmarks/matriz_search/regs.txt";
+        path = base_path + "/in/benchmarks/matriz_search/regs.txt";
         inFile.open(path);
             if(!inFile.is_open())
                 show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
@@ -564,7 +596,7 @@ int sc_main(int argc, char *argv[])
     });
 
     bench_sub->append("Bubble Sort",[&](menu::item_proxy &ip){
-        string path = "in/benchmarks/bubble_sort/bubble_sort.txt";
+        string path = base_path + "/in/benchmarks/bubble_sort/bubble_sort.txt";
         bench_name = "bubble_sort";
         inFile.open(path);
         if(!add_instructions(inFile,instruction_queue,instruct))
@@ -572,7 +604,7 @@ int sc_main(int argc, char *argv[])
         else
             fila = true;
         
-        path = "in/benchmarks/bubble_sort/memory.txt";
+        path = base_path + "/in/benchmarks/bubble_sort/memory.txt";
         inFile.open(path);
             if(!inFile.is_open())
                 show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
@@ -592,7 +624,7 @@ int sc_main(int argc, char *argv[])
                 inFile.close();
             }
 
-        path = "in/benchmarks/bubble_sort/regs.txt";
+        path = base_path + "/in/benchmarks/bubble_sort/regs.txt";
         inFile.open(path);
             if(!inFile.is_open())
                 show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
@@ -612,7 +644,7 @@ int sc_main(int argc, char *argv[])
     });
 
     bench_sub->append("Insertion Sort",[&](menu::item_proxy &ip){
-        string path = "in/benchmarks/insertion_sort/insertion_sort.txt";
+        string path = base_path + "/in/benchmarks/insertion_sort/insertion_sort.txt";
         bench_name = "insertion_sort";
         inFile.open(path);
         if(!add_instructions(inFile,instruction_queue,instruct))
@@ -620,7 +652,7 @@ int sc_main(int argc, char *argv[])
         else
             fila = true;
         
-        path = "in/benchmarks/insertion_sort/memory.txt";
+        path = base_path + "/in/benchmarks/insertion_sort/memory.txt";
         inFile.open(path);
             if(!inFile.is_open())
                 show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
@@ -640,7 +672,7 @@ int sc_main(int argc, char *argv[])
                 inFile.close();
             }
 
-        path = "in/benchmarks/insertion_sort/regs.txt";
+        path = base_path + "/in/benchmarks/insertion_sort/regs.txt";
         inFile.open(path);
             if(!inFile.is_open())
                 show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
@@ -660,7 +692,7 @@ int sc_main(int argc, char *argv[])
     });
 
     bench_sub->append("Tick Tack",[&](menu::item_proxy &ip){
-        string path = "in/benchmarks/tick_tack/tick_tack.txt";
+        string path = base_path + "/in/benchmarks/tick_tack/tick_tack.txt";
         bench_name = "tick_tack";
         inFile.open(path);
         if(!add_instructions(inFile,instruction_queue,instruct))
@@ -668,7 +700,7 @@ int sc_main(int argc, char *argv[])
         else
             fila = true;
         
-        path = "in/benchmarks/tick_tack/regs.txt";
+        path = base_path + "/in/benchmarks/tick_tack/regs.txt";
         inFile.open(path);
             if(!inFile.is_open())
                 show_message("Arquivo inválido","Não foi possível abrir o arquivo!");
@@ -898,7 +930,9 @@ int sc_main(int argc, char *argv[])
 
     clock_control.events().click([&]
     {
-        if(top1.get_queue().queue_is_empty() && top1.get_rob().rob_is_empty())
+        if(spec && top1.get_rob_queue().queue_is_empty() && top1.get_rob().rob_is_empty())
+            return;
+        else if (top1.get_queue().queue_is_empty())
             return;
         if(sc_is_running())
             sc_start();

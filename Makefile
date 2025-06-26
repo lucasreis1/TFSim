@@ -9,7 +9,6 @@ NANA_INCLUDE=$(ROOT)/nana/include
 NANA_LIB=$(ROOT)/nana/built
 
 CXX = g++
-INCLUDEDIR = include/
 SRC_DIR = src
 OBJ_DIR = obj
 

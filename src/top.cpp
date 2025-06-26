@@ -254,7 +254,7 @@ void top::metrics(int cpu_freq, int mode, string bench_name, int n_bits) {
     double ciclos = static_cast<double>((sc_time_stamp().to_double() / 1000) - 1);
 
     if(fila_r != NULL && rob != NULL){
-        unsigned int total_instructions_exec = get_queue().get_instruction_counter();
+        unsigned int total_instructions_exec = get_rob_queue().get_instruction_counter();
         
         double cpi_medio = (double) ciclos / total_instructions_exec;
         

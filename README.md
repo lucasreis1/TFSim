@@ -1,4 +1,3 @@
-
 # TFSim
 
 Event-driven simulation of the Tomasulo Algorithm using the C++ interface SystemC, with a complete GUI.
@@ -6,8 +5,20 @@ Event-driven simulation of the Tomasulo Algorithm using the C++ interface System
 The purpose of this project is to ease the teaching of this algorithm, deemed extremely important to the understanding of
 out-of-order execution on modern microprocessors.
 
-# Guia de Execução
+## Guia de Execução
 
+### Container
+Um container é fornecido para compilação e execução da ferramenta com mais facilidade. Execute o comando na raíz do repositório:
+
+`bash ./build_docker.sh`
+
+Sempre que precisar usar o container, utilize:
+
+`docker start tfsim-tfsim-1`
+
+Caso queira inserir valores por linha de comando pelo container, lembre-se inserí-los na pasta `in`
+
+### Manualmente
 1. Instale os pacotes necessários para uso da biblioteca Nana
 	```apt install -y unzip libx11-dev libxft-dev libasound2-dev libxcursor-dev```
 2. Execute o script na raíz do repositório para instalar as dependências do simulador
@@ -34,7 +45,7 @@ out-of-order execution on modern microprocessors.
 	- Um vídeo de demonstração da execução do simulador pode ser visto [aqui](https://youtu.be/hleCH6yndPY)
 
 
-Instruções suportadas:
+## Instruções suportadas
 
 Sem especulação | Com especulação
 ---| ---|

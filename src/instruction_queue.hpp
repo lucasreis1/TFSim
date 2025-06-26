@@ -13,6 +13,8 @@ public:
     
     SC_HAS_PROCESS(instruction_queue);
     instruction_queue(sc_module_name name, vector<string> inst_q, nana::listbox &instr);
+
+		bool queue_is_empty();
     void main();
 
 private:

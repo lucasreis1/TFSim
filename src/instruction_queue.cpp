@@ -25,3 +25,7 @@ void instruction_queue::main()
         wait();
     }
 }
+
+bool instruction_queue::queue_is_empty() {
+	return instruct_queue.size() == 0;
+}
