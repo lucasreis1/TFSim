@@ -932,7 +932,7 @@ int sc_main(int argc, char *argv[])
     {
         if(spec && top1.get_rob_queue().queue_is_empty() && top1.get_rob().rob_is_empty())
             return;
-        else if (top1.get_queue().queue_is_empty())
+        else if (!spec && top1.get_queue().queue_is_empty())
             return;
         if(sc_is_running())
             sc_start();
